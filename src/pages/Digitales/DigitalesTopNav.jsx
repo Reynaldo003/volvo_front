@@ -1,8 +1,9 @@
 // src/pages/Digitales/DigitalesTopNav.jsx
+
 import { useMemo } from "react";
 import { Link, useLocation } from "react-router-dom";
-import { LayoutGrid, Phone, Contact, ChartNoAxesCombined } from "lucide-react";
-import vwWhite from "../../assets/vw_white.png";
+import { Phone, Contact, ChartNoAxesCombined } from "lucide-react";
+import volvoWhite from "../../assets/volvo.png";
 import ryr from "../../assets/ryr.png";
 
 const BRAND_BLUE = "#131E5C";
@@ -12,14 +13,19 @@ export default function DigitalesTopNav() {
 
     const tabs = useMemo(
         () => [
-            { label: "Prospectos", href: "/crm_digitales", icon: Contact },
-            { label: "Contacto", href: "/crm_digitales/contacto", icon: Phone },
-            { label: "Resumen", href: "/crm_digitales/resumen", icon: ChartNoAxesCombined },
+            { label: "Prospectos", href: "/crm_volvo/comercial/", exact: true, icon: Contact },
+            { label: "Contacto", href: "/crm_volvo/comercial/contacto", icon: Phone },
         ],
         []
     );
 
-    const isActive = (href) => location.pathname.startsWith(href);
+    const isActive = (tab) => {
+        if (tab.exact) {
+            return location.pathname === tab.href;
+        }
+
+        return location.pathname === tab.href || location.pathname.startsWith(`${tab.href}/`);
+    };
 
     return (
         <header className="w-full">
@@ -36,48 +42,22 @@ export default function DigitalesTopNav() {
                 <div className="relative px-5 py-5 sm:px-7 sm:py-6">
                     <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
                         <div className="min-w-0">
-                            <div className="flex items-center gap-2">
-                                <h1 className="font-vw-header truncate text-lg font-extrabold text-white sm:text-xl">
-                                    Gestión de Prospectos Digitales
-                                </h1>
-                            </div>
-                            <p className="mt-1 text-sm text-white/80">
-                                Registro y seguimiento de prospectos digitales.
-                            </p>
+                            <h1 className="truncate text-lg font-extrabold text-white sm:text-xl">
+                                Gestión de Prospectos Digitales
+                            </h1>
+
                         </div>
 
                         <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between lg:justify-end">
-                            <nav className="flex w-full gap-2 sm:w-auto overflow-x-auto">
-                                {tabs.map((t) => {
-                                    const Icon = t.icon;
-                                    const active = isActive(t.href);
-                                    return (
-                                        <Link
-                                            key={t.href}
-                                            to={t.href}
-                                            className={[
-                                                "group inline-flex flex-1 items-center justify-center gap-2 rounded-lg px-4 py-2 text-sm transition",
-                                                "border",
-                                                active
-                                                    ? "border-white/35 bg-white/20 text-white shadow-sm"
-                                                    : "border-white/20 bg-white/10 text-white/85 hover:bg-white/15 hover:text-white",
-                                            ].join(" ")}
-                                            aria-current={active ? "page" : undefined}
-                                        >
-                                            <Icon className="h-4 w-4 opacity-90" />
-                                            {t.label}
-                                        </Link>
-                                    );
-                                })}
-                            </nav>
 
                             <div className="flex items-center justify-between gap-3 sm:justify-end">
                                 <img
-                                    src={vwWhite}
-                                    alt="VW"
+                                    src={volvoWhite}
+                                    alt="Volvo"
                                     className="h-10 w-auto opacity-95"
                                     loading="lazy"
                                 />
+
                                 <img
                                     src={ryr}
                                     alt="RYR"

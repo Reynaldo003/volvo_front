@@ -22,17 +22,11 @@ import { api } from "../../lib/apiPruebas";
 const BRAND_BLUE = "#131E5C";
 
 const DEALERS = [
-    "VW Cordoba",
-    "VW Orizaba",
-    "VW Poza Rica",
-    "VW Tuxtepec",
-    "VW Tuxpan",
-    "Chirey",
-    "JAECOO R&R",
+    "Volvo",
 ];
 
 const CANALES = [
-    "VW-Concesionario",
+    "Volvo-Concesionario",
     "WhatsApp",
     "Facebook",
     "Llamada Entrante",

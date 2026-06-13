@@ -1,29 +1,59 @@
 // src/lib/apiPruebas.js
 import { http, toQuery } from "./apiClient";
 
+const NUMERO_ASESOR_VOLVO =
+  import.meta.env.VITE_VOLVO_WHATSAPP_NUMERO || "522211092815";
+
+function cleanParams(params = {}) {
+  const out = {};
+
+  for (const [key, value] of Object.entries(params || {})) {
+    if (value === undefined || value === null || value === "") continue;
+    out[key] = value;
+  }
+
+  return out;
+}
+
+function withNumeroAsesor(params = {}) {
+  return cleanParams({
+    ...params,
+    numero_asesor: params.numero_asesor || NUMERO_ASESOR_VOLVO,
+  });
+}
+
+function jsonBody(payload = {}) {
+  return {
+    headers: {
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify(payload),
+  };
+}
+
 export const api = {
   // ------------------ PROSPECTOS MANUALES ------------------
   digitalesListProspectos: (params = {}) =>
-    http(`/digitales/api/prospectos/${toQuery(params)}`),
+    http(`/digitales/api/prospectos/${toQuery(cleanParams(params))}`),
 
   digitalesGetProspecto: (id) => http(`/digitales/api/prospectos/${id}/`),
 
   digitalesCreateProspecto: (payload) =>
     http("/digitales/api/prospectos/", {
       method: "POST",
-      body: JSON.stringify(payload),
+      ...jsonBody(payload),
     }),
 
   digitalesUpdateProspecto: (id, payload) =>
     http(`/digitales/api/prospectos/${id}/`, {
       method: "PUT",
-      body: JSON.stringify(payload),
+      ...jsonBody(payload),
     }),
 
   digitalesPatchProspecto: (id, payload) =>
     http(`/digitales/api/prospectos/${id}/`, {
       method: "PATCH",
-      body: JSON.stringify(payload),
+      ...jsonBody(payload),
     }),
 
   digitalesDeleteProspecto: (id) =>
@@ -31,11 +61,8 @@ export const api = {
       method: "DELETE",
     }),
 
-  digitalesCampanasMeta: () =>
-    Promise.resolve({
-      ok: true,
-      items: [],
-    }),
+  digitalesCampanasMeta: (params = {}) =>
+    http(`/digitales/api/campanas-meta/${toQuery(cleanParams(params))}`),
 
   digitalesGenerarResumen: () =>
     Promise.resolve({
@@ -43,56 +70,118 @@ export const api = {
       error: "La generación de resumen está desactivada en CRM Volvo.",
     }),
 
-  // ------------------ WHATSAPP DESACTIVADO ------------------
-  digitalesChats: () => Promise.resolve([]),
+  // ------------------ WHATSAPP ACTIVO ------------------
+  digitalesChats: (params = {}) =>
+    http(`/digitales/chats/${toQuery(withNumeroAsesor(params))}`),
 
-  digitalesMarkRead: () =>
-    Promise.resolve({
-      ok: true,
+  digitalesContacto: (tel, options = {}) =>
+    http(
+      `/digitales/contacto/${toQuery(
+        withNumeroAsesor({
+          tel,
+          limit: options.limit || 80,
+          days: options.days || 3,
+        }),
+      )}`,
+    ),
+
+  digitalesContactoUpdates: (tel, after = "", options = {}) =>
+    http(
+      `/digitales/contacto/updates/${toQuery(
+        withNumeroAsesor({
+          tel,
+          after,
+          after_id: options.after_id || "",
+          limit: options.limit || 80,
+          days: options.days || 3,
+        }),
+      )}`,
+    ),
+
+  digitalesMarkRead: ({ tel, telefono, numero_asesor } = {}) =>
+    http("/digitales/chats/mark-read/", {
+      method: "POST",
+      ...jsonBody(
+        withNumeroAsesor({
+          tel: tel || telefono,
+          numero_asesor,
+        }),
+      ),
     }),
 
-  digitalesContacto: (tel) => http(`/digitales/contacto/${toQuery({ tel })}`),
+  digitalesPlantillas: (params = {}) =>
+    http(`/digitales/mensajes/plantillas/${toQuery(withNumeroAsesor(params))}`),
 
-  digitalesContactoUpdates: () =>
-    Promise.resolve({
-      ok: true,
-      mensajes: [],
+  digitalesEnviarMensaje: ({ to, text, numero_asesor } = {}) =>
+    http("/digitales/mensajes/enviar/", {
+      method: "POST",
+      ...jsonBody(
+        withNumeroAsesor({
+          to,
+          text,
+          numero_asesor,
+        }),
+      ),
     }),
 
-  digitalesPlantillas: () =>
-    Promise.resolve({
-      ok: true,
-      items: [],
-      mensaje: "WhatsApp está desactivado temporalmente en CRM Volvo.",
+  digitalesEnviarPlantilla: ({
+    to,
+    template_name,
+    idioma = "es_MX",
+    params,
+    components,
+    numero_asesor,
+  } = {}) =>
+    http("/digitales/mensajes/enviar-plantilla/", {
+      method: "POST",
+      ...jsonBody(
+        withNumeroAsesor({
+          to,
+          template_name,
+          idioma,
+          params,
+          components,
+          numero_asesor,
+        }),
+      ),
     }),
 
-  digitalesEnviarMensaje: () =>
-    Promise.resolve({
-      ok: false,
-      error: "WhatsApp está desactivado temporalmente en CRM Volvo.",
-    }),
+  digitalesEnviarMedia: ({ to, text = "", files = [], numero_asesor } = {}) => {
+    const fd = new FormData();
 
-  digitalesEnviarPlantilla: () =>
-    Promise.resolve({
-      ok: false,
-      error: "WhatsApp está desactivado temporalmente en CRM Volvo.",
-    }),
+    fd.append("to", to || "");
+    fd.append("text", text || "");
+    fd.append("numero_asesor", numero_asesor || NUMERO_ASESOR_VOLVO);
 
-  digitalesEnviarMedia: () =>
-    Promise.resolve({
-      ok: false,
-      error: "WhatsApp está desactivado temporalmente en CRM Volvo.",
-    }),
+    const arr = Array.isArray(files) ? files : files ? [files] : [];
 
-  digitalesEditarMensaje: () =>
-    Promise.resolve({
-      ok: false,
-      error: "WhatsApp está desactivado temporalmente en CRM Volvo.",
+    for (const file of arr) {
+      fd.append("files", file);
+    }
+
+    return http("/digitales/mensajes/enviar-media/", {
+      method: "POST",
+      body: fd,
+    });
+  },
+
+  digitalesEditarMensaje: ({ to, message_id, text, numero_asesor } = {}) =>
+    http("/digitales/mensajes/editar/", {
+      method: "PATCH",
+      ...jsonBody(
+        withNumeroAsesor({
+          to,
+          message_id,
+          text,
+          numero_asesor,
+        }),
+      ),
     }),
 
   digitalesEliminarMensaje: () =>
     Promise.resolve({
       ok: false,
-      error: "WhatsApp está desactivado temporalmente en CRM Volvo.",
+      error:
+        "Eliminar mensajes todavía no está implementado en el backend de Volvo.",
     }),
 };

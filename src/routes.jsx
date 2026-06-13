@@ -80,10 +80,6 @@ export const router = createBrowserRouter([
                                         element: <DigitalesProspectos />,
                                     },
                                     {
-                                        path: "resumen",
-                                        element: <DigitalesOverView />,
-                                    },
-                                    {
                                         path: "contacto",
                                         element: <DigitalesContacto />,
                                     },

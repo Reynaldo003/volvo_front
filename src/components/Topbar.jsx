@@ -30,6 +30,10 @@ const TITULOS = [
         title: "Prospectos digitales",
     },
     {
+        path: `${BASE_PATH}/comercial/contacto`,
+        title: "Prospectos digitales",
+    },
+    {
         path: `${BASE_PATH}/comercial/citas`,
         title: "Citas",
     },
@@ -72,6 +76,11 @@ const gestionComercialTabs = [
     {
         label: "Prospectos",
         to: `${BASE_PATH}/comercial/prospectos`,
+        icon: UserRoundSearch,
+    },
+    {
+        label: "Contacto",
+        to: `${BASE_PATH}/comercial/prospectos/contacto`,
         icon: UserRoundSearch,
     },
     {
