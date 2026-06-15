@@ -38,7 +38,7 @@ import CheckListRecepcion from "./pages/CheckListRecepcion/RegistroCheckRecepcio
 import PruebaManejoLayout from "./pages/PruebasManejo/PruebaManejoLayout";
 import RegistroPruebaManejo from "./pages/PruebasManejo/RegistroPruebaManejo";
 
-import EntregasLayout from "./pages/Entregas/EntregasLayout";
+
 import RegistroEntregas from "./pages/Entregas/RegistroEntregas";
 
 export const router = createBrowserRouter([
@@ -78,6 +78,10 @@ export const router = createBrowserRouter([
                                     {
                                         index: true,
                                         element: <DigitalesProspectos />,
+                                    },
+                                    {
+                                        path: "resumen",
+                                        element: <DigitalesOverView />,
                                     },
                                     {
                                         path: "contacto",
@@ -134,15 +138,9 @@ export const router = createBrowserRouter([
 
                             {
                                 path: "entregas",
-                                element: <EntregasLayout />,
-                                children: [
-                                    {
-                                        index: true,
-                                        element: <RegistroEntregas />,
-                                    },
-                                ],
+                                element: <RegistroEntregas />,
                             },
-                        ],
+                                ],
                     },
                     // ===== Gestión Calidad =====
                     {
