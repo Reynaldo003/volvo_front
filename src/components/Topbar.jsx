@@ -15,29 +15,30 @@ import { useAuth } from "../auth/AuthContext";
 const BASE_PATH = "/crm_volvo";
 
 const TITULOS = [
-    { path: `${BASE_PATH}/`,                          title: "Inicio",               exact: true },
-    { path: `${BASE_PATH}/comercial`,                 title: "Gestión comercial" },
-    { path: `${BASE_PATH}/comercial/prospectos`,      title: "Prospectos digitales" },
-    { path: `${BASE_PATH}/comercial/citas`,           title: "Citas" },
-    { path: `${BASE_PATH}/comercial/control_piso`,    title: "Control piso" },
-    { path: `${BASE_PATH}/comercial/trafico_piso`,    title: "Tráfico piso" },
-    { path: `${BASE_PATH}/comercial/pruebas_manejo`,  title: "Pruebas de manejo" },
-    { path: `${BASE_PATH}/comercial/entregas`,        title: "Entregas" },
+    { path: `${BASE_PATH}/`, title: "Inicio", exact: true },
+    { path: `${BASE_PATH}/comercial`, title: "Gestión comercial" },
+    { path: `${BASE_PATH}/comercial/prospectos`, title: "Prospectos digitales" },
+    { path: `${BASE_PATH}/comercial/citas`, title: "Citas" },
+    { path: `${BASE_PATH}/comercial/control_piso`, title: "Control piso" },
+    { path: `${BASE_PATH}/comercial/trafico_piso`, title: "Tráfico piso" },
+    { path: `${BASE_PATH}/comercial/pruebas_manejo`, title: "Pruebas de manejo" },
+    { path: `${BASE_PATH}/comercial/entregas`, title: "Entregas" },
 ];
 
 const gestionCalidadTabs = [
     { label: "Check Recepción", to: `${BASE_PATH}/calidad/checklist_recepcion`, icon: UserRoundSearch },
-    { label: "Check Entrega",   to: `${BASE_PATH}/calidad/checklist_entrega`,   icon: CalendarDays },
-    { label: "Check General",   to: `${BASE_PATH}/calidad/checklist_general`,   icon: ClipboardList },
+    { label: "Check Entrega", to: `${BASE_PATH}/calidad/checklist_entrega`, icon: CalendarDays },
+    { label: "Check General", to: `${BASE_PATH}/calidad/checklist_general`, icon: ClipboardList },
 ];
 
 const gestionComercialTabs = [
-    { label: "Prospectos",      to: `${BASE_PATH}/comercial/prospectos`,     icon: UserRoundSearch },
-    { label: "Citas",           to: `${BASE_PATH}/comercial/citas`,          icon: CalendarDays },
-    { label: "Control piso",    to: `${BASE_PATH}/comercial/control_piso`,   icon: ClipboardList },
-    { label: "Tráfico piso",    to: `${BASE_PATH}/comercial/trafico_piso`,   icon: Gauge },
-    { label: "Pruebas manejo",  to: `${BASE_PATH}/comercial/pruebas_manejo`, icon: Car },
-    { label: "Entregas",        to: `${BASE_PATH}/comercial/entregas`,       icon: Handshake },
+    { label: "Prospectos", to: `${BASE_PATH}/comercial/prospectos`, icon: UserRoundSearch },
+    { label: "Contacto", to: `${BASE_PATH}/comercial/prospectos/contacto`, icon: UserRoundSearch },
+    { label: "Citas", to: `${BASE_PATH}/comercial/citas`, icon: CalendarDays },
+    { label: "Control piso", to: `${BASE_PATH}/comercial/control_piso`, icon: ClipboardList },
+    { label: "Tráfico piso", to: `${BASE_PATH}/comercial/trafico_piso`, icon: Gauge },
+    { label: "Pruebas manejo", to: `${BASE_PATH}/comercial/pruebas_manejo`, icon: Car },
+    { label: "Entregas", to: `${BASE_PATH}/comercial/entregas`, icon: Handshake },
 ];
 
 function obtenerTitulo(pathname) {

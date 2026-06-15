@@ -80,10 +80,6 @@ export const router = createBrowserRouter([
                                         element: <DigitalesProspectos />,
                                     },
                                     {
-                                        path: "resumen",
-                                        element: <DigitalesOverView />,
-                                    },
-                                    {
                                         path: "contacto",
                                         element: <DigitalesContacto />,
                                     },
@@ -140,7 +136,7 @@ export const router = createBrowserRouter([
                                 path: "entregas",
                                 element: <RegistroEntregas />,
                             },
-                                ],
+                        ],
                     },
                     // ===== Gestión Calidad =====
                     {
