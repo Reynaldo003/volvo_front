@@ -2,6 +2,8 @@
 import { useMemo } from "react";
 import { Link, useLocation } from "react-router-dom";
 import { ChartNoAxesCombined, CalendarCheck2 } from "lucide-react";
+import volvoWhite from "../../assets/volvo.png";
+import ryr from "../../assets/ryr.png";
 
 export default function CitasTopNav() {
     const location = useLocation();
@@ -58,6 +60,25 @@ export default function CitasTopNav() {
                                 );
                             })}
                         </nav>
+
+                        <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between lg:justify-end">
+
+                            <div className="flex items-center justify-between gap-3 sm:justify-end">
+                                <img
+                                    src={volvoWhite}
+                                    alt="Volvo"
+                                    className="h-10 w-auto opacity-95 rounded-lg"
+                                    loading="lazy"
+                                />
+
+                                <img
+                                    src={ryr}
+                                    alt="RYR"
+                                    className="h-10 w-auto opacity-95"
+                                    loading="lazy"
+                                />
+                            </div>
+                        </div>
                     </div>
 
                     <div className="mt-5 h-px w-full bg-gradient-to-r from-white/10 via-white/30 to-white/10" />

@@ -1,3 +1,4 @@
+//volvo
 // src/lib/apiPruebas.js
 import { http, toQuery } from "./apiClient";
 
@@ -80,7 +81,9 @@ export const api = {
         withNumeroAsesor({
           tel,
           limit: options.limit || 80,
-          days: options.days || 3,
+          before_id: options.before_id || "",
+          mark_read: options.mark_read ?? 1,
+          days: options.days ?? "",
         }),
       )}`,
     ),
@@ -93,13 +96,24 @@ export const api = {
           after,
           after_id: options.after_id || "",
           limit: options.limit || 80,
-          days: options.days || 3,
+          mark_read: options.mark_read ?? 0,
+          days: options.days ?? "",
         }),
       )}`,
     ),
 
   digitalesMarkRead: ({ tel, telefono, numero_asesor } = {}) =>
     http("/digitales/chats/mark-read/", {
+      method: "POST",
+      ...jsonBody(
+        withNumeroAsesor({
+          tel: tel || telefono,
+          numero_asesor,
+        }),
+      ),
+    }),
+  digitalesMarkUnread: ({ tel, telefono, numero_asesor } = {}) =>
+    http("/digitales/chats/mark-unread/", {
       method: "POST",
       ...jsonBody(
         withNumeroAsesor({

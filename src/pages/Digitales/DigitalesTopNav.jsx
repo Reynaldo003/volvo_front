@@ -54,7 +54,7 @@ export default function DigitalesTopNav() {
                                 <img
                                     src={volvoWhite}
                                     alt="Volvo"
-                                    className="h-10 w-auto opacity-95"
+                                    className="h-10 w-auto opacity-95 rounded-lg"
                                     loading="lazy"
                                 />
 

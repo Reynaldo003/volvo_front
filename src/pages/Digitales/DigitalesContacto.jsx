@@ -2317,6 +2317,7 @@ export default function DigitalesContacto() {
                     {
                         limit: CHAT_UPDATES_LIMIT,
                         after_id: lastId,
+                        mark_read: 1,
                     },
                 );
 
