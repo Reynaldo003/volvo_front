@@ -1423,6 +1423,7 @@ export default function DigitalesContacto() {
             const data = await api.digitalesContacto(activeTel, {
                 limit: CHAT_PAGE_SIZE,
                 before_id: oldestMessageId,
+                mark_read: 0,
             });
 
             const older = (Array.isArray(data.mensajes) ? data.mensajes : []).map(normalizeMessage);

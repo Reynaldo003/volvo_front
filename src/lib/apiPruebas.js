@@ -80,10 +80,10 @@ export const api = {
       `/digitales/contacto/${toQuery(
         withNumeroAsesor({
           tel,
-          limit: options.limit || 80,
+          limit: options.limit ?? 80,
           before_id: options.before_id || "",
           mark_read: options.mark_read ?? 1,
-          days: options.days ?? "",
+          ...(options.days ? { days: options.days } : {}),
         }),
       )}`,
     ),
@@ -95,9 +95,8 @@ export const api = {
           tel,
           after,
           after_id: options.after_id || "",
-          limit: options.limit || 80,
+          limit: options.limit ?? 80,
           mark_read: options.mark_read ?? 0,
-          days: options.days ?? "",
         }),
       )}`,
     ),
