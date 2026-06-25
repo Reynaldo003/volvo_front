@@ -910,72 +910,204 @@ export default function RegistroEntregas() {
     // ══════════════════════════════════════════════════════════════════════════
     return (
         <div className="w-full">
-            {/* ── Header ──────────────────────────────────────────────────── */}
-            <div
-    className="relative mb-4 overflow-hidden rounded-xl shadow-lg"
-    style={{ background: "linear-gradient(135deg, #111011 0%, #131011 55%, #0f0208 100%)" }}
+      {/* ── Header premium Entregas ── */}
+<div
+    className="relative mb-4 overflow-hidden rounded-2xl"
+    style={{
+        background: "linear-gradient(135deg, #0d0d0d 0%, #181818 40%, #111111 70%, #0a0a0a 100%)",
+        border: "0.5px solid rgba(255,255,255,0.06)",
+    }}
 >
-    {/* Destellos decorativos */}
-    <div className="pointer-events-none absolute inset-0">
-        <div className="absolute -top-20 -left-24 h-64 w-64 rounded-full bg-white/5 blur-3xl" />
-        <div className="absolute -bottom-20 right-0 h-72 w-72 rounded-full bg-white/5 blur-3xl" />
-        <div className="absolute top-0 right-1/3 h-28 w-28 rounded-full bg-rose-300/5 blur-2xl" />
-    </div>
- 
-    <div className="relative px-5 py-5 sm:px-7 sm:py-6">
-        <div className="flex flex-col gap-4 xl:flex-row xl:items-center xl:justify-between">
- 
-            {/* Título */}
-            <div className="min-w-0">
-                <h2 className="truncate text-lg font-extrabold text-white sm:text-xl">
+    {/* Línea de acento superior */}
+    <div
+        className="absolute top-0 left-0 right-0"
+        style={{
+            height: "1px",
+            background:
+                "linear-gradient(90deg, transparent 0%, rgba(255,255,255,0) 10%, rgba(255,255,255,0.55) 40%, rgba(255,255,255,0.55) 60%, rgba(255,255,255,0) 90%, transparent 100%)",
+        }}
+    />
+
+    {/* Glows */}
+    <div
+        className="pointer-events-none absolute"
+        style={{
+            top: "-60px", left: "-60px",
+            width: "260px", height: "200px",
+            background: "radial-gradient(ellipse, rgba(255,255,255,0.03) 0%, transparent 70%)",
+        }}
+    />
+    <div
+        className="pointer-events-none absolute"
+        style={{
+            bottom: "-40px", right: "-20px",
+            width: "220px", height: "160px",
+            background: "radial-gradient(ellipse, rgba(255,255,255,0.02) 0%, transparent 70%)",
+        }}
+    />
+
+    <div className="relative px-6 pt-5 pb-0" style={{ zIndex: 1 }}>
+
+        {/* Fila 1 — breadcrumb + vista tabs */}
+        <div className="flex items-center justify-between mb-5">
+
+            {/* Breadcrumb */}
+            <div className="flex items-center gap-2.5">
+                <div
+                    className="rounded-full"
+                    style={{ width: 6, height: 6, background: "rgba(255,255,255,0.9)" }}
+                />
+                <span
+                    style={{
+                        fontSize: 11,
+                        color: "rgba(255,255,255,0.35)",
+                        letterSpacing: "0.08em",
+                        textTransform: "uppercase",
+                    }}
+                >
+                    Comercial &nbsp;/&nbsp; Entregas
+                </span>
+            </div>
+
+            {/* Selector de vista pill-group */}
+            <div
+                className="flex gap-1 p-[3px] rounded-[10px]"
+                style={{
+                    background: "rgba(255,255,255,0.05)",
+                    border: "0.5px solid rgba(255,255,255,0.08)",
+                }}
+            >
+                {VIEWS.map(({ key, label, Icon }) => {
+                    const active = viewMode === key;
+                    return (
+                        <button
+                            key={key}
+                            type="button"
+                            onClick={() => setViewMode(key)}
+                            className="inline-flex items-center gap-1.5 whitespace-nowrap transition-all"
+                            style={{
+                                padding: "6px 14px",
+                                borderRadius: 7,
+                                fontSize: 12,
+                                fontWeight: 500,
+                                border: active
+                                    ? "0.5px solid rgba(255,255,255,0.18)"
+                                    : "0.5px solid transparent",
+                                background: active ? "rgba(255,255,255,0.12)" : "transparent",
+                                color: active ? "#ffffff" : "rgba(255,255,255,0.38)",
+                            }}
+                        >
+                            <Icon size={13} />
+                            {label}
+                        </button>
+                    );
+                })}
+            </div>
+        </div>
+
+        {/* Divisor */}
+        <div
+            style={{
+                height: "0.5px",
+                background:
+                    "linear-gradient(90deg, transparent, rgba(255,255,255,0.08) 15%, rgba(255,255,255,0.08) 85%, transparent)",
+                marginBottom: 18,
+            }}
+        />
+
+        {/* Fila 2 — título + stats + botón */}
+        <div className="flex items-end justify-between gap-4 pb-5">
+
+            <div>
+                <h2
+                    style={{
+                        fontSize: 26,
+                        fontWeight: 500,
+                        color: "#ffffff",
+                        margin: "0 0 5px",
+                        letterSpacing: "-0.02em",
+                        lineHeight: 1.1,
+                    }}
+                >
                     Entregas
                 </h2>
-                {!isAdmin && userAgencia && (
-                    <p className="mt-1 text-xs font-semibold text-white/40">
-                        Agencia asignada: <span className="text-white/70">{userAgencia}</span>
-                    </p>
-                )}
+                <p style={{ fontSize: 13, color: "rgba(255,255,255,0.35)", margin: 0 }}>
+                    {!isAdmin && userAgencia
+                        ? <span>Agencia: <span style={{ color: "rgba(255,255,255,0.6)" }}>{userAgencia}</span></span>
+                        : viewMode === "tabla"
+                        ? "Registro y seguimiento de entregas. Doble clic para editar."
+                        : viewMode === "agenda"
+                        ? "Vista semanal de entregas programadas."
+                        : "Estadísticas de entregas."}
+                </p>
             </div>
- 
-            {/* Controles: toggle vistas + botón nuevo */}
-            <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-end">
-                {/* Toggle vistas */}
-                <div className="flex overflow-hidden rounded-lg border border-white/20 bg-white/10 p-0.5 backdrop-blur-sm">
-                    {VIEWS.map(({ key, label, Icon }) => {
-                        const active = viewMode === key;
-                        return (
-                            <button
-                                key={key}
-                                type="button"
-                                onClick={() => setViewMode(key)}
-                                className={[
-                                    "inline-flex items-center gap-1.5 rounded-md px-3 py-1.5 text-xs font-bold transition-all",
-                                    active
-                                        ? "bg-white text-[#2d1420] shadow"
-                                        : "text-white/70 hover:bg-white/15 hover:text-white",
-                                ].join(" ")}
-                            >
-                                <Icon className="h-3.5 w-3.5" />
-                                {label}
-                            </button>
-                        );
-                    })}
-                </div>
- 
-                {/* Botón nuevo */}
-                <button
-                    onClick={() => openCreate()}
-                    className="inline-flex items-center justify-center gap-2 rounded-lg border border-white/20 bg-white/10 px-4 py-2 text-sm font-bold text-white backdrop-blur-sm transition hover:bg-white hover:text-[#2d1420]"
+
+            <div className="flex items-center gap-3">
+                {/* Mini-stats dinámicos */}
+                <div
+                    className="flex items-stretch overflow-hidden rounded-[10px]"
+                    style={{ border: "0.5px solid rgba(255,255,255,0.1)" }}
                 >
-                    <Plus className="h-4 w-4" />
+                    {[
+                        { n: entregas.length,                                                                   l: "Total"      },
+                        { n: entregas.filter(r => entregaFisicaActiva(r.entrega_reportada)).length,             l: "Entregadas" },
+                        { n: entregas.filter(r => !entregaFisicaActiva(r.entrega_reportada)).length,            l: "Pendientes" },
+                    ].map((s, i) => (
+                        <div
+                            key={i}
+                            className="text-center px-[16px] py-[9px]"
+                            style={{
+                                background: "rgba(255,255,255,0.04)",
+                                borderLeft: i > 0 ? "0.5px solid rgba(255,255,255,0.08)" : "none",
+                            }}
+                        >
+                            <div style={{ fontSize: 18, fontWeight: 500, color: "#fff", lineHeight: 1 }}>
+                                {s.n}
+                            </div>
+                            <div
+                                style={{
+                                    fontSize: 10,
+                                    color: "rgba(255,255,255,0.3)",
+                                    marginTop: 3,
+                                    textTransform: "uppercase",
+                                    letterSpacing: "0.06em",
+                                }}
+                            >
+                                {s.l}
+                            </div>
+                        </div>
+                    ))}
+                </div>
+
+                {/* Botón nueva entrega */}
+                <button
+                    type="button"
+                    onClick={() => openCreate()}
+                    className="inline-flex items-center gap-2 whitespace-nowrap transition-all"
+                    style={{
+                        padding: "8px 16px",
+                        borderRadius: 9,
+                        fontSize: 13,
+                        fontWeight: 500,
+                        background: "rgba(255,255,255,0.1)",
+                        border: "0.5px solid rgba(255,255,255,0.18)",
+                        color: "#ffffff",
+                    }}
+                >
+                    <Plus size={14} />
                     Nueva Entrega
                 </button>
             </div>
         </div>
- 
-        {/* Separador */}
-        <div className="mt-5 h-px w-full bg-gradient-to-r from-white/5 via-white/20 to-white/5" />
     </div>
+
+    {/* Franja inferior decorativa */}
+    <div
+        style={{
+            height: 3,
+            background: "linear-gradient(90deg, #1a1a1a 0%, #2a2a2a 30%, #1f1f1f 60%, #111 100%)",
+        }}
+    />
 </div>
 
             {/* ── Filtros ──────────────────────────────────────────────────── */}

@@ -72,29 +72,11 @@ function normalizarPayload(form) {
     return { ...form, agencia: normalizeStr(form.agencia), nombre_prospecto: normalizeStr(form.nombre_prospecto).toUpperCase(), codigo_postal: soloNumeros(form.codigo_postal), telefono: soloNumeros(form.telefono), email: normalizeStr(form.email), asesor_ventas: normalizeStr(form.asesor_ventas), auto_suenos: normalizeStr(form.auto_suenos), presupuesto_estimado: Number(form.presupuesto_estimado || 0), enganche_presupuestado: Number(form.enganche_presupuestado || 0), mensualidades_presupuestadas: Number(form.mensualidades_presupuestadas || 0), edad: form.edad === "" ? null : Number(form.edad), cantidad_hijos: Number(form.cantidad_hijos || 0), modelo_auto_cuenta: form.deja_auto_cuenta ? normalizeStr(form.modelo_auto_cuenta) : "", pasatiempos: Array.isArray(form.pasatiempos) ? form.pasatiempos : [], comentarios: normalizeStr(form.comentarios) };
 }
 
-function validarFormulario(form) {
-    const e = [];
-    const t = soloNumeros(form.telefono);
-    if (!normalizeStr(form.agencia)) e.push("Selecciona el dealer.");
-    if (!normalizeStr(form.nombre_prospecto)) e.push("Captura el nombre del prospecto.");
-    if (!soloNumeros(form.codigo_postal)) e.push("Captura un código postal numérico.");
-    if (!validarTelefono(t)) e.push(mensajeTelefono(t));
-    if (!validarEmail(form.email)) e.push("Captura un correo electrónico válido.");
-    if (!normalizeStr(form.asesor_ventas)) e.push("Selecciona o captura un asesor de ventas.");
-    if (!form.motivo_ingreso) e.push("Selecciona por qué ingresó a la agencia.");
-    if (!form.tiempo_compra) e.push("Selecciona cuándo tiene programada su compra.");
-    if (!form.auto_suenos) e.push("Selecciona el auto de sus sueños.");
-    if (!form.forma_capitalizacion) e.push("Selecciona una forma de capitalización.");
-    if (Number(form.presupuesto_estimado || 0) < 100000) e.push("El presupuesto estimado debe tener al menos seis dígitos.");
-    if (Number(form.enganche_presupuestado || 0) < 10000) e.push("El enganche presupuestado debe tener al menos cinco dígitos.");
-    if (!form.mensualidades_presupuestadas) e.push("Selecciona mensualidades presupuestadas.");
-    if (!form.forma_comprobar_ingresos) e.push("Selecciona la forma de comprobar ingresos.");
-    if (!form.motivo_compra) e.push("Selecciona el motivo de compra.");
-    if (!form.perfil_profesional) e.push("Selecciona el perfil profesional.");
-    if (!form.estado_civil) e.push("Selecciona el estado civil.");
-    if (form.deja_auto_cuenta && !normalizeStr(form.modelo_auto_cuenta)) e.push("Captura el modelo que desea dejar a cuenta.");
-    if (!Array.isArray(form.pasatiempos) || form.pasatiempos.length < 3) e.push("Selecciona al menos 3 pasatiempos.");
-    return e;
+// Validación de obligatoriedad removida a propósito: ningún campo es requerido
+// para guardar un registro de tráfico de piso. Se conserva la función por si
+// se quiere reactivar alguna regla puntual en el futuro.
+function validarFormulario(_form) {
+    return [];
 }
 
 // ─── micro-components ────────────────────────────────────────────────────────
@@ -214,16 +196,16 @@ function BooleanSwitch({ value, onChange, yes = "SÍ", no = "NO" }) {
     );
 }
 
-function PasatiemposPicker({ value, onChange, invalid }) {
+function PasatiemposPicker({ value, onChange }) {
     const sel = new Set(value || []);
     return (
-        <div className={["rounded-lg border bg-neutral-200/50 p-4", invalid ? "border-red-400" : "border-black/10"].join(" ")}>
+        <div className="rounded-lg border border-black/10 bg-neutral-200/50 p-4">
             <div className="mb-3 flex items-center justify-between gap-3">
                 <div className="flex items-center gap-2 text-sm font-extrabold text-black">
-                    <HeartHandshake className="h-4 w-4" /><span>Pasatiempos *</span>
+                    <HeartHandshake className="h-4 w-4" /><span>Pasatiempos</span>
                 </div>
-                <span className={["rounded-full px-3 py-1 text-xs font-extrabold", value.length >= 3 ? "bg-emerald-100 text-emerald-700" : "bg-amber-100 text-amber-700"].join(" ")}>
-                    {value.length}/3 mínimos
+                <span className="rounded-full bg-slate-100 px-3 py-1 text-xs font-extrabold text-slate-600">
+                    {value.length} seleccionados
                 </span>
             </div>
             <div className="flex max-h-[220px] flex-wrap gap-2 overflow-y-auto pr-1">
@@ -298,20 +280,31 @@ function ContextMenu({ ctxMenu, onDelete, onClose }) {
 // ─── vista agenda ────────────────────────────────────────────────────────────
 function AgendaCard({ item, onEdit, onContext }) {
     return (
-        <button type="button" onClick={() => onEdit(item)} onContextMenu={e => onContext(e, item)}
-            className="w-full rounded-md border border-black/15 bg-white p-2.5 text-left shadow-sm transition hover:-translate-y-[1px] hover:shadow-md"
-            title="Click para editar. Click derecho para eliminar.">
+        <button
+            type="button"
+            onClick={() => onEdit(item)}
+            onContextMenu={e => onContext(e, item)}
+            className="w-full rounded-lg border border-black/10 bg-white p-2.5 text-left shadow-sm transition hover:-translate-y-[1px] hover:shadow-md hover:border-black/20"
+            title="Click para editar. Click derecho para eliminar."
+        >
             <div className="text-[10px] font-extrabold text-black truncate">{item.nombre_prospecto || "—"}</div>
             <div className="mt-1 flex items-center gap-1 text-[10px] text-slate-500">
-                <CarFront className="h-3 w-3 shrink-0" />
+                <CarFront className="h-3 w-3 shrink-0 text-slate-400" />
                 <span className="truncate">{item.auto_suenos || "—"}</span>
             </div>
             <div className="mt-1 flex items-center gap-1 text-[10px] text-slate-500">
-                <Phone className="h-3 w-3 shrink-0" />
+                <Phone className="h-3 w-3 shrink-0 text-slate-400" />
                 <span className="truncate">{item.telefono || "—"}</span>
             </div>
-            <div className="mt-1.5">
-                <span className={["inline-flex rounded-full border px-2 py-0.5 text-[9px] font-extrabold", item.tiempo_compra === "Este mes" ? "border-emerald-300 bg-emerald-100 text-emerald-800" : "border-amber-300 bg-amber-100 text-amber-800"].join(" ")}>
+            <div className="mt-2">
+                <span className={[
+                    "inline-flex rounded-full border px-2 py-0.5 text-[9px] font-extrabold",
+                    item.tiempo_compra === "Este mes"
+                        ? "border-emerald-200 bg-emerald-50 text-emerald-700"
+                        : item.tiempo_compra === "De 1 a 3 meses"
+                        ? "border-amber-200 bg-amber-50 text-amber-700"
+                        : "border-slate-200 bg-slate-50 text-slate-600"
+                ].join(" ")}>
                     {item.tiempo_compra || "—"}
                 </span>
             </div>
@@ -324,9 +317,8 @@ function AgendaWeekView({ rows, loading, currentWeekDate, setCurrentWeekDate, on
     const weekDays = useMemo(() => Array.from({ length: 6 }, (_, i) => addDays(weekStart, i)), [weekStart]);
     const weekEnd = weekDays[weekDays.length - 1];
     const todayIso = toYMDLocal(new Date());
-    const gridStyle = useMemo(() => ({ gridTemplateColumns: "58px repeat(6, minmax(180px, 1fr))" }), []);
+    const gridStyle = useMemo(() => ({ gridTemplateColumns: "72px repeat(6, minmax(160px, 1fr))" }), []);
 
-    // agrupar por día (sin hora — tráfico de piso no tiene hora exacta, usamos creado_en)
     const rowsByDay = useMemo(() => {
         const map = new Map();
         for (const row of rows) {
@@ -337,14 +329,12 @@ function AgendaWeekView({ rows, loading, currentWeekDate, setCurrentWeekDate, on
         return map;
     }, [rows]);
 
-    // filas de "turno" — mañana / tarde / noche como agrupador visual
     const TURNOS = [
         { label: "Mañana", range: "08:00 – 13:00" },
         { label: "Tarde",  range: "13:00 – 18:00" },
         { label: "Noche",  range: "18:00 – 21:00" },
     ];
 
-    // distribuir registros del día en turnos por índice circular
     function rowsForTurno(dayKey, turnoIdx) {
         const all = rowsByDay.get(dayKey) || [];
         return all.filter((_, i) => i % 3 === turnoIdx);
@@ -363,63 +353,106 @@ function AgendaWeekView({ rows, loading, currentWeekDate, setCurrentWeekDate, on
     return (
         <div className="hidden lg:block">
             {/* nav semana */}
-            <div className="mb-3 flex flex-col gap-3 rounded-xl border border-black/10 bg-white p-3 shadow-sm xl:flex-row xl:items-center xl:justify-between">
+            <div className="mb-3 flex flex-col gap-3 rounded-xl border border-black bg-black p-3 shadow-sm xl:flex-row xl:items-center xl:justify-between">
                 <div>
-                    <div className="text-xs font-semibold text-slate-500">Semana</div>
-                    <div className="truncate text-sm font-black text-black">{formatWeekTitle(weekStart, weekEnd)}</div>
+                    <div className="text-[10px] font-bold uppercase tracking-widest text-white/40">Semana</div>
+                    <div className="truncate text-sm font-black text-white">{formatWeekTitle(weekStart, weekEnd)}</div>
                 </div>
                 <div className="flex items-center gap-2">
-                    <button type="button" onClick={() => setCurrentWeekDate(d => addDays(d, -7))} className="inline-flex h-9 w-9 items-center justify-center rounded-lg border border-black/15 bg-white text-black hover:bg-slate-50" aria-label="Semana anterior"><ChevronLeft className="h-4 w-4" /></button>
-                    <button type="button" onClick={() => setCurrentWeekDate(new Date())} className="inline-flex items-center justify-center gap-1 rounded-lg border border-black bg-white px-3 py-2 text-xs font-black text-black hover:bg-black hover:text-white transition">Hoy</button>
-                    <button type="button" onClick={() => setCurrentWeekDate(d => addDays(d, 7))} className="inline-flex h-9 w-9 items-center justify-center rounded-lg border border-black/15 bg-white text-black hover:bg-slate-50" aria-label="Semana siguiente"><ChevronRight className="h-4 w-4" /></button>
+                    <button
+                        type="button"
+                        onClick={() => setCurrentWeekDate(d => addDays(d, -7))}
+                        className="inline-flex h-9 w-9 items-center justify-center rounded-lg border border-white/20 bg-white/10 text-white hover:bg-white/20 transition"
+                        aria-label="Semana anterior"
+                    >
+                        <ChevronLeft className="h-4 w-4" />
+                    </button>
+                    <button
+                        type="button"
+                        onClick={() => setCurrentWeekDate(new Date())}
+                        className="inline-flex items-center justify-center gap-1 rounded-lg border border-white/20 bg-white/10 px-4 py-2 text-xs font-black text-white hover:bg-white hover:text-black transition"
+                    >
+                        Hoy
+                    </button>
+                    <button
+                        type="button"
+                        onClick={() => setCurrentWeekDate(d => addDays(d, 7))}
+                        className="inline-flex h-9 w-9 items-center justify-center rounded-lg border border-white/20 bg-white/10 text-white hover:bg-white/20 transition"
+                        aria-label="Semana siguiente"
+                    >
+                        <ChevronRight className="h-4 w-4" />
+                    </button>
                 </div>
             </div>
 
-            <div className="overflow-hidden rounded-xl border border-black/10 bg-white shadow-sm">
+            <div className="overflow-hidden rounded-xl border border-black/15 bg-white shadow-sm">
                 <div className="overflow-auto">
-                    <div className="min-w-[1200px]">
-                        {/* header días */}
-                        <div className="sticky top-0 z-20 grid border-b border-black/10 bg-slate-50" style={gridStyle}>
-                            <div className="px-3 py-3 text-xs font-bold text-slate-400">Turno</div>
+                    <div className="min-w-[1100px]">
+                        {/* header días — NEGRO */}
+                        <div className="sticky top-0 z-20 grid border-b border-black bg-black" style={gridStyle}>
+                            <div className="px-3 py-3 text-[10px] font-bold uppercase tracking-widest text-white/40">Turno</div>
                             {weekDays.map(day => {
                                 const iso = toYMDLocal(day);
                                 const isToday = iso === todayIso;
+                                const count = (rowsByDay.get(iso) || []).length;
                                 return (
-                                    <div key={iso} className="border-l border-black/10 px-3 py-3 text-center">
-                                        <div className={["mx-auto inline-flex items-center gap-2 rounded-full px-3 py-1 text-xs font-black", isToday ? "bg-black text-white" : "text-black"].join(" ")}>
-                                            <span>{weekdayShortEs(day)}</span>
-                                            <span>{day.toLocaleDateString("es-MX", { day: "2-digit", month: "2-digit" })}</span>
+                                    <div key={iso} className="border-l border-white/10 px-3 py-3 text-center">
+                                        <div className="text-[10px] font-bold uppercase tracking-widest text-white/40">
+                                            {weekdayShortEs(day)}
                                         </div>
+                                        <div className={[
+                                            "mx-auto mt-1 inline-flex h-7 w-7 items-center justify-center rounded-full text-sm font-black",
+                                            isToday ? "bg-white text-black" : "text-white"
+                                        ].join(" ")}>
+                                            {day.getDate()}
+                                        </div>
+                                        {count > 0 && (
+                                            <div className="mt-1 text-[9px] font-bold text-white/30">
+                                                {count} ingreso{count !== 1 ? "s" : ""}
+                                            </div>
+                                        )}
                                     </div>
                                 );
                             })}
                         </div>
 
-                        {/* filas por turno */}
+                        {/* filas por turno — celdas BLANCAS con texto oscuro */}
                         {loading ? (
                             Array.from({ length: 3 }).map((_, i) => (
-                                <div key={i} className="grid border-b border-dashed border-black/10" style={gridStyle}>
-                                    <div className="bg-slate-50 px-3 py-3 text-xs font-bold text-slate-400">—</div>
-                                    {weekDays.map((_, j) => <div key={j} className="min-h-[120px] border-l border-black/10 p-2"><Skeleton className="h-16 w-full rounded-lg" /></div>)}
+                                <div key={i} className="grid border-b border-black/8" style={gridStyle}>
+                                    <div className="bg-black/5 px-3 py-3 text-xs font-bold text-slate-400">—</div>
+                                    {weekDays.map((_, j) => (
+                                        <div key={j} className="min-h-[120px] border-l border-black/8 p-2">
+                                            <Skeleton className="h-16 w-full rounded-lg" />
+                                        </div>
+                                    ))}
                                 </div>
                             ))
                         ) : (
                             TURNOS.map((turno, turnoIdx) => (
-                                <div key={turno.label} className="grid border-b border-dashed border-black/10" style={gridStyle}>
-                                    <div className="bg-slate-50 px-3 py-3">
-                                        <div className="text-xs font-black text-black">{turno.label}</div>
-                                        <div className="text-[10px] text-slate-400">{turno.range}</div>
+                                <div key={turno.label} className="grid border-b border-black/8 last:border-b-0" style={gridStyle}>
+                                    {/* label del turno — fondo muy suave negro */}
+                                    <div className="bg-black px-3 py-3 border-r border-white/10">
+                                        <div className="text-[10px] font-black uppercase tracking-widest text-white/70">{turno.label}</div>
+                                        <div className="mt-1 text-[9px] text-white/30">{turno.range}</div>
                                     </div>
                                     {weekDays.map(day => {
                                         const dayKey = toYMDLocal(day);
                                         const items = rowsForTurno(dayKey, turnoIdx);
                                         return (
-                                            <div key={dayKey} className="group relative min-h-[120px] border-l border-black/10 bg-white/80 p-1.5 hover:bg-slate-50">
-                                                <button type="button" onClick={() => onOpenCreate()} className="absolute right-2 top-2 z-[4] inline-flex h-7 w-7 items-center justify-center rounded-md border border-black/15 bg-white text-slate-400 opacity-0 shadow-sm hover:bg-slate-100 group-hover:opacity-100" title="Nuevo ingreso">
-                                                    <Plus className="h-4 w-4" />
+                                            <div key={dayKey} className="group relative min-h-[120px] border-l border-black/8 bg-white p-1.5 hover:bg-slate-50/80 transition-colors">
+                                                <button
+                                                    type="button"
+                                                    onClick={() => onOpenCreate()}
+                                                    className="absolute right-2 top-2 z-[4] inline-flex h-6 w-6 items-center justify-center rounded-md border border-black/15 bg-white text-slate-400 opacity-0 shadow-sm hover:bg-slate-100 group-hover:opacity-100 transition"
+                                                    title="Nuevo ingreso"
+                                                >
+                                                    <Plus className="h-3.5 w-3.5" />
                                                 </button>
                                                 <div className="grid gap-1.5 pr-1">
-                                                    {items.map(item => <AgendaCard key={item.id_trafico} item={item} onEdit={onEdit} onContext={onContext} />)}
+                                                    {items.map(item => (
+                                                        <AgendaCard key={item.id_trafico} item={item} onEdit={onEdit} onContext={onContext} />
+                                                    ))}
                                                 </div>
                                             </div>
                                         );
@@ -431,11 +464,21 @@ function AgendaWeekView({ rows, loading, currentWeekDate, setCurrentWeekDate, on
                 </div>
             </div>
 
+            {/* fuera de semana */}
             {!loading && outOfWeek.length ? (
-                <div className="mt-3 rounded-xl border border-amber-200 bg-amber-50 p-3">
-                    <div className="mb-2 text-xs font-black uppercase tracking-wide text-amber-800">Ingresos fuera de esta semana</div>
-                    <div className="grid gap-2 md:grid-cols-3 xl:grid-cols-4">
-                        {outOfWeek.map(item => <AgendaCard key={item.id_trafico} item={item} onEdit={onEdit} onContext={onContext} />)}
+                <div className="mt-3 overflow-hidden rounded-xl border border-black/15 bg-white shadow-sm">
+                    <div className="border-b border-black bg-black px-4 py-2.5">
+                        <span className="text-[10px] font-black uppercase tracking-widest text-white/60">
+                            Ingresos fuera de esta semana
+                        </span>
+                        <span className="ml-2 inline-flex h-5 w-5 items-center justify-center rounded-full bg-white/10 text-[9px] font-black text-white">
+                            {outOfWeek.length}
+                        </span>
+                    </div>
+                    <div className="grid gap-2 p-3 md:grid-cols-3 xl:grid-cols-4">
+                        {outOfWeek.map(item => (
+                            <AgendaCard key={item.id_trafico} item={item} onEdit={onEdit} onContext={onContext} />
+                        ))}
                     </div>
                 </div>
             ) : null}
@@ -456,20 +499,35 @@ function AgendaMobileList({ rows, loading, onEdit, onContext }) {
 
     if (loading) return (
         <div className="grid gap-3 lg:hidden">
-            {Array.from({ length: 4 }).map((_, i) => <div key={i} className="rounded-xl border border-black/10 bg-white p-4 shadow-sm"><Skeleton className="h-4 w-40" /><Skeleton className="mt-3 h-4 w-28" /></div>)}
+            {Array.from({ length: 4 }).map((_, i) => (
+                <div key={i} className="rounded-xl border border-black/10 bg-white p-4 shadow-sm">
+                    <Skeleton className="h-4 w-40" /><Skeleton className="mt-3 h-4 w-28" />
+                </div>
+            ))}
         </div>
     );
-    if (!rows.length) return <div className="rounded-xl border border-black/10 bg-white px-4 py-10 text-center text-sm font-semibold text-black lg:hidden">No hay registros esta semana.</div>;
+    if (!rows.length) return (
+        <div className="rounded-xl border border-black/10 bg-white px-4 py-10 text-center text-sm font-semibold text-black lg:hidden">
+            No hay registros esta semana.
+        </div>
+    );
 
     return (
         <div className="grid gap-4 lg:hidden">
             {grouped.map(([key, items]) => {
-                const title = key === "sin-fecha" ? "Sin fecha" : new Date(key + "T12:00:00").toLocaleDateString("es-MX", { weekday: "long", day: "2-digit", month: "long", year: "numeric" });
+                const title = key === "sin-fecha"
+                    ? "Sin fecha"
+                    : new Date(key + "T12:00:00").toLocaleDateString("es-MX", { weekday: "long", day: "2-digit", month: "long", year: "numeric" });
                 return (
-                    <section key={key} className="rounded-xl border border-black/10 bg-white p-3 shadow-sm">
-                        <h3 className="mb-3 text-xs font-black uppercase tracking-wide text-black">{title}</h3>
-                        <div className="grid gap-2 sm:grid-cols-2">
-                            {items.map(item => <AgendaCard key={item.id_trafico} item={item} onEdit={onEdit} onContext={onContext} />)}
+                    <section key={key} className="overflow-hidden rounded-xl border border-black/15 bg-white shadow-sm">
+                        {/* encabezado de fecha — NEGRO */}
+                        <div className="border-b border-black bg-black px-4 py-3">
+                            <h3 className="text-xs font-black uppercase tracking-widest text-white/80">{title}</h3>
+                        </div>
+                        <div className="grid gap-2 p-3 sm:grid-cols-2">
+                            {items.map(item => (
+                                <AgendaCard key={item.id_trafico} item={item} onEdit={onEdit} onContext={onContext} />
+                            ))}
                         </div>
                     </section>
                 );
@@ -505,13 +563,11 @@ function ChartCard({ title, subtitle, children }) {
 }
 
 function GraficasView({ registros }) {
-    // KPIs calculados desde data real
     const total = registros.length;
     const conAutoCuenta = registros.filter(r => r.deja_auto_cuenta).length;
     const promPresupuesto = total ? registros.reduce((acc, r) => acc + Number(r.presupuesto_estimado || 0), 0) / total : 0;
     const esMes = registros.filter(r => r.tiempo_compra === "Este mes").length;
 
-    // tendencia últimos 7 días
     const trendData = useMemo(() => {
         const hoy = new Date();
         return Array.from({ length: 7 }, (_, i) => {
@@ -522,28 +578,24 @@ function GraficasView({ registros }) {
         });
     }, [registros]);
 
-    // por tiempo compra
     const byTiempo = useMemo(() => {
         const map = {};
         for (const r of registros) { const k = r.tiempo_compra || "Sin dato"; map[k] = (map[k] || 0) + 1; }
         return Object.entries(map).map(([name, value]) => ({ name, value }));
     }, [registros]);
 
-    // por auto
     const byAuto = useMemo(() => {
         const map = {};
         for (const r of registros) { const k = r.auto_suenos || "—"; map[k] = (map[k] || 0) + 1; }
         return Object.entries(map).sort((a, b) => b[1] - a[1]).slice(0, 7).map(([auto, citas]) => ({ auto, citas }));
     }, [registros]);
 
-    // por capitalización
     const byCapital = useMemo(() => {
         const map = {};
         for (const r of registros) { const k = r.forma_capitalizacion || "—"; map[k] = (map[k] || 0) + 1; }
         return Object.entries(map).map(([name, value]) => ({ name, value }));
     }, [registros]);
 
-    // por asesor
     const byAsesor = useMemo(() => {
         const map = {};
         for (const r of registros) { const k = r.asesor_ventas || "—"; map[k] = (map[k] || 0) + 1; }
@@ -552,7 +604,6 @@ function GraficasView({ registros }) {
 
     return (
         <div className="space-y-4">
-            {/* KPIs */}
             <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
                 {[
                     { label: "Total ingresos", value: total },
@@ -568,7 +619,6 @@ function GraficasView({ registros }) {
                 ))}
             </div>
 
-            {/* fila 1 */}
             <div className="grid gap-4 lg:grid-cols-3">
                 <div className="lg:col-span-2">
                     <ChartCard title="Ingresos últimos 7 días" subtitle="Prospectos que entraron a la agencia">
@@ -583,7 +633,6 @@ function GraficasView({ registros }) {
                         </ResponsiveContainer>
                     </ChartCard>
                 </div>
-
                 <ChartCard title="Por tiempo de compra" subtitle="Cuándo planean comprar">
                     <ResponsiveContainer width="100%" height="100%">
                         <PieChart>
@@ -597,7 +646,6 @@ function GraficasView({ registros }) {
                 </ChartCard>
             </div>
 
-            {/* fila 2 */}
             <div className="grid gap-4 lg:grid-cols-3">
                 <ChartCard title="Auto de sus sueños" subtitle="Modelos más solicitados">
                     <ResponsiveContainer width="100%" height="100%">
@@ -610,7 +658,6 @@ function GraficasView({ registros }) {
                         </BarChart>
                     </ResponsiveContainer>
                 </ChartCard>
-
                 <ChartCard title="Forma de capitalización" subtitle="¿Cómo planean pagar?">
                     <ResponsiveContainer width="100%" height="100%">
                         <BarChart data={byCapital} layout="vertical" margin={{ top: 5, right: 10, left: 10, bottom: 0 }}>
@@ -622,7 +669,6 @@ function GraficasView({ registros }) {
                         </BarChart>
                     </ResponsiveContainer>
                 </ChartCard>
-
                 <ChartCard title="Top asesores" subtitle="Ingresos registrados por asesor">
                     <ResponsiveContainer width="100%" height="100%">
                         <BarChart data={byAsesor} margin={{ top: 5, right: 10, left: -20, bottom: 0 }}>
@@ -652,7 +698,6 @@ export default function TraficoPiso() {
     const [openModal, setOpenModal] = useState(false);
     const [mode, setMode] = useState("create");
     const [draft, setDraft] = useState(null);
-    const [touchedSave, setTouchedSave] = useState(false);
 
     const [loadingList, setLoadingList] = useState(false);
     const [loadingDetail, setLoadingDetail] = useState(false);
@@ -660,44 +705,28 @@ export default function TraficoPiso() {
     const [error, setError] = useState("");
     const [ok, setOk] = useState("");
 
-    const errores = useMemo(() => validarFormulario(draft || INITIAL_FORM), [draft]);
+    // Sin campos obligatorios: ningún Field se marca como inválido.
+    function isInvalid() { return false; }
 
-    const missingMap = useMemo(() => {
-        const map = new Set();
-        if (!draft) return map;
-        if (!normalizeStr(draft.agencia)) map.add("agencia");
-        if (!normalizeStr(draft.nombre_prospecto)) map.add("nombre_prospecto");
-        if (!soloNumeros(draft.codigo_postal)) map.add("codigo_postal");
-        if (!validarTelefono(draft.telefono)) map.add("telefono");
-        if (!validarEmail(draft.email)) map.add("email");
-        if (!normalizeStr(draft.asesor_ventas)) map.add("asesor_ventas");
-        if (!draft.motivo_ingreso) map.add("motivo_ingreso");
-        if (!draft.tiempo_compra) map.add("tiempo_compra");
-        if (!draft.auto_suenos) map.add("auto_suenos");
-        if (draft.deja_auto_cuenta && !normalizeStr(draft.modelo_auto_cuenta)) map.add("modelo_auto_cuenta");
-        if (!draft.forma_capitalizacion) map.add("forma_capitalizacion");
-        if (Number(draft.presupuesto_estimado || 0) < 100000) map.add("presupuesto_estimado");
-        if (Number(draft.enganche_presupuestado || 0) < 10000) map.add("enganche_presupuestado");
-        if (!draft.mensualidades_presupuestadas) map.add("mensualidades_presupuestadas");
-        if (!draft.forma_comprobar_ingresos) map.add("forma_comprobar_ingresos");
-        if (!draft.motivo_compra) map.add("motivo_compra");
-        if (!draft.perfil_profesional) map.add("perfil_profesional");
-        if (!draft.estado_civil) map.add("estado_civil");
-        if (!Array.isArray(draft.pasatiempos) || draft.pasatiempos.length < 3) map.add("pasatiempos");
-        return map;
-    }, [draft]);
-
-    function isInvalid(key) { return touchedSave && missingMap.has(key); }
     function updateField(name, value) { setDraft(prev => ({ ...(prev || INITIAL_FORM), [name]: value })); }
     function toggleSort(key) { setSort(prev => ({ key, dir: prev.key === key && prev.dir === "asc" ? "desc" : "asc" })); }
 
     async function cargarDatos() {
         try {
             setLoadingList(true); setError("");
-            const [lista, datosResumen] = await Promise.all([apiTraficoPiso.list(), apiTraficoPiso.resumen().catch(() => null)]);
-            setRegistros(Array.isArray(lista) ? lista : lista?.results || []);
-        } catch (err) { console.error(err); setError(err.message || "No se pudo cargar."); setRegistros([]); }
-        finally { setLoadingList(false); }
+            const lista = await apiTraficoPiso.list();
+            const arr = Array.isArray(lista) ? lista : lista?.results || [];
+            setRegistros(arr);
+            // saltar a la semana del registro más reciente
+            if (arr.length) {
+                const fechas = arr.map(r => r.creado_en ? new Date(r.creado_en) : null).filter(Boolean).sort((a, b) => b - a);
+                if (fechas[0]) setCurrentWeekDate(fechas[0]);
+            }
+        } catch (err) {
+            console.error(err); setError(err.message || "No se pudo cargar."); setRegistros([]);
+        } finally {
+            setLoadingList(false);
+        }
     }
 
     useEffect(() => { cargarDatos(); }, []);
@@ -710,33 +739,37 @@ export default function TraficoPiso() {
         return () => { window.removeEventListener("click", fn); window.removeEventListener("scroll", fn, true); window.removeEventListener("resize", fn); };
     }, []);
 
-    function openCreate() { setError(""); setOk(""); setTouchedSave(false); setMode("create"); setDraft({ ...INITIAL_FORM }); setOpenModal(true); }
+    function openCreate() { setError(""); setOk(""); setMode("create"); setDraft({ ...INITIAL_FORM }); setOpenModal(true); }
 
     async function openEdit(row) {
         if (!row?.id_trafico) return;
         try {
-            setError(""); setOk(""); setTouchedSave(false); setMode("edit"); setOpenModal(true); setLoadingDetail(true);
+            setError(""); setOk(""); setMode("edit"); setOpenModal(true); setLoadingDetail(true);
             const item = await apiTraficoPiso.get(row.id_trafico);
             setDraft({ ...INITIAL_FORM, ...item, presupuesto_estimado: item.presupuesto_estimado == null ? "" : String(parseInt(item.presupuesto_estimado || 0, 10) || ""), enganche_presupuestado: item.enganche_presupuestado == null ? "" : String(parseInt(item.enganche_presupuestado || 0, 10) || ""), mensualidades_presupuestadas: item.mensualidades_presupuestadas ? String(item.mensualidades_presupuestadas) : "", edad: item.edad == null ? "" : String(item.edad), cantidad_hijos: item.cantidad_hijos == null ? "0" : String(item.cantidad_hijos), pasatiempos: Array.isArray(item.pasatiempos) ? item.pasatiempos : [], deja_auto_cuenta: !!item.deja_auto_cuenta, comprueba_ingresos: !!item.comprueba_ingresos });
-        } catch (err) { console.error(err); setError(err.message || "No se pudo abrir el registro."); setOpenModal(false); }
-        finally { setLoadingDetail(false); }
+        } catch (err) {
+            console.error(err); setError(err.message || "No se pudo abrir el registro."); setOpenModal(false);
+        } finally {
+            setLoadingDetail(false);
+        }
     }
 
-    function closeModal() { if (saving) return; setOpenModal(false); setDraft(null); setTouchedSave(false); }
+    function closeModal() { if (saving) return; setOpenModal(false); setDraft(null); }
 
     async function save() {
         if (!draft || saving) return;
-        setTouchedSave(true); setError(""); setOk("");
-        const actuales = validarFormulario(draft);
-        if (actuales.length) { setError(actuales[0]); return; }
+        setError(""); setOk("");
         try {
             setSaving(true);
             const payload = normalizarPayload(draft);
             if (mode === "edit" && draft.id_trafico) { await apiTraficoPiso.update(draft.id_trafico, payload); setOk("Registro actualizado."); }
             else { await apiTraficoPiso.create(payload); setOk("Registro guardado."); }
             await cargarDatos(); closeModal();
-        } catch (err) { console.error(err); setError(err.message || "No se pudo guardar."); }
-        finally { setSaving(false); }
+        } catch (err) {
+            console.error(err); setError(err.message || "No se pudo guardar.");
+        } finally {
+            setSaving(false);
+        }
     }
 
     async function eliminar(row) {
@@ -746,8 +779,11 @@ export default function TraficoPiso() {
             setError(""); setOk("");
             await apiTraficoPiso.remove(row.id_trafico);
             await cargarDatos(); setOk("Registro eliminado.");
-        } catch (err) { console.error(err); setError(err.message || "No se pudo eliminar."); }
-        finally { setCtxMenu({ open: false, x: 0, y: 0, row: null }); }
+        } catch (err) {
+            console.error(err); setError(err.message || "No se pudo eliminar.");
+        } finally {
+            setCtxMenu({ open: false, x: 0, y: 0, row: null });
+        }
     }
 
     function onRowContextMenu(e, row) { e.preventDefault(); e.stopPropagation(); setCtxMenu({ open: true, x: e.clientX, y: e.clientY, row }); }
@@ -786,80 +822,224 @@ export default function TraficoPiso() {
         });
     }, [filtered, sort]);
 
-    // ─── render ───────────────────────────────────────────────────────────────
     return (
         <div className="w-full space-y-4">
-            {/* header */}
-            <div className="relative overflow-hidden rounded-xl shadow-lg"
-    style={{ background: "linear-gradient(135deg, #10110e 0%, #2f302e 50%, #1d2019 100%)" }}>
- 
-    {/* Destellos decorativos */}
-    <div className="pointer-events-none absolute inset-0">
-        <div className="absolute -top-16 -left-20 h-56 w-56 rounded-full bg-white/5 blur-3xl" />
-        <div className="absolute -bottom-20 right-0 h-64 w-64 rounded-full bg-white/5 blur-3xl" />
-        <div className="absolute top-0 right-1/3 h-32 w-32 rounded-full bg-green-300/5 blur-2xl" />
-    </div>
- 
-    <div className="relative px-5 py-5 sm:px-7 sm:py-6">
-        <div className="flex flex-col gap-4 xl:flex-row xl:items-center xl:justify-between">
- 
-            {/* Título */}
-            <div className="min-w-0">
-                <h2 className="truncate text-lg font-extrabold text-white sm:text-xl">
-                    Tráfico de piso
-                </h2>
-                <p className="mt-1 text-sm text-white/60">
-                    Control de prospectos que ingresan físicamente a la agencia. Doble clic para editar.
-                </p>
+            {/* ── Header premium Tráfico de Piso ── */}
+<div
+    className="relative overflow-hidden rounded-2xl"
+    style={{
+        background: "linear-gradient(135deg, #0d0d0d 0%, #181818 40%, #111111 70%, #0a0a0a 100%)",
+        border: "0.5px solid rgba(255,255,255,0.06)",
+    }}
+>
+    {/* Línea de acento superior */}
+    <div
+        className="absolute top-0 left-0 right-0"
+        style={{
+            height: "1px",
+            background:
+                "linear-gradient(90deg, transparent 0%, rgba(255,255,255,0) 10%, rgba(255,255,255,0.55) 40%, rgba(255,255,255,0.55) 60%, rgba(255,255,255,0) 90%, transparent 100%)",
+        }}
+    />
+
+    {/* Glows */}
+    <div
+        className="pointer-events-none absolute"
+        style={{
+            top: "-60px", left: "-60px",
+            width: "260px", height: "200px",
+            background: "radial-gradient(ellipse, rgba(255,255,255,0.03) 0%, transparent 70%)",
+        }}
+    />
+    <div
+        className="pointer-events-none absolute"
+        style={{
+            bottom: "-40px", right: "-20px",
+            width: "220px", height: "160px",
+            background: "radial-gradient(ellipse, rgba(255,255,255,0.02) 0%, transparent 70%)",
+        }}
+    />
+
+    <div className="relative px-6 pt-5 pb-0" style={{ zIndex: 1 }}>
+
+        {/* Fila 1 — breadcrumb + vista tabs */}
+        <div className="flex items-center justify-between mb-5">
+
+            {/* Breadcrumb */}
+            <div className="flex items-center gap-2.5">
+                <div
+                    className="rounded-full"
+                    style={{ width: 6, height: 6, background: "rgba(255,255,255,0.9)" }}
+                />
+                <span
+                    style={{
+                        fontSize: 11,
+                        color: "rgba(255,255,255,0.35)",
+                        letterSpacing: "0.08em",
+                        textTransform: "uppercase",
+                    }}
+                >
+                    Comercial &nbsp;/&nbsp; Tráfico de piso
+                </span>
             </div>
- 
-            {/* Controles: toggle vistas + botón nuevo */}
-            <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-end">
-                {/* Toggle vistas */}
-                <div className="inline-flex overflow-hidden rounded-lg border border-white/20 bg-white/10 p-1 backdrop-blur-sm">
-                    {[
-                        { key: "tabla",    label: "Tabla",    icon: TableProperties },
-                        { key: "agenda",   label: "Agenda",   icon: CalendarRange   },
-                        { key: "graficas", label: "Gráficas", icon: BarChart2       },
-                    ].map(({ key, label, icon: Icon }) => (
+
+            {/* Selector de vista pill-group */}
+            <div
+                className="flex gap-1 p-[3px] rounded-[10px]"
+                style={{
+                    background: "rgba(255,255,255,0.05)",
+                    border: "0.5px solid rgba(255,255,255,0.08)",
+                }}
+            >
+                {[
+                    { key: "tabla",    label: "Tabla",    icon: TableProperties },
+                    { key: "agenda",   label: "Agenda",   icon: CalendarRange   },
+                    { key: "graficas", label: "Gráficas", icon: BarChart2       },
+                ].map(({ key, label, icon: Icon }) => {
+                    const active = viewMode === key;
+                    return (
                         <button
                             key={key}
                             type="button"
                             onClick={() => setViewMode(key)}
-                            className={[
-                                "inline-flex items-center justify-center gap-2 rounded-md px-3 py-2 text-xs font-black transition",
-                                viewMode === key
-                                    ? "bg-white text-[#2d3a1e] shadow-sm"
-                                    : "text-white/80 hover:bg-white/15 hover:text-white",
-                            ].join(" ")}
+                            className="inline-flex items-center gap-1.5 whitespace-nowrap transition-all"
+                            style={{
+                                padding: "6px 14px",
+                                borderRadius: 7,
+                                fontSize: 12,
+                                fontWeight: 500,
+                                border: active
+                                    ? "0.5px solid rgba(255,255,255,0.18)"
+                                    : "0.5px solid transparent",
+                                background: active ? "rgba(255,255,255,0.12)" : "transparent",
+                                color: active ? "#ffffff" : "rgba(255,255,255,0.38)",
+                            }}
                         >
-                            <Icon className="h-4 w-4" />
+                            <Icon size={13} />
                             {label}
                         </button>
+                    );
+                })}
+            </div>
+        </div>
+
+        {/* Divisor */}
+        <div
+            style={{
+                height: "0.5px",
+                background:
+                    "linear-gradient(90deg, transparent, rgba(255,255,255,0.08) 15%, rgba(255,255,255,0.08) 85%, transparent)",
+                marginBottom: 18,
+            }}
+        />
+
+        {/* Fila 2 — título + stats + botón */}
+        <div className="flex items-end justify-between gap-4 pb-5">
+
+            <div>
+                <h2
+                    style={{
+                        fontSize: 26,
+                        fontWeight: 500,
+                        color: "#ffffff",
+                        margin: "0 0 5px",
+                        letterSpacing: "-0.02em",
+                        lineHeight: 1.1,
+                    }}
+                >
+                    Tráfico de Piso
+                </h2>
+                <p style={{ fontSize: 13, color: "rgba(255,255,255,0.35)", margin: 0 }}>
+                    {viewMode === "tabla"
+                        ? "Control de prospectos que ingresan a la agencia. Doble clic para editar."
+                        : viewMode === "agenda"
+                        ? "Vista semanal de ingresos a piso."
+                        : "Estadísticas de tráfico de piso."}
+                </p>
+            </div>
+
+            <div className="flex items-center gap-3">
+                {/* Mini-stats dinámicos */}
+                <div
+                    className="flex items-stretch overflow-hidden rounded-[10px]"
+                    style={{ border: "0.5px solid rgba(255,255,255,0.1)" }}
+                >
+                    {[
+                        {
+                            n: registros.length,
+                            l: "Total",
+                        },
+                        {
+                            n: registros.filter(r => r.tiempo_compra === "Este mes").length,
+                            l: "Este mes",
+                        },
+                        {
+                            n: registros.filter(r => r.deja_auto_cuenta).length,
+                            l: "Auto cuenta",
+                        },
+                    ].map((s, i) => (
+                        <div
+                            key={i}
+                            className="text-center px-[16px] py-[9px]"
+                            style={{
+                                background: "rgba(255,255,255,0.04)",
+                                borderLeft: i > 0 ? "0.5px solid rgba(255,255,255,0.08)" : "none",
+                            }}
+                        >
+                            <div style={{ fontSize: 18, fontWeight: 500, color: "#fff", lineHeight: 1 }}>
+                                {s.n}
+                            </div>
+                            <div
+                                style={{
+                                    fontSize: 10,
+                                    color: "rgba(255,255,255,0.3)",
+                                    marginTop: 3,
+                                    textTransform: "uppercase",
+                                    letterSpacing: "0.06em",
+                                }}
+                            >
+                                {s.l}
+                            </div>
+                        </div>
                     ))}
                 </div>
- 
-                {/* Botón nuevo */}
+
+                {/* Botón nuevo ingreso */}
                 <button
                     type="button"
                     onClick={openCreate}
-                    className="inline-flex items-center justify-center gap-2 rounded-lg border border-white/20 bg-white/10 px-4 py-2 text-sm font-bold text-white backdrop-blur-sm transition hover:bg-white hover:text-[#2d3a1e]"
+                    className="inline-flex items-center gap-2 whitespace-nowrap transition-all"
+                    style={{
+                        padding: "8px 16px",
+                        borderRadius: 9,
+                        fontSize: 13,
+                        fontWeight: 500,
+                        background: "rgba(255,255,255,0.1)",
+                        border: "0.5px solid rgba(255,255,255,0.18)",
+                        color: "#ffffff",
+                    }}
                 >
-                    <Plus className="h-4 w-4" />
+                    <Plus size={14} />
                     Nuevo ingreso
                 </button>
             </div>
         </div>
- 
-        {/* Separador */}
-        <div className="mt-5 h-px w-full bg-gradient-to-r from-white/5 via-white/20 to-white/5" />
     </div>
+
+    {/* Franja inferior decorativa */}
+    <div
+        style={{
+            height: 3,
+            background: "linear-gradient(90deg, #1a1a1a 0%, #2a2a2a 30%, #1f1f1f 60%, #111 100%)",
+        }}
+    />
 </div>
+
             {/* alertas */}
             {error ? <div className="rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm font-bold text-red-700">{error}</div> : null}
             {ok    ? <div className="rounded-lg border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm font-bold text-emerald-700">{ok}</div> : null}
 
-            {/* filtros — solo en tabla y agenda */}
+            {/* filtros */}
             {viewMode !== "graficas" && (
                 <div className="rounded-xl border border-black/10 bg-white p-4 shadow-sm">
                     <div className="grid gap-3 md:grid-cols-12">
@@ -913,7 +1093,6 @@ export default function TraficoPiso() {
             {/* ── VISTA TABLA ── */}
             {viewMode === "tabla" && (
                 <>
-                    {/* desktop */}
                     <div className="hidden overflow-hidden rounded-xl shadow-sm lg:block">
                         <div className="overflow-auto">
                             <table className="min-w-[1200px] w-full text-left text-sm">
@@ -961,7 +1140,6 @@ export default function TraficoPiso() {
                         </div>
                     </div>
 
-                    {/* mobile */}
                     <div className="grid gap-3 lg:hidden">
                         {loadingList ? (
                             <div className="rounded-xl border border-black/10 bg-white p-6 shadow-sm"><div className="flex items-center gap-2 font-bold text-black"><Loader2 className="h-5 w-5 animate-spin" />Cargando...</div></div>
@@ -1003,7 +1181,7 @@ export default function TraficoPiso() {
                 footer={
                     <>
                         <div className="min-w-0 text-xs font-bold text-slate-500">
-                            {errores.length > 0 && touchedSave ? `Pendiente: ${errores[0]}` : "Los campos marcados con * son obligatorios."}
+                            Ningún campo es obligatorio: puedes guardar el registro en cualquier momento.
                         </div>
                         <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-end">
                             <button type="button" onClick={closeModal} disabled={saving} className="inline-flex items-center gap-2 rounded-lg bg-red-500 px-4 py-2 text-sm font-semibold text-white hover:bg-red-600 disabled:opacity-60"><X className="h-4 w-4" />Cancelar</button>
@@ -1018,14 +1196,14 @@ export default function TraficoPiso() {
                     <div className="space-y-4">
                         <Section title="Datos generales" icon={User}>
                             <div className="grid gap-3 md:grid-cols-3">
-                                <Field label="Dealer" icon={Building2} required invalid={isInvalid("agencia")}><Select value={draft.agencia} invalid={isInvalid("agencia")} onChange={e => updateField("agencia", e.target.value)}><option value="">Seleccionar dealer...</option>{DEALERS.map(d => <option key={d} value={d}>{d}</option>)}</Select></Field>
-                                <Field label="Nombre del prospecto" icon={User} required hint="Mayúsculas" invalid={isInvalid("nombre_prospecto")}><Input value={draft.nombre_prospecto} invalid={isInvalid("nombre_prospecto")} onChange={e => updateField("nombre_prospecto", e.target.value.toUpperCase())} placeholder="NOMBRE COMPLETO" /></Field>
-                                <Field label="Código postal" icon={ClipboardList} required invalid={isInvalid("codigo_postal")}><Input value={draft.codigo_postal} invalid={isInvalid("codigo_postal")} onChange={e => updateField("codigo_postal", soloNumeros(e.target.value).slice(0,5))} inputMode="numeric" placeholder="68300" /></Field>
-                                <Field label="Teléfono" icon={Phone} required invalid={isInvalid("telefono")}><Input value={draft.telefono} invalid={isInvalid("telefono")} onChange={e => updateField("telefono", soloNumeros(e.target.value).slice(0,12))} inputMode="numeric" placeholder="10 dígitos" /></Field>
+                                <Field label="Dealer" icon={Building2} invalid={isInvalid("agencia")}><Select value={draft.agencia} invalid={isInvalid("agencia")} onChange={e => updateField("agencia", e.target.value)}><option value="">Seleccionar dealer...</option>{DEALERS.map(d => <option key={d} value={d}>{d}</option>)}</Select></Field>
+                                <Field label="Nombre del prospecto" icon={User} hint="Mayúsculas" invalid={isInvalid("nombre_prospecto")}><Input value={draft.nombre_prospecto} invalid={isInvalid("nombre_prospecto")} onChange={e => updateField("nombre_prospecto", e.target.value.toUpperCase())} placeholder="NOMBRE COMPLETO" /></Field>
+                                <Field label="Código postal" icon={ClipboardList} invalid={isInvalid("codigo_postal")}><Input value={draft.codigo_postal} invalid={isInvalid("codigo_postal")} onChange={e => updateField("codigo_postal", soloNumeros(e.target.value).slice(0,5))} inputMode="numeric" placeholder="68300" /></Field>
+                                <Field label="Teléfono" icon={Phone} invalid={isInvalid("telefono")}><Input value={draft.telefono} invalid={isInvalid("telefono")} onChange={e => updateField("telefono", soloNumeros(e.target.value).slice(0,12))} inputMode="numeric" placeholder="10 dígitos" /></Field>
                                 <Field label="E-mail" icon={Mail} invalid={isInvalid("email")}><Input type="email" value={draft.email} invalid={isInvalid("email")} onChange={e => updateField("email", e.target.value)} placeholder="correo@dominio.com" /></Field>
-                                <Field label="Asesor de ventas" icon={UserRoundSearch} required hint="Buscar" invalid={isInvalid("asesor_ventas")}><AsesorAutocomplete value={draft.asesor_ventas} invalid={isInvalid("asesor_ventas")} onChange={v => updateField("asesor_ventas", v)} /></Field>
-                                <Field label="Ingresó a la agencia porque" icon={MessageSquareText} required invalid={isInvalid("motivo_ingreso")}><Select value={draft.motivo_ingreso} invalid={isInvalid("motivo_ingreso")} onChange={e => updateField("motivo_ingreso", e.target.value)}><option value="">Seleccionar...</option>{MOTIVOS_INGRESO.map(x => <option key={x} value={x}>{x}</option>)}</Select></Field>
-                                <Field label="Tipo de persona" icon={Users} required>
+                                <Field label="Asesor de ventas" icon={UserRoundSearch} hint="Buscar" invalid={isInvalid("asesor_ventas")}><AsesorAutocomplete value={draft.asesor_ventas} invalid={isInvalid("asesor_ventas")} onChange={v => updateField("asesor_ventas", v)} /></Field>
+                                <Field label="Ingresó a la agencia porque" icon={MessageSquareText} invalid={isInvalid("motivo_ingreso")}><Select value={draft.motivo_ingreso} invalid={isInvalid("motivo_ingreso")} onChange={e => updateField("motivo_ingreso", e.target.value)}><option value="">Seleccionar...</option>{MOTIVOS_INGRESO.map(x => <option key={x} value={x}>{x}</option>)}</Select></Field>
+                                <Field label="Tipo de persona" icon={Users}>
                                     <div className="grid grid-cols-2 gap-2">
                                         {TIPOS_PERSONA.map(tipo => <button key={tipo} type="button" onClick={() => updateField("tipo_persona", tipo)} className={["rounded-lg border px-3 py-2 text-sm font-extrabold transition", draft.tipo_persona === tipo ? "border-black bg-black text-white" : "border-black/15 bg-white text-black hover:bg-slate-50"].join(" ")}>{tipo}</button>)}
                                     </div>
@@ -1035,33 +1213,33 @@ export default function TraficoPiso() {
 
                         <Section title="Intención de compra" icon={CarFront}>
                             <div className="grid gap-3 md:grid-cols-3">
-                                <Field label="Programación de compra" icon={Clock} required invalid={isInvalid("tiempo_compra")}><Select value={draft.tiempo_compra} invalid={isInvalid("tiempo_compra")} onChange={e => updateField("tiempo_compra", e.target.value)}><option value="">Seleccionar...</option>{TIEMPOS_COMPRA.map(x => <option key={x} value={x}>{x}</option>)}</Select></Field>
-                                <Field label="¿Deja auto a cuenta?" icon={CarFront} required><BooleanSwitch value={!!draft.deja_auto_cuenta} onChange={v => updateField("deja_auto_cuenta", v)} /></Field>
-                                <Field label="Auto de sus sueños" icon={CarFront} required invalid={isInvalid("auto_suenos")}><Select value={draft.auto_suenos} invalid={isInvalid("auto_suenos")} onChange={e => updateField("auto_suenos", e.target.value)}><option value="">Seleccionar...</option>{VEHICULOS.map(v => <option key={v} value={v}>{v}</option>)}</Select></Field>
-                                <Field label="Modelo de auto a cuenta" icon={CarFront} required={!!draft.deja_auto_cuenta} invalid={isInvalid("modelo_auto_cuenta")}><Input value={draft.modelo_auto_cuenta} invalid={isInvalid("modelo_auto_cuenta")} disabled={!draft.deja_auto_cuenta} onChange={e => updateField("modelo_auto_cuenta", e.target.value)} placeholder="Ej. Jetta 2020" /></Field>
-                                <Field label="Forma de capitalización" icon={CircleDollarSign} required invalid={isInvalid("forma_capitalizacion")}><Select value={draft.forma_capitalizacion} invalid={isInvalid("forma_capitalizacion")} onChange={e => updateField("forma_capitalizacion", e.target.value)}><option value="">Seleccionar...</option>{FORMAS_CAPITALIZACION.map(x => <option key={x} value={x}>{x}</option>)}</Select></Field>
-                                <Field label="Presupuesto estimado" icon={BadgeDollarSign} required hint="Mín. 6 dígitos" invalid={isInvalid("presupuesto_estimado")}><Input value={draft.presupuesto_estimado} invalid={isInvalid("presupuesto_estimado")} onChange={e => updateField("presupuesto_estimado", soloNumeros(e.target.value))} inputMode="numeric" placeholder="300000" /></Field>
-                                <Field label="Enganche presupuestado" icon={BadgeDollarSign} required hint="Mín. 5 dígitos" invalid={isInvalid("enganche_presupuestado")}><Input value={draft.enganche_presupuestado} invalid={isInvalid("enganche_presupuestado")} onChange={e => updateField("enganche_presupuestado", soloNumeros(e.target.value))} inputMode="numeric" placeholder="50000" /></Field>
-                                <Field label="Mensualidades presupuestadas" icon={CalendarDays} required invalid={isInvalid("mensualidades_presupuestadas")}><Select value={draft.mensualidades_presupuestadas} invalid={isInvalid("mensualidades_presupuestadas")} onChange={e => updateField("mensualidades_presupuestadas", e.target.value)}><option value="">Seleccionar...</option>{MENSUALIDADES.map(x => <option key={x} value={x}>{x}</option>)}</Select></Field>
+                                <Field label="Programación de compra" icon={Clock} invalid={isInvalid("tiempo_compra")}><Select value={draft.tiempo_compra} invalid={isInvalid("tiempo_compra")} onChange={e => updateField("tiempo_compra", e.target.value)}><option value="">Seleccionar...</option>{TIEMPOS_COMPRA.map(x => <option key={x} value={x}>{x}</option>)}</Select></Field>
+                                <Field label="¿Deja auto a cuenta?" icon={CarFront}><BooleanSwitch value={!!draft.deja_auto_cuenta} onChange={v => updateField("deja_auto_cuenta", v)} /></Field>
+                                <Field label="Auto de sus sueños" icon={CarFront} invalid={isInvalid("auto_suenos")}><Select value={draft.auto_suenos} invalid={isInvalid("auto_suenos")} onChange={e => updateField("auto_suenos", e.target.value)}><option value="">Seleccionar...</option>{VEHICULOS.map(v => <option key={v} value={v}>{v}</option>)}</Select></Field>
+                                <Field label="Modelo de auto a cuenta" icon={CarFront} invalid={isInvalid("modelo_auto_cuenta")}><Input value={draft.modelo_auto_cuenta} invalid={isInvalid("modelo_auto_cuenta")} disabled={!draft.deja_auto_cuenta} onChange={e => updateField("modelo_auto_cuenta", e.target.value)} placeholder="Ej. Jetta 2020" /></Field>
+                                <Field label="Forma de capitalización" icon={CircleDollarSign} invalid={isInvalid("forma_capitalizacion")}><Select value={draft.forma_capitalizacion} invalid={isInvalid("forma_capitalizacion")} onChange={e => updateField("forma_capitalizacion", e.target.value)}><option value="">Seleccionar...</option>{FORMAS_CAPITALIZACION.map(x => <option key={x} value={x}>{x}</option>)}</Select></Field>
+                                <Field label="Presupuesto estimado" icon={BadgeDollarSign} invalid={isInvalid("presupuesto_estimado")}><Input value={draft.presupuesto_estimado} invalid={isInvalid("presupuesto_estimado")} onChange={e => updateField("presupuesto_estimado", soloNumeros(e.target.value))} inputMode="numeric" placeholder="300000" /></Field>
+                                <Field label="Enganche presupuestado" icon={BadgeDollarSign} invalid={isInvalid("enganche_presupuestado")}><Input value={draft.enganche_presupuestado} invalid={isInvalid("enganche_presupuestado")} onChange={e => updateField("enganche_presupuestado", soloNumeros(e.target.value))} inputMode="numeric" placeholder="50000" /></Field>
+                                <Field label="Mensualidades presupuestadas" icon={CalendarDays} invalid={isInvalid("mensualidades_presupuestadas")}><Select value={draft.mensualidades_presupuestadas} invalid={isInvalid("mensualidades_presupuestadas")} onChange={e => updateField("mensualidades_presupuestadas", e.target.value)}><option value="">Seleccionar...</option>{MENSUALIDADES.map(x => <option key={x} value={x}>{x}</option>)}</Select></Field>
                             </div>
                         </Section>
 
                         <Section title="Perfil financiero" icon={ShieldCheck}>
                             <div className="grid gap-3 md:grid-cols-3">
-                                <Field label="Comprobación de ingresos" icon={ShieldCheck} required><BooleanSwitch value={!!draft.comprueba_ingresos} onChange={v => updateField("comprueba_ingresos", v)} /></Field>
-                                <Field label="Forma de comprobar ingresos" icon={ClipboardList} required invalid={isInvalid("forma_comprobar_ingresos")}><Select value={draft.forma_comprobar_ingresos} invalid={isInvalid("forma_comprobar_ingresos")} onChange={e => updateField("forma_comprobar_ingresos", e.target.value)}>{FORMAS_COMPROBAR_INGRESOS.map(x => <option key={x} value={x}>{x}</option>)}</Select></Field>
+                                <Field label="Comprobación de ingresos" icon={ShieldCheck}><BooleanSwitch value={!!draft.comprueba_ingresos} onChange={v => updateField("comprueba_ingresos", v)} /></Field>
+                                <Field label="Forma de comprobar ingresos" icon={ClipboardList} invalid={isInvalid("forma_comprobar_ingresos")}><Select value={draft.forma_comprobar_ingresos} invalid={isInvalid("forma_comprobar_ingresos")} onChange={e => updateField("forma_comprobar_ingresos", e.target.value)}>{FORMAS_COMPROBAR_INGRESOS.map(x => <option key={x} value={x}>{x}</option>)}</Select></Field>
                             </div>
                         </Section>
 
                         <Section title="Perfil del prospecto" icon={BriefcaseBusiness}>
                             <div className="grid gap-3 md:grid-cols-3">
-                                <Field label="Motivo de compra" icon={MessageSquareText} required invalid={isInvalid("motivo_compra")}><Select value={draft.motivo_compra} invalid={isInvalid("motivo_compra")} onChange={e => updateField("motivo_compra", e.target.value)}><option value="">Seleccionar...</option>{MOTIVOS_COMPRA.map(x => <option key={x} value={x}>{x}</option>)}</Select></Field>
-                                <Field label="Perfil profesional" icon={BriefcaseBusiness} required invalid={isInvalid("perfil_profesional")}><Select value={draft.perfil_profesional} invalid={isInvalid("perfil_profesional")} onChange={e => updateField("perfil_profesional", e.target.value)}><option value="">Seleccionar...</option>{PERFILES_PROFESIONALES.map(x => <option key={x} value={x}>{x}</option>)}</Select></Field>
-                                <Field label="Estado civil" icon={Users} required invalid={isInvalid("estado_civil")}><Select value={draft.estado_civil} invalid={isInvalid("estado_civil")} onChange={e => updateField("estado_civil", e.target.value)}><option value="">Seleccionar...</option>{ESTADOS_CIVILES.map(x => <option key={x} value={x}>{x}</option>)}</Select></Field>
+                                <Field label="Motivo de compra" icon={MessageSquareText} invalid={isInvalid("motivo_compra")}><Select value={draft.motivo_compra} invalid={isInvalid("motivo_compra")} onChange={e => updateField("motivo_compra", e.target.value)}><option value="">Seleccionar...</option>{MOTIVOS_COMPRA.map(x => <option key={x} value={x}>{x}</option>)}</Select></Field>
+                                <Field label="Perfil profesional" icon={BriefcaseBusiness} invalid={isInvalid("perfil_profesional")}><Select value={draft.perfil_profesional} invalid={isInvalid("perfil_profesional")} onChange={e => updateField("perfil_profesional", e.target.value)}><option value="">Seleccionar...</option>{PERFILES_PROFESIONALES.map(x => <option key={x} value={x}>{x}</option>)}</Select></Field>
+                                <Field label="Estado civil" icon={Users} invalid={isInvalid("estado_civil")}><Select value={draft.estado_civil} invalid={isInvalid("estado_civil")} onChange={e => updateField("estado_civil", e.target.value)}><option value="">Seleccionar...</option>{ESTADOS_CIVILES.map(x => <option key={x} value={x}>{x}</option>)}</Select></Field>
                                 <Field label="Edad" icon={User}><Input value={draft.edad} onChange={e => updateField("edad", soloNumeros(e.target.value).slice(0,3))} inputMode="numeric" placeholder="35" /></Field>
                                 <Field label="Cantidad de hijos" icon={Users}><Input value={draft.cantidad_hijos} onChange={e => updateField("cantidad_hijos", soloNumeros(e.target.value).slice(0,2))} inputMode="numeric" placeholder="0" /></Field>
                             </div>
-                            <div className="mt-3"><PasatiemposPicker value={draft.pasatiempos || []} invalid={isInvalid("pasatiempos")} onChange={v => updateField("pasatiempos", v)} /></div>
+                            <div className="mt-3"><PasatiemposPicker value={draft.pasatiempos || []} onChange={v => updateField("pasatiempos", v)} /></div>
                             <div className="mt-3"><Field label="Comentarios" icon={MessageSquareText}><Textarea value={draft.comentarios} onChange={e => updateField("comentarios", e.target.value)} placeholder="Notas adicionales del asesor..." /></Field></div>
                         </Section>
                     </div>

@@ -1,29 +1,30 @@
 // src/pages/CitasPiso/RegistroCitasPiso.jsx
-import { useMemo, useState, useEffect } from "react";
+import { useMemo, useState, useEffect, useRef } from "react";
 import {
     Plus, Search, X, Save, User, CarFront, CalendarDays,
     ArrowUpDown, ChevronDown, ChevronUp, Trash2, Loader2,
     Phone, UserCheck, UserSearch, UserStar, Building2,
     MessageSquareText, LayoutList, CalendarRange, BarChart2,
     ChevronLeft, ChevronRight, CheckCircle2, Clock,
+    Car, MessageSquare, Hash, Zap, Circle, XCircle,
 } from "lucide-react";
 import { apiCitasPiso } from "../../lib/apiCitasPiso";
 import { createPortal } from "react-dom";
 import { useAuth } from "../../auth/AuthContext";
 import {
     BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer,
-    CartesianGrid, PieChart, Pie, Cell, AreaChart, Area, Legend,
+    CartesianGrid, PieChart, Pie, Cell, AreaChart, Area,
 } from "recharts";
 
 // ─── constantes ───────────────────────────────────────────────────────────────
-const MESES = ["Enero","Febrero","Marzo","Abril","Mayo","Junio","Julio","Agosto","Septiembre","Octubre","Noviembre","Diciembre"];
-const DIAS_SEMANA = ["Dom","Lun","Mar","Mié","Jue","Vie","Sáb"];
-const CHART_COLORS = ["#1a1a1a","#3d3d3d","#616161","#8a8a8a","#b3b3b3"];
+const MESES      = ["Enero","Febrero","Marzo","Abril","Mayo","Junio","Julio","Agosto","Septiembre","Octubre","Noviembre","Diciembre"];
+const DIAS_SEMANA= ["Dom","Lun","Mar","Mié","Jue","Vie","Sáb"];
+const DIAS_CORTOS= ["LUN","MAR","MIÉ","JUE","VIE","SÁB","DOM"];
 
 const VIEWS = [
-    { key: "tabla",    label: "Tabla",    Icon: LayoutList   },
-    { key: "agenda",   label: "Agenda",   Icon: CalendarRange },
-    { key: "graficas", label: "Gráficas", Icon: BarChart2     },
+    { key: "tabla",    label: "Tabla",   Icon: LayoutList   },
+    { key: "agenda",   label: "Agenda",  Icon: CalendarRange },
+    { key: "graficas", label: "Gráficas",Icon: BarChart2     },
 ];
 
 const DEALERS  = ["Volvo"];
@@ -40,16 +41,33 @@ const VEHICULOS = [
     "XC60 Black Edition","XC90 Black Edition","Seminuevos","Avaluo",
 ];
 
-// ─── helpers ──────────────────────────────────────────────────────────────────
+// ─── helpers generales ────────────────────────────────────────────────────────
+const PAD = (n) => String(n).padStart(2, "0");
 function normalizeStr(v) { return String(v ?? "").trim(); }
 
+function parseLocalDT(raw) {
+    if (!raw) return null;
+    const d = new Date(String(raw));
+    return isNaN(d.getTime()) ? null : d;
+}
+function localYMD(date) {
+    return `${date.getFullYear()}-${PAD(date.getMonth() + 1)}-${PAD(date.getDate())}`;
+}
+function localHHMM(date) { return `${PAD(date.getHours())}:${PAD(date.getMinutes())}`; }
+function addDays(date, n) { const d = new Date(date); d.setDate(d.getDate() + n); return d; }
+function startOfWeek(date) {
+    const d = new Date(date);
+    const diff = d.getDay() === 0 ? -6 : 1 - d.getDay();
+    d.setDate(d.getDate() + diff);
+    d.setHours(0, 0, 0, 0);
+    return d;
+}
 function toDTLocal(isoOrNull) {
     if (!isoOrNull) return "";
     const s = String(isoOrNull);
     if (s.endsWith("Z")) {
         const d = new Date(s); if (Number.isNaN(d.getTime())) return "";
-        const p = (n) => String(n).padStart(2,"0");
-        return `${d.getFullYear()}-${p(d.getMonth()+1)}-${p(d.getDate())}T${p(d.getHours())}:${p(d.getMinutes())}`;
+        return `${d.getFullYear()}-${PAD(d.getMonth()+1)}-${PAD(d.getDate())}T${PAD(d.getHours())}:${PAD(d.getMinutes())}`;
     }
     if (/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}/.test(s)) return s.slice(0,16);
     return "";
@@ -57,17 +75,29 @@ function toDTLocal(isoOrNull) {
 function fromDTLocalToISO(v) { return String(v||"").trim() || null; }
 function toYMDLocal(dateLike) {
     const d = new Date(dateLike); if (Number.isNaN(d.getTime())) return "";
-    const p = (n) => String(n).padStart(2,"0");
-    return `${d.getFullYear()}-${p(d.getMonth()+1)}-${p(d.getDate())}`;
+    return `${d.getFullYear()}-${PAD(d.getMonth()+1)}-${PAD(d.getDate())}`;
 }
 function ymdToInt(ymd) {
     if (!ymd || !/^\d{4}-\d{2}-\d{2}$/.test(ymd)) return null;
     return Number(ymd.replaceAll("-",""));
 }
 
-// ─── micro-components ─────────────────────────────────────────────────────────
-function Skeleton({ className="" }) { return <div className={["animate-pulse rounded-md bg-black/10",className].join(" ")}/>; }
+// ─── Colores kanban por Be Back ───────────────────────────────────────────────
+const BB_COLOR = {
+    yes: { card:"bg-emerald-50 border-emerald-200", accent:"border-l-emerald-500", header:"bg-emerald-100", name:"text-emerald-900", meta:"text-emerald-700" },
+    no:  { card:"bg-red-50 border-red-200",         accent:"border-l-red-400",     header:"bg-red-100",     name:"text-red-900",     meta:"text-red-700"     },
+    nil: { card:"bg-slate-50 border-slate-200",     accent:"border-l-slate-400",   header:"bg-slate-100",   name:"text-slate-900",   meta:"text-slate-600"   },
+};
+function colorFor(beBack) {
+    if (beBack === true)  return BB_COLOR.yes;
+    if (beBack === false) return BB_COLOR.no;
+    return BB_COLOR.nil;
+}
 
+// ─── micro-components ─────────────────────────────────────────────────────────
+function Skeleton({ className="" }) {
+    return <div className={["animate-pulse rounded-md bg-black/10", className].join(" ")} />;
+}
 function SkeletonRow() {
     return (
         <tr className="animate-pulse">
@@ -77,13 +107,12 @@ function SkeletonRow() {
         </tr>
     );
 }
-
 function ModalSkeleton() {
     return (
         <div className="grid gap-3 md:grid-cols-2">
             {Array.from({length:8}).map((_,i) => (
-                <div key={i} className="rounded-lg border border-black/10 bg-neutral-200/50 p-4">
-                    <Skeleton className="h-4 w-32"/><Skeleton className="mt-3 h-10 w-full rounded-lg"/>
+                <div key={i} className="rounded-xl border border-black/8 bg-white p-4">
+                    <Skeleton className="h-3.5 w-28"/><Skeleton className="mt-3 h-10 w-full rounded-lg"/>
                 </div>
             ))}
         </div>
@@ -94,20 +123,19 @@ function Modal({ open, title, onClose, children, footer }) {
     if (!open) return null;
     return createPortal(
         <div className="fixed inset-0 z-[60]">
-            <div className="absolute inset-0 bg-black/55 backdrop-blur-[2px]" onClick={onClose}/>
+            <div className="absolute inset-0 bg-black/45" onClick={onClose}/>
             <div className="absolute inset-0 flex items-end justify-center p-3 sm:items-center">
-                <div className="w-full max-w-4xl overflow-hidden rounded-xl border border-black bg-neutral-100 shadow-2xl">
-                    <div className="flex items-center justify-between gap-3 px-5 py-4"
-                        style={{background:"linear-gradient(135deg,#1a1a1a 0%,#2d2d2d 100%)"}}>
-                        <div className="truncate text-base font-extrabold text-white">{title}</div>
+                <div className="w-full max-w-4xl overflow-hidden rounded-2xl border border-black/10 bg-white">
+                    <div className="flex items-center justify-between gap-3 border-b border-black/8 px-6 py-4">
+                        <div className="truncate text-[15px] font-medium text-black">{title}</div>
                         <button onClick={onClose}
-                            className="inline-flex h-10 w-10 items-center justify-center rounded-xl border border-white/20 bg-white/10 text-white hover:bg-white/20">
-                            <X className="h-5 w-5"/>
+                            className="inline-flex h-9 w-9 items-center justify-center rounded-full text-black/40 transition hover:bg-black/5 hover:text-black">
+                            <X className="h-4 w-4"/>
                         </button>
                     </div>
-                    <div className="max-h-[72vh] overflow-auto p-5">{children}</div>
+                    <div className="max-h-[72vh] overflow-auto px-6 py-5">{children}</div>
                     {footer && (
-                        <div className="flex flex-col gap-2 border-t border-black/10 bg-white/80 px-5 py-4 sm:flex-row sm:items-center sm:justify-end">
+                        <div className="flex flex-col gap-2 border-t border-black/8 px-6 py-4 sm:flex-row sm:items-center sm:justify-end">
                             {footer}
                         </div>
                     )}
@@ -120,16 +148,15 @@ function Modal({ open, title, onClose, children, footer }) {
 
 function Field({ label, icon: Icon, children }) {
     return (
-        <div className="rounded-lg border border-black/10 bg-neutral-200/50 p-4">
-            <div className="mb-2 flex items-center gap-2 text-sm font-bold text-black">
-                {Icon && <Icon className="h-4 w-4"/>}
+        <div className="rounded-xl border border-black/8 bg-white p-4">
+            <div className="mb-2 flex items-center gap-2 text-[13px] font-medium text-black/55">
+                {Icon && <Icon className="h-3.5 w-3.5 text-black/35"/>}
                 <span>{label}</span>
             </div>
             {children}
         </div>
     );
 }
-
 function FilterBlock({ label, children }) {
     return (
         <div>
@@ -138,7 +165,6 @@ function FilterBlock({ label, children }) {
         </div>
     );
 }
-
 function ContextMenu({ ctxMenu, onDelete, onClose }) {
     if (!ctxMenu.open || !ctxMenu.row) return null;
     return createPortal(
@@ -155,177 +181,356 @@ function ContextMenu({ ctxMenu, onDelete, onClose }) {
     );
 }
 
-// ─── VISTA AGENDA ─────────────────────────────────────────────────────────────
-function AgendaView({ registros, onOpenEdit, onOpenCreate }) {
-    const hoy = new Date();
-    const [year, setYear]   = useState(hoy.getFullYear());
-    const [month, setMonth] = useState(hoy.getMonth());
-    const [diaSeleccionado, setDiaSeleccionado] = useState(null);
+// ─── Badge Be Back ────────────────────────────────────────────────────────────
+function BeBackBadge({ value }) {
+    if (value === true)
+        return (
+            <span className="inline-flex items-center gap-1 rounded-full bg-emerald-100 border border-emerald-300 px-2 py-0.5 text-[10px] font-bold text-emerald-800 whitespace-nowrap">
+                <CheckCircle2 className="h-3 w-3" /> Be Back
+            </span>
+        );
+    if (value === false)
+        return (
+            <span className="inline-flex items-center gap-1 rounded-full bg-red-100 border border-red-300 px-2 py-0.5 text-[10px] font-bold text-red-700 whitespace-nowrap">
+                <XCircle className="h-3 w-3" /> No regresó
+            </span>
+        );
+    return (
+        <span className="inline-flex items-center gap-1 rounded-full bg-slate-100 border border-slate-300 px-2 py-0.5 text-[10px] font-bold text-slate-600 whitespace-nowrap">
+            <Circle className="h-3 w-3" /> Sin definir
+        </span>
+    );
+}
 
-    const primerDia  = new Date(year, month, 1).getDay();
-    const diasEnMes  = new Date(year, month+1, 0).getDate();
+// ═══════════════════════════════════════════════════════════════════════════════
+//  VISTA AGENDA — KANBAN SEMANAL (reemplaza AgendaView anterior)
+// ═══════════════════════════════════════════════════════════════════════════════
+
+// Tarjeta de ingreso
+function PisoCard({ registro, onOpenEdit }) {
+    const dt = parseLocalDT(registro.fecha_hora_cita);
+    if (!dt) return null;
+    const c = colorFor(registro.be_back);
+
+    return (
+        <div
+            onClick={() => onOpenEdit(registro)}
+            className={[
+                "w-full rounded-lg border border-l-4 overflow-hidden cursor-pointer",
+                "transition-all duration-150 hover:shadow-md hover:brightness-[.97]",
+                c.card, c.accent,
+            ].join(" ")}
+        >
+            {/* Cabecera */}
+            <div className={["flex items-center justify-between gap-2 px-2.5 py-1.5", c.header].join(" ")}>
+                <span className="text-[11px] font-extrabold text-black/70 shrink-0">
+                    {localHHMM(dt)}
+                </span>
+                <BeBackBadge value={registro.be_back} />
+            </div>
+
+            {/* Cuerpo */}
+            <div className="px-2.5 py-2 space-y-1.5">
+                <p className={["text-[12px] font-extrabold leading-snug", c.name].join(" ")}>
+                    {registro?.cliente?.nombre || "Cliente sin nombre"}
+                </p>
+
+                {registro.auto_interes && (
+                    <div className={["flex items-center gap-1.5 text-[11px] font-semibold", c.meta].join(" ")}>
+                        <Car className="h-3 w-3 shrink-0 opacity-70" />
+                        <span>{registro.auto_interes}</span>
+                    </div>
+                )}
+
+                {registro?.cliente?.telefono && (
+                    <div className={["flex items-center gap-1.5 text-[11px]", c.meta].join(" ")}>
+                        <Phone className="h-3 w-3 shrink-0 opacity-70" />
+                        <span>{registro.cliente.telefono}</span>
+                    </div>
+                )}
+
+                {registro.agencia && (
+                    <div className={["flex items-center gap-1.5 text-[11px]", c.meta].join(" ")}>
+                        <Building2 className="h-3 w-3 shrink-0 opacity-70" />
+                        <span>{registro.agencia}</span>
+                    </div>
+                )}
+
+                {(registro.asesor_piso || registro.fuente_prospeccion) && (
+                    <div className="border-t border-black/[.07] pt-1 space-y-1">
+                        {registro.asesor_piso && (
+                            <div className={["flex items-start gap-1.5 text-[10px]", c.meta].join(" ")}>
+                                <UserStar className="h-3 w-3 shrink-0 opacity-60 mt-px" />
+                                <span><span className="opacity-60">Asesor: </span>{registro.asesor_piso}</span>
+                            </div>
+                        )}
+                        {registro.fuente_prospeccion && (
+                            <div className={["flex items-start gap-1.5 text-[10px]", c.meta].join(" ")}>
+                                <Zap className="h-3 w-3 shrink-0 opacity-60 mt-px" />
+                                <span><span className="opacity-60">Fuente: </span>{registro.fuente_prospeccion}</span>
+                            </div>
+                        )}
+                    </div>
+                )}
+
+                {registro.folio && (
+                    <div className={["flex items-center gap-1.5 text-[10px] border-t border-black/[.07] pt-1", c.meta].join(" ")}>
+                        <Hash className="h-3 w-3 shrink-0 opacity-60" />
+                        <span><span className="opacity-60">Folio: </span>{registro.folio}</span>
+                    </div>
+                )}
+
+                {registro.comentarios_cliente && (
+                    <div className={["flex items-start gap-1.5 text-[10px] border-t border-black/[.07] pt-1", c.meta].join(" ")}>
+                        <MessageSquare className="h-3 w-3 shrink-0 opacity-60 mt-px" />
+                        <span className="leading-relaxed opacity-80 break-words whitespace-normal">
+                            {registro.comentarios_cliente}
+                        </span>
+                    </div>
+                )}
+            </div>
+        </div>
+    );
+}
+
+// Columna de un día
+function DayColumn({ day, registros, isToday, onOpenEdit }) {
+    const bebacks   = registros.filter((r) => r.be_back === true).length;
+    const noRegreso = registros.filter((r) => r.be_back === false).length;
+
+    return (
+        <div className={["border-l border-black/[.07]", isToday ? "bg-blue-50/20" : "bg-white"].join(" ")}>
+            {/* Cabecera sticky */}
+            <div className={[
+                "sticky top-0 z-10 flex flex-col items-center py-2 px-1 border-b border-black/[.07] backdrop-blur-sm",
+                isToday ? "bg-blue-50/80" : "bg-white/95",
+            ].join(" ")}>
+                <span className="text-[9px] font-extrabold tracking-widest text-black/40">
+                    {DIAS_CORTOS[(day.getDay() + 6) % 7]}
+                </span>
+                <span className={[
+                    "flex h-7 w-7 items-center justify-center rounded-full text-sm font-extrabold mt-0.5",
+                    isToday ? "bg-black text-white" : "text-black",
+                ].join(" ")}>
+                    {day.getDate()}
+                </span>
+                {registros.length > 0 ? (
+                    <div className="flex flex-col items-center gap-0.5 mt-0.5">
+                        <span className="text-[9px] font-bold text-black/40">
+                            {registros.length} ingreso{registros.length > 1 ? "s" : ""}
+                        </span>
+                        <div className="flex items-center gap-1">
+                            {bebacks > 0 && (
+                                <span className="text-[8px] font-bold text-emerald-600 bg-emerald-50 px-1.5 py-px rounded-full border border-emerald-200">
+                                    ✓ {bebacks}
+                                </span>
+                            )}
+                            {noRegreso > 0 && (
+                                <span className="text-[8px] font-bold text-red-600 bg-red-50 px-1.5 py-px rounded-full border border-red-200">
+                                    ✗ {noRegreso}
+                                </span>
+                            )}
+                        </div>
+                    </div>
+                ) : (
+                    <span className="h-3.5" />
+                )}
+            </div>
+
+            {/* Tarjetas */}
+            <div className="p-1.5">
+                {registros.length === 0 ? (
+                    <div className="flex items-center justify-center py-8 text-[10px] text-black/20 font-semibold">
+                        Sin ingresos
+                    </div>
+                ) : (
+                    <div className="space-y-1.5">
+                        {registros
+                            .slice()
+                            .sort((a, b) => {
+                                const da = parseLocalDT(a.fecha_hora_cita);
+                                const db = parseLocalDT(b.fecha_hora_cita);
+                                return (da?.getTime() ?? 0) - (db?.getTime() ?? 0);
+                            })
+                            .map((r) => (
+                                <PisoCard key={r.id} registro={r} onOpenEdit={onOpenEdit} />
+                            ))
+                        }
+                    </div>
+                )}
+            </div>
+        </div>
+    );
+}
+
+// Kanban semanal completo
+function KanbanAgenda({ filtered, onOpenEdit, onOpenCreate, loading }) {
+    const [weekStart, setWeekStart] = useState(() => startOfWeek(new Date()));
+    const [search,    setSearch]    = useState("");
+
+    const weekDays = useMemo(
+        () => Array.from({ length: 7 }, (_, i) => addDays(weekStart, i)),
+        [weekStart]
+    );
+    const todayYMD = localYMD(new Date());
+
+    const headerLabel = useMemo(() => {
+        const from = weekDays[0], to = weekDays[6];
+        if (from.getMonth() === to.getMonth())
+            return `${from.getDate()} – ${to.getDate()} de ${MESES[from.getMonth()]} ${from.getFullYear()}`;
+        return `${from.getDate()} ${MESES[from.getMonth()].slice(0,3)} – ${to.getDate()} ${MESES[to.getMonth()].slice(0,3)} ${to.getFullYear()}`;
+    }, [weekDays]);
+
+    // Búsqueda local dentro de la agenda
+    const searched = useMemo(() => {
+        if (!search.trim()) return filtered;
+        const q = search.toLowerCase();
+        return filtered.filter((r) =>
+            r?.cliente?.nombre?.toLowerCase().includes(q)    ||
+            r?.cliente?.telefono?.includes(q)                ||
+            r?.agencia?.toLowerCase().includes(q)            ||
+            r?.asesor_piso?.toLowerCase().includes(q)        ||
+            r?.fuente_prospeccion?.toLowerCase().includes(q) ||
+            r?.auto_interes?.toLowerCase().includes(q)       ||
+            r?.folio?.toLowerCase().includes(q)
+        );
+    }, [filtered, search]);
 
     const byDay = useMemo(() => {
         const map = {};
-        registros.forEach(r => {
-            if (!r.fecha_hora_cita) return;
-            const d = new Date(r.fecha_hora_cita);
-            if (d.getFullYear()===year && d.getMonth()===month) {
-                const key = d.getDate();
-                if (!map[key]) map[key]=[];
-                map[key].push(r);
-            }
+        searched.forEach((r) => {
+            const dt = parseLocalDT(r.fecha_hora_cita);
+            if (!dt) return;
+            const key = localYMD(dt);
+            if (!map[key]) map[key] = [];
+            map[key].push(r);
         });
         return map;
-    }, [registros, year, month]);
+    }, [searched]);
 
-    const cells = [];
-    for (let i=0; i<primerDia; i++) cells.push(null);
-    for (let d=1; d<=diasEnMes; d++) cells.push(d);
-    while (cells.length%7!==0) cells.push(null);
-
-    const esHoy = d => d===hoy.getDate() && month===hoy.getMonth() && year===hoy.getFullYear();
-    const prevMonth = () => month===0 ? (setMonth(11),setYear(y=>y-1)) : setMonth(m=>m-1);
-    const nextMonth = () => month===11 ? (setMonth(0),setYear(y=>y+1)) : setMonth(m=>m+1);
-
-    const eventosDia = diaSeleccionado ? (byDay[diaSeleccionado]||[]) : [];
+    const weekStats = useMemo(() => {
+        const ymds = new Set(weekDays.map(localYMD));
+        const wk   = searched.filter((r) => {
+            const dt = parseLocalDT(r.fecha_hora_cita);
+            return dt && ymds.has(localYMD(dt));
+        });
+        return {
+            total:   wk.length,
+            bebacks: wk.filter((r) => r.be_back === true).length,
+            noBack:  wk.filter((r) => r.be_back === false).length,
+        };
+    }, [searched, weekDays]);
 
     return (
-        <div className="grid gap-5 lg:grid-cols-[1fr_340px]">
-            {/* Calendario */}
-            <div className="overflow-hidden rounded-xl border border-black/10 bg-white shadow-sm">
-                {/* Nav mes */}
-                <div className="flex items-center justify-between px-5 py-3"
-                    style={{background:"linear-gradient(135deg,#1a1a1a 0%,#2d2d2d 100%)"}}>
-                    <button onClick={prevMonth} className="rounded-lg p-2 text-white hover:bg-white/10 transition">
-                        <ChevronLeft className="h-5 w-5"/>
+        <div
+            className="rounded-xl border border-black/10 bg-white shadow-sm overflow-hidden flex flex-col"
+            style={{ height: "calc(100vh - 310px)", minHeight: 480 }}
+        >
+            {/* Top bar */}
+            <div className="flex items-center gap-3 px-4 py-3 border-b border-black/10 shrink-0 flex-wrap">
+                {/* Búsqueda */}
+                <div className="flex items-center gap-2 flex-1 min-w-[180px] max-w-xs border border-black/15 rounded-lg px-3 py-1.5 bg-slate-50">
+                    <Search className="h-3.5 w-3.5 text-black/30 shrink-0" />
+                    <input
+                        type="text"
+                        value={search}
+                        onChange={(e) => setSearch(e.target.value)}
+                        placeholder="Buscar en la semana…"
+                        className="flex-1 bg-transparent text-xs outline-none text-black placeholder:text-black/30"
+                    />
+                    {search && (
+                        <button onClick={() => setSearch("")} className="text-black/30 hover:text-black/60">
+                            <X className="h-3 w-3" />
+                        </button>
+                    )}
+                </div>
+
+                {/* Nav semana */}
+                <div className="flex items-center gap-1.5 ml-auto">
+                    {loading && <Loader2 className="h-4 w-4 animate-spin text-black/30" />}
+                    <button
+                        onClick={() => setWeekStart((d) => addDays(d, -7))}
+                        className="h-8 w-8 flex items-center justify-center rounded-lg border border-black/15 hover:bg-black hover:text-white transition"
+                    >
+                        <ChevronLeft className="h-4 w-4" />
                     </button>
-                    <span className="text-base font-extrabold text-white">{MESES[month]} {year}</span>
-                    <button onClick={nextMonth} className="rounded-lg p-2 text-white hover:bg-white/10 transition">
-                        <ChevronRight className="h-5 w-5"/>
-                    </button>
-                </div>
-
-                {/* Días semana */}
-                <div className="grid grid-cols-7 border-b border-black/10 bg-slate-50">
-                    {DIAS_SEMANA.map(d => (
-                        <div key={d} className="py-2 text-center text-xs font-extrabold uppercase tracking-wider text-black/40">{d}</div>
-                    ))}
-                </div>
-
-                {/* Celdas */}
-                <div className="grid grid-cols-7">
-                    {cells.map((dia, idx) => {
-                        const eventos = dia ? (byDay[dia]||[]) : [];
-                        const seleccionado = dia===diaSeleccionado;
-                        const bebacks = eventos.filter(r=>r.be_back).length;
-                        return (
-                            <div key={idx}
-                                onClick={() => dia && setDiaSeleccionado(seleccionado ? null : dia)}
-                                className={[
-                                    "min-h-[88px] cursor-pointer border-b border-r border-black/5 p-1.5 transition",
-                                    !dia ? "bg-neutral-50" :
-                                    seleccionado ? "bg-black/5 ring-2 ring-inset ring-black/20" :
-                                    "bg-white hover:bg-slate-50",
-                                ].join(" ")}
-                            >
-                                {dia && (
-                                    <>
-                                        <div className={[
-                                            "mb-1 inline-flex h-7 w-7 items-center justify-center rounded-full text-xs font-bold",
-                                            esHoy(dia) ? "bg-black text-white" :
-                                            seleccionado ? "bg-black/80 text-white" : "text-black/70",
-                                        ].join(" ")}>{dia}</div>
-
-                                        {/* Pills de eventos */}
-                                        <div className="space-y-0.5">
-                                            {eventos.slice(0,2).map(r => (
-                                                <button key={r.id}
-                                                    onClick={e=>{e.stopPropagation();onOpenEdit(r);}}
-                                                    className="w-full truncate rounded bg-[#2d2d2d] px-1.5 py-0.5 text-left text-[10px] font-semibold text-white hover:bg-black transition"
-                                                    title={r?.cliente?.nombre||"—"}>
-                                                    {toDTLocal(r.fecha_hora_cita).slice(11,16)} {r?.cliente?.nombre||"—"}
-                                                </button>
-                                            ))}
-                                            {eventos.length>2 && (
-                                                <div className="text-[10px] font-bold text-black/40">+{eventos.length-2} más</div>
-                                            )}
-                                        </div>
-
-                                        {/* Indicador be-back */}
-                                        {bebacks>0 && (
-                                            <div className="mt-0.5 text-[9px] font-bold text-emerald-600">✓ {bebacks} be-back</div>
-                                        )}
-                                    </>
-                                )}
-                            </div>
-                        );
-                    })}
-                </div>
-
-                {/* Footer */}
-                <div className="flex items-center justify-between border-t border-black/10 px-5 py-2">
-                    <span className="text-xs font-semibold text-black/40">
-                        {Object.values(byDay).flat().length} cita(s) en {MESES[month]}
+                    <span className="text-sm font-extrabold text-black min-w-[200px] text-center">
+                        {headerLabel}
                     </span>
-                    <button onClick={()=>onOpenCreate()}
-                        className="inline-flex items-center gap-1.5 rounded-lg bg-black px-3 py-1.5 text-xs font-bold text-white hover:bg-black/80 transition">
-                        <Plus className="h-3.5 w-3.5"/> Nueva cita
+                    <button
+                        onClick={() => setWeekStart((d) => addDays(d, +7))}
+                        className="h-8 w-8 flex items-center justify-center rounded-lg border border-black/15 hover:bg-black hover:text-white transition"
+                    >
+                        <ChevronRight className="h-4 w-4" />
+                    </button>
+                    <button
+                        onClick={() => setWeekStart(startOfWeek(new Date()))}
+                        className="rounded-lg border border-black px-3 py-1.5 text-xs font-extrabold hover:bg-black hover:text-white transition ml-1"
+                    >
+                        Hoy
+                    </button>
+                    <button
+                        onClick={onOpenCreate}
+                        className="ml-2 inline-flex items-center gap-1.5 rounded-lg bg-black px-3 py-1.5 text-xs font-bold text-white hover:bg-black/80 transition"
+                    >
+                        <Plus className="h-3.5 w-3.5" /> Nuevo ingreso
                     </button>
                 </div>
             </div>
 
-            {/* Panel lateral: detalle del día */}
-            <div className="rounded-xl border border-black/10 bg-white overflow-hidden shadow-sm">
-                <div className="border-b border-black/10 px-4 py-3"
-                    style={{background:"linear-gradient(135deg,#1a1a1a 0%,#2d2d2d 100%)"}}>
-                    <p className="text-sm font-extrabold text-white">
-                        {diaSeleccionado
-                            ? `${diaSeleccionado} de ${MESES[month]}`
-                            : "Selecciona un día"}
-                    </p>
-                    <p className="text-xs text-white/50">{eventosDia.length} cita(s)</p>
+            {/* Leyenda + stats */}
+            <div className="flex items-center gap-4 px-4 py-2 border-b border-black/[.06] shrink-0 bg-slate-50/50 flex-wrap">
+                <div className="flex items-center gap-1.5">
+                    <span className="h-2 w-2 rounded-full bg-emerald-500" />
+                    <span className="text-[10px] font-semibold text-black/50">Be Back</span>
                 </div>
+                <div className="flex items-center gap-1.5">
+                    <span className="h-2 w-2 rounded-full bg-red-400" />
+                    <span className="text-[10px] font-semibold text-black/50">No regresó</span>
+                </div>
+                <div className="flex items-center gap-1.5">
+                    <span className="h-2 w-2 rounded-full bg-slate-400" />
+                    <span className="text-[10px] font-semibold text-black/50">Sin definir</span>
+                </div>
+                <div className="ml-auto flex items-center gap-2 flex-wrap">
+                    <span className="text-[10px] text-black/30 font-semibold">
+                        {weekStats.total} ingreso{weekStats.total !== 1 ? "s" : ""} esta semana
+                    </span>
+                    {weekStats.bebacks > 0 && (
+                        <span className="text-[10px] font-bold text-emerald-600 bg-emerald-50 border border-emerald-200 px-2 py-0.5 rounded-full">
+                            ✓ {weekStats.bebacks} Be Back
+                        </span>
+                    )}
+                    {weekStats.noBack > 0 && (
+                        <span className="text-[10px] font-bold text-red-600 bg-red-50 border border-red-200 px-2 py-0.5 rounded-full">
+                            ✗ {weekStats.noBack} no regresaron
+                        </span>
+                    )}
+                    {weekStats.total > 0 && (
+                        <span className="text-[10px] font-bold text-black/40 bg-black/5 px-2 py-0.5 rounded-full">
+                            {Math.round((weekStats.bebacks / weekStats.total) * 100)}% tasa BB
+                        </span>
+                    )}
+                </div>
+            </div>
 
-                {!diaSeleccionado ? (
-                    <div className="flex flex-col items-center justify-center py-16 text-black/30">
-                        <CalendarDays className="h-10 w-10 mb-2"/>
-                        <p className="text-sm font-semibold">Toca un día para ver sus citas</p>
-                    </div>
-                ) : eventosDia.length===0 ? (
-                    <div className="flex flex-col items-center justify-center py-16 text-black/30">
-                        <Clock className="h-10 w-10 mb-2"/>
-                        <p className="text-sm font-semibold">Sin citas este día</p>
-                        <button onClick={()=>onOpenCreate()}
-                            className="mt-3 inline-flex items-center gap-1.5 rounded-lg bg-black px-3 py-1.5 text-xs font-bold text-white hover:bg-black/80">
-                            <Plus className="h-3 w-3"/> Agregar
-                        </button>
-                    </div>
-                ) : (
-                    <div className="divide-y divide-black/5">
-                        {eventosDia.map(r => (
-                            <button key={r.id} onClick={()=>onOpenEdit(r)}
-                                className="flex w-full items-start gap-3 px-4 py-3 text-left hover:bg-slate-50 transition">
-                                <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-black/5">
-                                    <CalendarDays className="h-4 w-4 text-black/60"/>
-                                </div>
-                                <div className="min-w-0 flex-1">
-                                    <p className="text-sm font-bold text-black truncate">
-                                        {toDTLocal(r.fecha_hora_cita).slice(11,16)} — {r?.cliente?.nombre||"—"}
-                                    </p>
-                                    <p className="text-xs text-black/50 truncate">{r.auto_interes||"—"} · {r.asesor_piso||"—"}</p>
-                                    <p className="text-xs text-black/40 truncate">{r.fuente_prospeccion||"—"}</p>
-                                </div>
-                                <span className={[
-                                    "shrink-0 rounded-full px-2 py-0.5 text-[10px] font-bold",
-                                    r.be_back ? "bg-emerald-100 text-emerald-700" : "bg-red-50 text-red-500",
-                                ].join(" ")}>
-                                    {r.be_back ? "Be Back" : "No regresó"}
-                                </span>
-                            </button>
-                        ))}
-                    </div>
-                )}
+            {/* Grid kanban */}
+            <div className="flex-1 overflow-x-auto overflow-y-auto">
+                <div className="grid" style={{ gridTemplateColumns: "repeat(7, minmax(160px, 1fr))" }}>
+                    {weekDays.map((day) => {
+                        const ymd     = localYMD(day);
+                        const isToday = ymd === todayYMD;
+                        return (
+                            <DayColumn
+                                key={ymd}
+                                day={day}
+                                registros={byDay[ymd] || []}
+                                isToday={isToday}
+                                onOpenEdit={onOpenEdit}
+                            />
+                        );
+                    })}
+                </div>
             </div>
         </div>
     );
@@ -348,11 +553,10 @@ function TooltipCustom({ active, payload, label }) {
 }
 
 function GraficasView({ registros }) {
-    const total   = registros.length;
-    const bebacks = registros.filter(r=>r.be_back).length;
+    const total     = registros.length;
+    const bebacks   = registros.filter(r=>r.be_back).length;
     const sinBeback = total - bebacks;
 
-    // Tendencia últimos 7 días
     const trendData = useMemo(() => {
         const hoy = new Date();
         return Array.from({length:7},(_,i)=>{
@@ -363,37 +567,29 @@ function GraficasView({ registros }) {
         });
     },[registros]);
 
-    // Por asesor
     const porAsesor = useMemo(()=>{
         const map={};
         registros.forEach(r=>{ const k=(r.asesor_piso||"Sin asignar").split(" ").slice(0,2).join(" "); map[k]=(map[k]||0)+1; });
         return Object.entries(map).map(([name,value])=>({name,value})).sort((a,b)=>b.value-a.value).slice(0,5);
     },[registros]);
 
-    // Por fuente
     const porFuente = useMemo(()=>{
         const map={};
         registros.forEach(r=>{ const k=r.fuente_prospeccion||"Sin fuente"; map[k]=(map[k]||0)+1; });
         return Object.entries(map).map(([name,value])=>({name,value})).sort((a,b)=>b.value-a.value);
     },[registros]);
 
-    // Por auto
     const porAuto = useMemo(()=>{
         const map={};
         registros.forEach(r=>{ const k=r.auto_interes||"—"; map[k]=(map[k]||0)+1; });
         return Object.entries(map).map(([name,value])=>({name,value})).sort((a,b)=>b.value-a.value).slice(0,6);
     },[registros]);
 
-    const pieData = [
-        { name:"Be Back", value:bebacks },
-        { name:"No regresó", value:sinBeback },
-    ];
-
-    const cardStyle = "rounded-2xl border border-black/10 bg-white p-5 shadow-sm";
+    const pieData = [{ name:"Be Back", value:bebacks },{ name:"No regresó", value:sinBeback }];
+    const card = "rounded-2xl border border-black/10 bg-white p-5 shadow-sm";
 
     return (
         <div className="space-y-5">
-            {/* KPIs */}
             <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
                 {[
                     { label:"Total ingresos",  value:total,    bg:"#1a1a1a" },
@@ -408,10 +604,8 @@ function GraficasView({ registros }) {
                     </div>
                 ))}
             </div>
-
-            {/* Fila 1 */}
             <div className="grid gap-5 lg:grid-cols-3">
-                <div className={"lg:col-span-2 "+cardStyle}>
+                <div className={"lg:col-span-2 "+card}>
                     <p className="mb-1 text-sm font-extrabold text-black">Ingresos últimos 7 días</p>
                     <p className="mb-4 text-xs text-black/40">Citas registradas por día</p>
                     <ResponsiveContainer width="100%" height={220}>
@@ -424,16 +618,14 @@ function GraficasView({ registros }) {
                         </AreaChart>
                     </ResponsiveContainer>
                 </div>
-
-                <div className={cardStyle}>
+                <div className={card}>
                     <p className="mb-1 text-sm font-extrabold text-black">Be Back</p>
                     <p className="mb-4 text-xs text-black/40">¿Regresaron?</p>
                     <div className="flex items-center justify-center gap-6">
                         <ResponsiveContainer width="55%" height={160}>
                             <PieChart>
                                 <Pie data={pieData} cx="50%" cy="50%" innerRadius={45} outerRadius={70} dataKey="value" paddingAngle={3}>
-                                    <Cell fill="#1a1a1a"/>
-                                    <Cell fill="#d1d5db"/>
+                                    <Cell fill="#1a1a1a"/><Cell fill="#d1d5db"/>
                                 </Pie>
                                 <Tooltip content={<TooltipCustom/>}/>
                             </PieChart>
@@ -450,10 +642,8 @@ function GraficasView({ registros }) {
                     </div>
                 </div>
             </div>
-
-            {/* Fila 2 */}
             <div className="grid gap-5 lg:grid-cols-3">
-                <div className={cardStyle}>
+                <div className={card}>
                     <p className="mb-1 text-sm font-extrabold text-black">Top asesores</p>
                     <p className="mb-4 text-xs text-black/40">Por número de citas</p>
                     <ResponsiveContainer width="100%" height={200}>
@@ -466,8 +656,7 @@ function GraficasView({ registros }) {
                         </BarChart>
                     </ResponsiveContainer>
                 </div>
-
-                <div className={cardStyle}>
+                <div className={card}>
                     <p className="mb-1 text-sm font-extrabold text-black">Fuente de prospección</p>
                     <p className="mb-4 text-xs text-black/40">Origen de los ingresos</p>
                     <ResponsiveContainer width="100%" height={200}>
@@ -480,8 +669,7 @@ function GraficasView({ registros }) {
                         </BarChart>
                     </ResponsiveContainer>
                 </div>
-
-                <div className={cardStyle}>
+                <div className={card}>
                     <p className="mb-1 text-sm font-extrabold text-black">Auto de interés</p>
                     <p className="mb-4 text-xs text-black/40">Modelos más solicitados</p>
                     <ResponsiveContainer width="100%" height={200}>
@@ -512,23 +700,22 @@ export default function RegistroCitasPiso() {
     },[user]);
 
     const userAgencia = String(user?.agencia||"").trim();
-    const [registros, setRegistros] = useState([]);
-    const [activeView, setActiveView] = useState("tabla");
 
-    const [ctxMenu, setCtxMenu]   = useState({open:false,x:0,y:0,row:null});
-    const [sort, setSort]         = useState({key:"fecha_hora_cita",dir:"desc"});
-    const [filters, setFilters]   = useState({q:"",agencia:"Todos",rangoDesde:"",rangoHasta:""});
-    const [openModal, setOpenModal] = useState(false);
-    const [mode, setMode]           = useState("create");
-    const [draft, setDraft]         = useState(null);
-    const [loadingList, setLoadingList]     = useState(false);
+    const [registros,   setRegistros]   = useState([]);
+    const [activeView,  setActiveView]  = useState("tabla");
+    const [ctxMenu,     setCtxMenu]     = useState({open:false,x:0,y:0,row:null});
+    const [sort,        setSort]        = useState({key:"fecha_hora_cita",dir:"desc"});
+    const [filters,     setFilters]     = useState({q:"",agencia:"Todos",rangoDesde:"",rangoHasta:""});
+    const [openModal,   setOpenModal]   = useState(false);
+    const [mode,        setMode]        = useState("create");
+    const [draft,       setDraft]       = useState(null);
+    const [loadingList,   setLoadingList]   = useState(false);
     const [loadingDetail, setLoadingDetail] = useState(false);
-    const [saving, setSaving]               = useState(false);
-    const [updatingInline, setUpdatingInline] = useState({});
-    const [touchedSave, setTouchedSave]     = useState(false);
+    const [saving,        setSaving]        = useState(false);
+    const [updatingInline,setUpdatingInline]= useState({});
+    const [touchedSave,   setTouchedSave]   = useState(false);
 
     const REQUIRED = useMemo(()=>({cliente_telefono:"Teléfono",fecha_hora_cita:"Fecha y hora"}),[]);
-
     const missing = useMemo(()=>{
         if (!draft) return [];
         return Object.keys(REQUIRED).filter(key=>{
@@ -536,11 +723,10 @@ export default function RegistroCitasPiso() {
             return v===null||v===undefined||(typeof v==="string"&&v.trim()==="");
         });
     },[draft,REQUIRED]);
-
     const isInvalid = key => touchedSave && missing.includes(key);
 
-    const telDigits     = useMemo(()=>String(draft?.cliente_telefono||"").replace(/\D/g,""),[draft?.cliente_telefono]);
-    const telIsOk       = useMemo(()=>/^(?:\d{10}|52\d{10})$/.test(telDigits),[telDigits]);
+    const telDigits       = useMemo(()=>String(draft?.cliente_telefono||"").replace(/\D/g,""),[draft?.cliente_telefono]);
+    const telIsOk         = useMemo(()=>/^(?:\d{10}|52\d{10})$/.test(telDigits),[telDigits]);
     const telIsNormalized = useMemo(()=>/^52\d{10}$/.test(telDigits),[telDigits]);
     const telError = useMemo(()=>{
         if (!openModal||!draft||!telDigits) return "";
@@ -553,9 +739,9 @@ export default function RegistroCitasPiso() {
     },[openModal,draft,telDigits]);
     const telInvalid = !!telError;
 
-    const inputBase = "w-full rounded-lg border shadow-sm px-3 py-2 text-sm text-black font-semibold outline-none";
-    const inputOk   = "border-black/15 bg-neutral-100";
-    const inputBad  = "border-red-500 bg-red-50";
+    const inputBase = "w-full rounded-lg border px-3 py-2 text-sm text-black font-medium outline-none transition";
+    const inputOk   = "border-black/12 bg-white focus:border-black/30";
+    const inputBad  = "border-red-300 bg-red-50";
 
     function toggleSort(key){ setSort(p=>p.key!==key?{key,dir:"asc"}:{key,dir:p.dir==="asc"?"desc":"asc"}); }
 
@@ -712,125 +898,275 @@ export default function RegistroCitasPiso() {
     const resetFilters=()=>setFilters({q:"",agencia:"Todos",rangoDesde:"",rangoHasta:""});
     const setHoy=()=>{ const h=toYMDLocal(new Date()); setFilters(p=>({...p,rangoDesde:h,rangoHasta:h})); };
 
-    // ─── RENDER ───────────────────────────────────────────────────────────────
     return (
         <div className="w-full space-y-4">
 
-            {/* ══ HEADER con degradado gris antracita ══ */}
-            <div className="relative overflow-hidden rounded-xl shadow-lg"
-                style={{background:"linear-gradient(135deg,#111111 0%,#2d2d2d 55%,#3d3d3d 100%)"}}>
-                <div className="pointer-events-none absolute inset-0">
-                    <div className="absolute -top-20 -left-24 h-64 w-64 rounded-full bg-white/5 blur-3xl"/>
-                    <div className="absolute -bottom-20 right-0 h-72 w-72 rounded-full bg-white/5 blur-3xl"/>
-                </div>
+            {/* ── Header oscuro con selector de vista ── */}
+          {/* ── Header premium Control de Piso ── */}
+<div
+    className="relative overflow-hidden rounded-2xl"
+    style={{
+        background: "linear-gradient(135deg, #0d0d0d 0%, #181818 40%, #111111 70%, #0a0a0a 100%)",
+        border: "0.5px solid rgba(255,255,255,0.06)",
+    }}
+>
+    {/* Línea de acento superior */}
+    <div
+        className="absolute top-0 left-0 right-0"
+        style={{
+            height: "1px",
+            background:
+                "linear-gradient(90deg, transparent 0%, rgba(255,255,255,0) 10%, rgba(255,255,255,0.55) 40%, rgba(255,255,255,0.55) 60%, rgba(255,255,255,0) 90%, transparent 100%)",
+        }}
+    />
 
-                <div className="relative px-5 py-5 sm:px-7 sm:py-6">
-                    <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-                        <div className="min-w-0">
-                            <h2 className="truncate text-lg font-extrabold text-white sm:text-xl">Control de piso</h2>
-                            <p className="mt-1 text-sm text-white/60">Doble clic para editar un registro.</p>
-                            {!isAdmin&&userAgencia&&(
-                                <p className="mt-1 text-xs font-semibold text-white/40">
-                                    Agencia: <span className="text-white/70">{userAgencia}</span>
-                                </p>
-                            )}
-                        </div>
+    {/* Glows */}
+    <div
+        className="pointer-events-none absolute"
+        style={{
+            top: "-60px", left: "-60px",
+            width: "260px", height: "200px",
+            background: "radial-gradient(ellipse, rgba(255,255,255,0.03) 0%, transparent 70%)",
+        }}
+    />
+    <div
+        className="pointer-events-none absolute"
+        style={{
+            bottom: "-40px", right: "-20px",
+            width: "220px", height: "160px",
+            background: "radial-gradient(ellipse, rgba(255,255,255,0.02) 0%, transparent 70%)",
+        }}
+    />
 
-                        <div className="flex items-center gap-2">
-                            {/* Toggle vistas */}
-                            <div className="flex overflow-hidden rounded-lg border border-white/20 bg-white/10 p-0.5 backdrop-blur-sm">
-                                {VIEWS.map(({key,label,Icon})=>{
-                                    const active=activeView===key;
-                                    return (
-                                        <button key={key} onClick={()=>setActiveView(key)}
-                                            className={["inline-flex items-center gap-1.5 rounded-md px-3 py-1.5 text-xs font-bold transition-all",
-                                                active?"bg-white text-[#2d2d2d] shadow":"text-white/70 hover:bg-white/15 hover:text-white"].join(" ")}>
-                                            <Icon className="h-3.5 w-3.5"/>
-                                            {label}
-                                        </button>
-                                    );
-                                })}
-                            </div>
+    <div className="relative px-6 pt-5 pb-0" style={{ zIndex: 1 }}>
 
-                            {/* Botón nuevo */}
-                            <button onClick={openCreate}
-                                className="inline-flex items-center justify-center gap-2 rounded-lg border border-white/20 bg-white/10 px-4 py-2 text-sm font-bold text-white backdrop-blur-sm transition hover:bg-white hover:text-[#2d2d2d]">
-                                <Plus className="h-4 w-4"/>
-                                Nuevo ingreso
-                            </button>
-                        </div>
-                    </div>
-                    <div className="mt-5 h-px w-full bg-gradient-to-r from-white/5 via-white/20 to-white/5"/>
-                </div>
+        {/* Fila 1 — breadcrumb + vista tabs */}
+        <div className="flex items-center justify-between mb-5">
+
+            {/* Breadcrumb */}
+            <div className="flex items-center gap-2.5">
+                <div
+                    className="rounded-full"
+                    style={{ width: 6, height: 6, background: "rgba(255,255,255,0.9)" }}
+                />
+                <span
+                    style={{
+                        fontSize: 11,
+                        color: "rgba(255,255,255,0.35)",
+                        letterSpacing: "0.08em",
+                        textTransform: "uppercase",
+                    }}
+                >
+                    Comercial &nbsp;/&nbsp; Control piso
+                </span>
             </div>
 
-            {/* ══ FILTROS ══ */}
-            <div className="rounded-xl border border-black/10 bg-white p-4 shadow-sm">
-                <div className="grid gap-3 md:grid-cols-12">
-                    <div className="md:col-span-6">
-                        <FilterBlock label="Búsqueda">
-                            <div className="flex items-center gap-2 rounded-lg border border-black bg-white px-3 py-2">
-                                <Search className="h-4 w-4 text-black"/>
-                                <input value={filters.q} onChange={e=>setFilters(p=>({...p,q:e.target.value}))}
-                                    placeholder="Dealer, cliente, teléfono, asesor, fuente…"
-                                    className="w-full text-sm text-black outline-none placeholder:text-black/40"/>
-                                {filters.q&&<button onClick={()=>setFilters(p=>({...p,q:""}))} className="p-1 text-black hover:text-red-500"><X className="h-4 w-4"/></button>}
-                            </div>
-                        </FilterBlock>
-                    </div>
+            {/* Selector de vista en pill-group */}
+            <div
+                className="flex gap-1 p-[3px] rounded-[10px]"
+                style={{
+                    background: "rgba(255,255,255,0.05)",
+                    border: "0.5px solid rgba(255,255,255,0.08)",
+                }}
+            >
+                {VIEWS.map(({ key, label, Icon }) => {
+                    const active = activeView === key;
+                    return (
+                        <button
+                            key={key}
+                            onClick={() => setActiveView(key)}
+                            className="inline-flex items-center gap-1.5 whitespace-nowrap transition-all"
+                            style={{
+                                padding: "6px 14px",
+                                borderRadius: 7,
+                                fontSize: 12,
+                                fontWeight: 500,
+                                border: active
+                                    ? "0.5px solid rgba(255,255,255,0.18)"
+                                    : "0.5px solid transparent",
+                                background: active ? "rgba(255,255,255,0.12)" : "transparent",
+                                color: active ? "#ffffff" : "rgba(255,255,255,0.38)",
+                            }}
+                        >
+                            <Icon size={13} />
+                            {label}
+                        </button>
+                    );
+                })}
+            </div>
+        </div>
 
-                    <div className="md:col-span-3">
-                        <FilterBlock label="Dealer">
-                            <select value={filters.agencia} onChange={e=>setFilters(p=>({...p,agencia:e.target.value}))}
-                                className="w-full rounded-lg border border-black bg-white px-3 py-2 text-sm text-black outline-none">
-                                {dealers.map(d=><option key={d} value={d}>{d}</option>)}
-                            </select>
-                        </FilterBlock>
-                    </div>
+        {/* Divisor */}
+        <div
+            style={{
+                height: "0.5px",
+                background:
+                    "linear-gradient(90deg, transparent, rgba(255,255,255,0.08) 15%, rgba(255,255,255,0.08) 85%, transparent)",
+                marginBottom: 18,
+            }}
+        />
 
-                    <div className="md:col-span-3">
-                        <FilterBlock label="Acciones">
-                            <div className="grid grid-cols-2 gap-2">
-                                <button onClick={setHoy}
-                                    className="inline-flex items-center justify-center gap-2 rounded-lg bg-emerald-600 px-3 py-2 text-sm font-semibold text-white hover:bg-emerald-700">
-                                    <CalendarDays className="h-4 w-4"/> Hoy
-                                </button>
-                                <button onClick={resetFilters}
-                                    className="inline-flex items-center justify-center gap-2 rounded-lg border border-black bg-white px-3 py-2 text-sm font-semibold text-black hover:bg-black hover:text-white transition">
-                                    <X className="h-4 w-4"/> Limpiar
-                                </button>
-                            </div>
-                        </FilterBlock>
-                    </div>
+        {/* Fila 2 — título + stats + botón */}
+        <div className="flex items-end justify-between gap-4 pb-5">
 
-                    <div className="md:col-span-6">
-                        <FilterBlock label="Desde">
-                            <input type="date" value={filters.rangoDesde} onChange={e=>setFilters(p=>({...p,rangoDesde:e.target.value}))}
-                                className="w-full rounded-lg border border-black bg-white px-3 py-2 text-sm text-black outline-none"/>
-                        </FilterBlock>
-                    </div>
-                    <div className="md:col-span-6">
-                        <FilterBlock label="Hasta">
-                            <input type="date" value={filters.rangoHasta} onChange={e=>setFilters(p=>({...p,rangoHasta:e.target.value}))}
-                                className="w-full rounded-lg border border-black bg-white px-3 py-2 text-sm text-black outline-none"/>
-                        </FilterBlock>
-                    </div>
-                </div>
+            <div>
+                <h2
+                    style={{
+                        fontSize: 26,
+                        fontWeight: 500,
+                        color: "#ffffff",
+                        margin: "0 0 5px",
+                        letterSpacing: "-0.02em",
+                        lineHeight: 1.1,
+                    }}
+                >
+                    Control de Piso
+                </h2>
+                <p style={{ fontSize: 13, color: "rgba(255,255,255,0.35)", margin: 0 }}>
+                    {activeView === "tabla"
+                        ? "Doble clic para editar un registro."
+                        : activeView === "agenda"
+                        ? "Vista semanal de ingresos."
+                        : "Estadísticas de ingresos."}
+                </p>
+                {!isAdmin && userAgencia && (
+                    <p style={{ fontSize: 11, color: "rgba(255,255,255,0.3)", marginTop: 4 }}>
+                        Agencia: <span style={{ color: "rgba(255,255,255,0.6)" }}>{userAgencia}</span>
+                    </p>
+                )}
             </div>
 
-            {/* ══ VISTAS ══ */}
+            <div className="flex items-center gap-3">
+                {/* Mini-stats */}
+                <div
+                    className="flex items-stretch overflow-hidden rounded-[10px]"
+                    style={{ border: "0.5px solid rgba(255,255,255,0.1)" }}
+                >
+                    {[
+                        { n: registros.length,                                                           l: "Total"     },
+                        { n: registros.filter(r => r.be_back).length,                                    l: "Be Back"   },
+                        { n: registros.length > 0 ? Math.round((registros.filter(r => r.be_back).length / registros.length) * 100) + "%" : "0%", l: "Tasa BB" },
+                    ].map((s, i) => (
+                        <div
+                            key={i}
+                            className="text-center px-[16px] py-[9px]"
+                            style={{
+                                background: "rgba(255,255,255,0.04)",
+                                borderLeft: i > 0 ? "0.5px solid rgba(255,255,255,0.08)" : "none",
+                            }}
+                        >
+                            <div style={{ fontSize: 18, fontWeight: 500, color: "#fff", lineHeight: 1 }}>
+                                {s.n}
+                            </div>
+                            <div style={{ fontSize: 10, color: "rgba(255,255,255,0.3)", marginTop: 3, textTransform: "uppercase", letterSpacing: "0.06em" }}>
+                                {s.l}
+                            </div>
+                        </div>
+                    ))}
+                </div>
 
-            {activeView==="agenda" && (
-                <AgendaView registros={filtered} onOpenEdit={openEdit} onOpenCreate={openCreate}/>
+                {/* Botón nuevo ingreso — oculto en agenda porque el kanban tiene el suyo */}
+                {activeView !== "agenda" && (
+                    <button
+                        onClick={openCreate}
+                        className="inline-flex items-center gap-2 whitespace-nowrap transition-all"
+                        style={{
+                            padding: "8px 16px",
+                            borderRadius: 9,
+                            fontSize: 13,
+                            fontWeight: 500,
+                            background: "rgba(255,255,255,0.1)",
+                            border: "0.5px solid rgba(255,255,255,0.18)",
+                            color: "#ffffff",
+                        }}
+                    >
+                        <Plus size={14} />
+                        Nuevo ingreso
+                    </button>
+                )}
+            </div>
+        </div>
+    </div>
+
+    {/* Franja inferior decorativa */}
+    <div
+        style={{
+            height: 3,
+            background: "linear-gradient(90deg, #1a1a1a 0%, #2a2a2a 30%, #1f1f1f 60%, #111 100%)",
+        }}
+    />
+</div>
+            {/* ── Filtros — solo visibles en tabla y gráficas ── */}
+            {activeView !== "agenda" && (
+                <div className="rounded-xl border border-black/10 bg-white p-4 shadow-sm">
+                    <div className="grid gap-3 md:grid-cols-12">
+                        <div className="md:col-span-6">
+                            <FilterBlock label="Búsqueda">
+                                <div className="flex items-center gap-2 rounded-lg border border-black bg-white px-3 py-2">
+                                    <Search className="h-4 w-4 text-black"/>
+                                    <input value={filters.q} onChange={e=>setFilters(p=>({...p,q:e.target.value}))}
+                                        placeholder="Dealer, cliente, teléfono, asesor, fuente…"
+                                        className="w-full text-sm text-black outline-none placeholder:text-black/40"/>
+                                    {filters.q&&<button onClick={()=>setFilters(p=>({...p,q:""}))} className="p-1 text-black hover:text-red-500"><X className="h-4 w-4"/></button>}
+                                </div>
+                            </FilterBlock>
+                        </div>
+                        <div className="md:col-span-3">
+                            <FilterBlock label="Dealer">
+                                <select value={filters.agencia} onChange={e=>setFilters(p=>({...p,agencia:e.target.value}))}
+                                    className="w-full rounded-lg border border-black bg-white px-3 py-2 text-sm text-black outline-none">
+                                    {dealers.map(d=><option key={d} value={d}>{d}</option>)}
+                                </select>
+                            </FilterBlock>
+                        </div>
+                        <div className="md:col-span-3">
+                            <FilterBlock label="Acciones">
+                                <div className="grid grid-cols-2 gap-2">
+                                    <button onClick={setHoy}
+                                        className="inline-flex items-center justify-center gap-2 rounded-lg bg-emerald-600 px-3 py-2 text-sm font-semibold text-white hover:bg-emerald-700">
+                                        <CalendarDays className="h-4 w-4"/> Hoy
+                                    </button>
+                                    <button onClick={resetFilters}
+                                        className="inline-flex items-center justify-center gap-2 rounded-lg border border-black bg-white px-3 py-2 text-sm font-semibold text-black hover:bg-black hover:text-white transition">
+                                        <X className="h-4 w-4"/> Limpiar
+                                    </button>
+                                </div>
+                            </FilterBlock>
+                        </div>
+                        <div className="md:col-span-6">
+                            <FilterBlock label="Desde">
+                                <input type="date" value={filters.rangoDesde} onChange={e=>setFilters(p=>({...p,rangoDesde:e.target.value}))}
+                                    className="w-full rounded-lg border border-black bg-white px-3 py-2 text-sm text-black outline-none"/>
+                            </FilterBlock>
+                        </div>
+                        <div className="md:col-span-6">
+                            <FilterBlock label="Hasta">
+                                <input type="date" value={filters.rangoHasta} onChange={e=>setFilters(p=>({...p,rangoHasta:e.target.value}))}
+                                    className="w-full rounded-lg border border-black bg-white px-3 py-2 text-sm text-black outline-none"/>
+                            </FilterBlock>
+                        </div>
+                    </div>
+                </div>
             )}
 
-            {activeView==="graficas" && (
+            {/* ── Vista Agenda (kanban semanal) ── */}
+            {activeView === "agenda" && (
+                <KanbanAgenda
+                    filtered={filtered}
+                    onOpenEdit={openEdit}
+                    onOpenCreate={openCreate}
+                    loading={loadingList}
+                />
+            )}
+
+            {/* ── Vista Gráficas ── */}
+            {activeView === "graficas" && (
                 <GraficasView registros={filtered}/>
             )}
 
-            {activeView==="tabla" && (
+            {/* ── Vista Tabla ── */}
+            {activeView === "tabla" && (
                 <>
-                    {/* Desktop */}
                     <div className="hidden overflow-hidden rounded-xl shadow-sm lg:block">
                         <div className="overflow-auto">
                             <table className="min-w-full text-left text-sm">
@@ -894,7 +1230,7 @@ export default function RegistroCitasPiso() {
                         </div>
                     </div>
 
-                    {/* Mobile */}
+                    {/* Mobile cards */}
                     <div className="grid gap-3 lg:hidden">
                         {loadingList ? (
                             <div className="rounded-xl border border-black/10 bg-white p-6 shadow-sm">
@@ -928,17 +1264,17 @@ export default function RegistroCitasPiso() {
                 onDelete={async(row)=>{ await eliminarRegistro(row); setCtxMenu({open:false,x:0,y:0,row:null}); }}
                 onClose={()=>setCtxMenu({open:false,x:0,y:0,row:null})}/>
 
-            {/* ══ MODAL ══ */}
+            {/* ── Modal crear/editar ── */}
             <Modal open={openModal} title={mode==="create"?"Nuevo ingreso a piso":`Editar • ${draft?.id}`} onClose={closeModal}
                 footer={
                     <>
                         <button onClick={closeModal} disabled={saving}
-                            className="inline-flex items-center gap-2 rounded-lg bg-red-500 px-4 py-2 text-sm font-semibold text-white hover:bg-red-600 disabled:opacity-60">
-                            <X className="h-4 w-4"/> Cancelar
+                            className="inline-flex items-center gap-2 rounded-full border border-black/15 px-4 py-2 text-sm font-medium text-black/60 transition hover:bg-black/5 hover:text-black disabled:opacity-50">
+                            Cancelar
                         </button>
                         <button onClick={save} disabled={saving||loadingDetail||telInvalid||(draft?.cliente_telefono?!telIsOk:false)}
-                            className="inline-flex items-center gap-2 rounded-lg bg-black px-4 py-2 text-sm font-bold text-white hover:bg-black/80 disabled:opacity-60 transition">
-                            {saving?<Loader2 className="h-4 w-4 animate-spin"/>:<Save className="h-4 w-4"/>}
+                            className="inline-flex items-center gap-2 rounded-full bg-black px-5 py-2 text-sm font-medium text-white transition hover:bg-black/85 disabled:opacity-50">
+                            {saving?<Loader2 className="h-4 w-4 animate-spin"/>:null}
                             {saving?"Guardando...":"Guardar cambios"}
                         </button>
                     </>
@@ -952,12 +1288,10 @@ export default function RegistroCitasPiso() {
                                 {(isAdmin?DEALERS:userAgencia?[userAgencia]:DEALERS).map(d=><option key={d} value={d}>{d}</option>)}
                             </select>
                         </Field>
-
                         <Field label="Prospecto" icon={User}>
                             <input value={draft.cliente_nombre} onChange={e=>setDraft(p=>({...p,cliente_nombre:e.target.value}))}
                                 className={[inputBase,inputOk].join(" ")} placeholder="Nombre completo"/>
                         </Field>
-
                         <Field label="Teléfono" icon={Phone}>
                             <input maxLength={12} value={draft.cliente_telefono}
                                 onChange={e=>setDraft(p=>({...p,cliente_telefono:e.target.value.replace(/\D/g,"").slice(0,12)}))}
@@ -966,7 +1300,6 @@ export default function RegistroCitasPiso() {
                             {isInvalid("cliente_telefono")&&<div className="mt-1 text-xs font-bold text-red-600">Teléfono es requerido.</div>}
                             {!isInvalid("cliente_telefono")&&telError&&<div className="mt-1 text-xs font-bold text-red-600">{telError}</div>}
                         </Field>
-
                         <Field label="Auto de interés" icon={CarFront}>
                             <select value={draft.auto_interes||""} onChange={e=>setDraft(p=>({...p,auto_interes:e.target.value}))}
                                 className={[inputBase,inputOk].join(" ")}>
@@ -974,14 +1307,12 @@ export default function RegistroCitasPiso() {
                                 {VEHICULOS.map(d=><option key={d} value={d}>{d}</option>)}
                             </select>
                         </Field>
-
                         <Field label="Fecha y Hora" icon={CalendarDays}>
                             <input type="datetime-local" value={draft.fecha_hora_cita}
                                 onChange={e=>setDraft(p=>({...p,fecha_hora_cita:e.target.value}))}
                                 className={[inputBase,isInvalid("fecha_hora_cita")?inputBad:inputOk].join(" ")}/>
                             {isInvalid("fecha_hora_cita")&&<div className="mt-1 text-xs font-bold text-red-600">Fecha y hora requerido.</div>}
                         </Field>
-
                         <Field label="Fuente de prospección" icon={UserSearch}>
                             <select value={draft.fuente_prospeccion||""} onChange={e=>setDraft(p=>({...p,fuente_prospeccion:e.target.value}))}
                                 className={[inputBase,inputOk].join(" ")}>
@@ -989,7 +1320,6 @@ export default function RegistroCitasPiso() {
                                 {FUENTE.map(d=><option key={d} value={d}>{d}</option>)}
                             </select>
                         </Field>
-
                         <Field label="Asesor piso" icon={UserStar}>
                             <select value={draft.asesor_piso||""} onChange={e=>setDraft(p=>({...p,asesor_piso:e.target.value}))}
                                 className={[inputBase,inputOk].join(" ")}>
@@ -997,20 +1327,18 @@ export default function RegistroCitasPiso() {
                                 {ASESORES.map(d=><option key={d} value={d}>{d}</option>)}
                             </select>
                         </Field>
-
                         <Field label="Folio" icon={UserSearch}>
                             <input value={draft.folio||""} onChange={e=>setDraft(p=>({...p,folio:e.target.value}))}
                                 className={[inputBase,inputOk].join(" ")} placeholder="A12B9981"/>
                         </Field>
-
                         <Field label="Be Back" icon={UserCheck}>
                             <button type="button" onClick={()=>setDraft(p=>({...p,be_back:!p.be_back}))}
-                                className={["w-full rounded-lg border px-3 py-2 text-sm font-black transition",
-                                    draft.be_back?"border-emerald-300 bg-emerald-100 text-emerald-800":"border-red-200 bg-red-50 text-red-700"].join(" ")}>
-                                {draft.be_back?"✓ Regresó":"✗ No regresó"}
+                                className={["inline-flex w-full items-center justify-center gap-1.5 rounded-full border px-3 py-2 text-sm font-medium transition",
+                                    draft.be_back?"border-emerald-200 bg-emerald-50 text-emerald-700":"border-red-200 bg-red-50 text-red-600"].join(" ")}>
+                                {draft.be_back?<CheckCircle2 className="h-4 w-4"/>:<X className="h-4 w-4"/>}
+                                {draft.be_back?"Regresó":"No regresó"}
                             </button>
                         </Field>
-
                         <div className="md:col-span-3">
                             <Field label="Comentarios del cliente" icon={MessageSquareText}>
                                 <textarea value={draft.comentarios_cliente} onChange={e=>setDraft(p=>({...p,comentarios_cliente:e.target.value}))}

@@ -1,8 +1,7 @@
-import React from "react";
+// src/pages/PruebasManejo/PruebaManejoLayout.jsx
 import { Outlet } from "react-router-dom";
-import CitasTopNav from "../PruebasManejo/PruebaManejoTopNav";
 
-export default function CitasLayout() {
+export default function PruebaManejoLayout() {
     return (
         <div className="space-y-4">
             <Outlet />

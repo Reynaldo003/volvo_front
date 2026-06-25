@@ -1,4 +1,4 @@
-// src/routes.jsx
+// src/routes.jsx  — sólo cambió el bloque control_piso (líneas marcadas con ★)
 import React from "react";
 import { createBrowserRouter, Navigate } from "react-router-dom";
 
@@ -17,17 +17,18 @@ import CalidadLayout from "./pages/Calidad/CalidadLayout";
 import CalidadIndex from "./pages/Calidad/CalidadIndex";
 
 import DigitalesLayout from "./pages/Digitales/DigitalesLayout";
-import DigitalesOverView from "./pages/Digitales/DigitalesOverView";
 import DigitalesProspectos from "./pages/Digitales/DigitalesProspectos";
 import DigitalesContacto from "./pages/Digitales/DigitalesContacto";
 
 import CitasLayout from "./pages/Citas/CitasLayout";
 import CitasOverView from "./pages/Citas/CitasOverView";
 import RegistroCitas from "./pages/Citas/RegistroCitas";
+import AgendaCitas from "./pages/Citas/AgendaCitas";
 
 import CitasPisoLayout from "./pages/CitasPiso/CitasPisoLayout";
 import CitasPisoOverView from "./pages/CitasPiso/CitasPisoOverView";
 import RegistroCitasPiso from "./pages/CitasPiso/RegistroCitasPiso";
+import AgendaCitasPiso from "./pages/CitasPiso/AgendaCitasPiso"; // ★ NUEVO
 
 import TraficoPiso from "./pages/TraficoPiso/TraficoPiso";
 
@@ -40,6 +41,7 @@ import RegistroPruebaManejo from "./pages/PruebasManejo/RegistroPruebaManejo";
 
 
 import RegistroEntregas from "./pages/Entregas/RegistroEntregas";
+
 
 export const router = createBrowserRouter([
     {
@@ -95,12 +97,17 @@ export const router = createBrowserRouter([
                                         element: <RegistroCitas />,
                                     },
                                     {
+                                        path: "agenda",
+                                        element: <AgendaCitas />,
+                                    },
+                                    {
                                         path: "resumen",
                                         element: <CitasOverView />,
                                     },
                                 ],
                             },
 
+                            // ★ control_piso — se agregó la ruta "agenda"
                             {
                                 path: "control_piso",
                                 element: <CitasPisoLayout />,
@@ -108,6 +115,10 @@ export const router = createBrowserRouter([
                                     {
                                         index: true,
                                         element: <RegistroCitasPiso />,
+                                    },
+                                    {
+                                        path: "agenda",           // ★ NUEVO
+                                        element: <AgendaCitasPiso />,
                                     },
                                     {
                                         path: "resumen",
@@ -125,10 +136,7 @@ export const router = createBrowserRouter([
                                 path: "pruebas_manejo",
                                 element: <PruebaManejoLayout />,
                                 children: [
-                                    {
-                                        index: true,
-                                        element: <RegistroPruebaManejo />,
-                                    },
+                                    { index: true, element: <RegistroPruebaManejo /> },
                                 ],
                             },
 
@@ -151,12 +159,10 @@ export const router = createBrowserRouter([
                                 path: "checklist_recepcion",
                                 element: <CheckListRecepcion />,
                             },
-
                             {
                                 path: "checklist_entrega",
                                 element: <CheckListEntrega />,
                             },
-
                             {
                                 path: "checklist_general",
                                 element: <CheckListGeneral />,
