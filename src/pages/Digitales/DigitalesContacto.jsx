@@ -2389,7 +2389,7 @@ export default function DigitalesContacto() {
                             </button>
 
                             <button
-                                onClick={() => navigate("/comercial/prospectos")}
+                                onClick={() => navigate("/crm_volvo/comercial/prospectos")}
                                 className="inline-flex items-center gap-2 rounded-xl bg-white/10 px-4 py-2 text-sm font-extrabold text-white hover:bg-white/15"
                                 title="Volver a Prospectos"
                                 type="button"
