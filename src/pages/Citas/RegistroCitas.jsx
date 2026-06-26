@@ -6,7 +6,7 @@ import {
     Phone, LayoutList, UserCheck, UserSearch, UserMinus,
     UserStar, MessageSquareText, Building2, ChevronLeft,
     ChevronRight, CheckCircle2, XCircle, Circle, AlertCircle,
-    TableProperties,
+    TableProperties, Clock, PieChart, MoreVertical,
 } from "lucide-react";
 import { apiCitas } from "../../lib/apiCitas";
 import { createPortal } from "react-dom";
@@ -67,45 +67,49 @@ function startOfWeek(date) {
     d.setHours(0, 0, 0, 0);
     return d;
 }
+function startOfMonth(date) { const d = new Date(date); d.setDate(1); d.setHours(0, 0, 0, 0); return d; }
+function addMonths(date, n) { const d = new Date(date); d.setMonth(d.getMonth() + n); return d; }
+
+function initialsOf(name) {
+    const parts = normalizeStr(name).split(/\s+/).filter(Boolean);
+    if (parts.length === 0) return "?";
+    if (parts.length === 1) return parts[0].slice(0, 2).toUpperCase();
+    return (parts[0][0] + parts[1][0]).toUpperCase();
+}
 
 const DIAS_CORTOS  = ["Lun", "Mar", "Mié", "Jue", "Vie", "Sáb", "Dom"];
 const DIAS_LARGOS  = ["Lunes", "Martes", "Miércoles", "Jueves", "Viernes", "Sábado", "Domingo"];
 const MESES        = ["Enero","Febrero","Marzo","Abril","Mayo","Junio","Julio","Agosto","Septiembre","Octubre","Noviembre","Diciembre"];
-const HOURS        = Array.from({ length: 13 }, (_, i) => i + 8); // 08–20
+const HOURS        = Array.from({ length: 13 }, (_, i) => i + 8);
 const TIMELINE_START = 8  * 60;
 const TIMELINE_END   = 21 * 60;
 const TIMELINE_RANGE = TIMELINE_END - TIMELINE_START;
 
 const TIPO_COLOR = {
-    "Prueba de Manejo": { bg: "bg-blue-100",   border: "border-blue-400",   text: "text-blue-900",   dot: "bg-blue-500"   },
-    "Tradicional":      { bg: "bg-amber-100",  border: "border-amber-400",  text: "text-amber-900",  dot: "bg-amber-500"  },
-    "Digital":          { bg: "bg-violet-100", border: "border-violet-400", text: "text-violet-900", dot: "bg-violet-500" },
+    "Prueba de Manejo": { bg: "bg-blue-50",   border: "border-blue-300",   text: "text-blue-700",   dot: "bg-blue-500"   },
+    "Tradicional":      { bg: "bg-amber-50",  border: "border-amber-300",  text: "text-amber-700",  dot: "bg-amber-500"  },
+    "Digital":          { bg: "bg-violet-50", border: "border-violet-300", text: "text-violet-700", dot: "bg-violet-500" },
 };
-const FALLBACK_COLOR = { bg: "bg-slate-100", border: "border-slate-400", text: "text-slate-900", dot: "bg-slate-400" };
+const FALLBACK_COLOR = { bg: "bg-slate-50", border: "border-slate-300", text: "text-slate-600", dot: "bg-slate-400" };
 function colorFor(tipo) { return TIPO_COLOR[tipo] ?? FALLBACK_COLOR; }
+
+function estatusOf(row) {
+    const dt = parseLocalDT(row.fecha_hora_cita);
+    if (row.asistencia === true) return { label: "Asistió", bg: "bg-emerald-100", text: "text-emerald-700", border: "border-emerald-200" };
+    if (row.asistencia === false && dt && dt < new Date()) return { label: "No asistió", bg: "bg-red-100", text: "text-red-700", border: "border-red-200" };
+    return { label: "Pendiente", bg: "bg-amber-100", text: "text-amber-700", border: "border-amber-200" };
+}
 
 // ─── micro-components ───────────────────────────────────────────────────────
 function Skeleton({ className = "" }) {
     return <div className={["animate-pulse rounded-md bg-black/10", className].join(" ")} />;
 }
 
-function SkeletonRow() {
-    return (
-        <tr className="animate-pulse">
-            {Array.from({ length: 9 }).map((_, i) => (
-                <td key={i} className="px-4 py-3">
-                    <div className="h-4 w-28 rounded bg-slate-200/60" />
-                </td>
-            ))}
-        </tr>
-    );
-}
-
 function ModalSkeleton() {
     return (
         <div className="grid gap-3 md:grid-cols-2">
             {Array.from({ length: 10 }).map((_, i) => (
-                <div key={i} className="rounded-lg border border-white/10 bg-neutral-200/50 p-4">
+                <div key={i} className="rounded-lg border border-black/10 bg-neutral-100 p-4">
                     <Skeleton className="h-4 w-32" />
                     <Skeleton className="mt-3 h-10 w-full rounded-lg" />
                 </div>
@@ -118,18 +122,18 @@ function Modal({ open, title, onClose, children, footer }) {
     if (!open) return null;
     return createPortal(
         <div className="fixed inset-0 z-[60]">
-            <div className="absolute inset-0 bg-black/55 backdrop-blur-[2px]" onClick={onClose} />
+            <div className="absolute inset-0 bg-black/45 backdrop-blur-[2px]" onClick={onClose} />
             <div className="absolute inset-0 flex items-end justify-center p-3 sm:items-center">
-                <div className="w-full max-w-4xl overflow-hidden rounded-xl border border-black bg-neutral-100 shadow-2xl">
-                    <div className="flex items-center justify-between gap-3 bg-black px-5 py-4">
-                        <div className="truncate text-base font-extrabold text-white">{title}</div>
-                        <button onClick={onClose} className="inline-flex h-10 w-10 items-center justify-center rounded-xl border border-white/20 bg-white/10 text-white hover:bg-white/20" aria-label="Cerrar">
-                            <X className="h-5 w-5" />
+                <div className="w-full max-w-4xl overflow-hidden rounded-2xl border border-black/10 bg-white shadow-2xl">
+                    <div className="flex items-center justify-between gap-3 border-b border-black/10 bg-white px-5 py-4">
+                        <div className="truncate text-base font-semibold text-black">{title}</div>
+                        <button onClick={onClose} className="inline-flex h-9 w-9 items-center justify-center rounded-lg border border-black/10 bg-white text-black/60 hover:bg-neutral-100" aria-label="Cerrar">
+                            <X className="h-4.5 w-4.5" />
                         </button>
                     </div>
                     <div className="max-h-[72vh] overflow-auto p-5">{children}</div>
                     {footer ? (
-                        <div className="flex flex-col gap-2 border-t border-black/10 bg-white/80 px-5 py-4 sm:flex-row sm:items-center sm:justify-end">
+                        <div className="flex flex-col gap-2 border-t border-black/10 bg-neutral-50 px-5 py-4 sm:flex-row sm:items-center sm:justify-end">
                             {footer}
                         </div>
                     ) : null}
@@ -142,8 +146,8 @@ function Modal({ open, title, onClose, children, footer }) {
 
 function Field({ label, icon: Icon, children }) {
     return (
-        <div className="rounded-lg border border-black/10 bg-neutral-200/50 p-4">
-            <div className="mb-2 flex items-center gap-2 text-sm font-bold text-black">
+        <div className="rounded-lg border border-black/10 bg-neutral-50 p-4">
+            <div className="mb-2 flex items-center gap-2 text-sm font-semibold text-black/70">
                 {Icon ? <Icon className="h-4 w-4" /> : null}
                 <span>{label}</span>
             </div>
@@ -155,21 +159,26 @@ function Field({ label, icon: Icon, children }) {
 function FilterBlock({ label, children }) {
     return (
         <div>
-            <div className="mb-2 text-xs font-extrabold tracking-wide text-black">{label}</div>
+            <div className="mb-1.5 text-xs font-medium text-neutral-500">{label}</div>
             {children}
         </div>
     );
 }
 
-function ContextMenu({ ctxMenu, onDelete, onClose }) {
+function ContextMenu({ ctxMenu, onDelete, onToggleAsistencia, onClose }) {
     if (!ctxMenu.open || !ctxMenu.row) return null;
+    const row = ctxMenu.row;
     return createPortal(
         <div className="fixed z-[9999]" style={{ left: ctxMenu.x, top: ctxMenu.y }} onClick={(e) => e.stopPropagation()}>
-            <div className="w-48 overflow-hidden rounded-xl border border-black/10 bg-white shadow-2xl">
-                <button className="flex w-full items-center gap-2 px-4 py-3 text-left text-sm font-semibold text-red-600 hover:bg-red-50" onClick={() => onDelete(ctxMenu.row)}>
+            <div className="w-52 overflow-hidden rounded-xl border border-black/10 bg-white shadow-2xl">
+                <button className="flex w-full items-center gap-2 px-4 py-3 text-left text-sm font-semibold text-black hover:bg-neutral-50" onClick={() => { onToggleAsistencia(row); onClose(); }}>
+                    {row.asistencia ? <XCircle className="h-4 w-4" /> : <CheckCircle2 className="h-4 w-4" />}
+                    Marcar como {row.asistencia ? "no asistió" : "asistió"}
+                </button>
+                <button className="flex w-full items-center gap-2 border-t border-black/5 px-4 py-3 text-left text-sm font-semibold text-red-600 hover:bg-red-50" onClick={() => onDelete(row)}>
                     <Trash2 className="h-4 w-4" /> Eliminar
                 </button>
-                <button className="w-full px-4 py-2 text-left text-xs text-slate-500 hover:bg-slate-50" onClick={onClose}>
+                <button className="w-full border-t border-black/5 px-4 py-2 text-left text-xs text-slate-500 hover:bg-slate-50" onClick={onClose}>
                     Cerrar
                 </button>
             </div>
@@ -178,70 +187,371 @@ function ContextMenu({ ctxMenu, onDelete, onClose }) {
     );
 }
 
-function MobileCardList({ rows, loading, onEdit, onContext, onToggleAsistencia, updatingInline }) {
+const AVATAR_SIZES = {
+    7: "h-7 w-7 text-[10px]",
+    8: "h-8 w-8 text-[11px]",
+    9: "h-9 w-9 text-xs",
+};
+function Avatar({ name, size = 8 }) {
+    const sizeClass = AVATAR_SIZES[size] || AVATAR_SIZES[8];
     return (
-        <div className="lg:hidden">
-            {loading ? (
-                <div className="grid gap-3 sm:grid-cols-2">
-                    {Array.from({ length: 6 }).map((_, i) => (
-                        <div key={i} className="rounded-xl border border-black/10 bg-white p-4 shadow-sm">
-                            <Skeleton className="h-4 w-40" />
-                            <Skeleton className="mt-3 h-4 w-28" />
-                            <Skeleton className="mt-3 h-4 w-56" />
-                            <Skeleton className="mt-4 h-8 w-24 rounded-full" />
-                        </div>
-                    ))}
-                </div>
-            ) : rows.length === 0 ? (
-                <div className="rounded-xl border border-black/10 bg-white px-4 py-10 text-center text-sm font-semibold text-black">
-                    No hay resultados con esos filtros.
-                </div>
-            ) : (
-                <div className="grid gap-3 sm:grid-cols-2">
-                    {rows.map((row) => {
-                        const isUpdating = !!updatingInline[row.id];
-                        const nombreCliente = row?.cliente?.nombre || "—";
-                        const telCliente = row?.cliente?.telefono || "—";
-                        const fecha = row.fecha_hora_cita ? toDTLocal(row.fecha_hora_cita).replace("T", " ") : "—";
-                        return (
-                            <div key={row.id} onClick={() => onEdit(row)} onContextMenu={(e) => onContext(e, row)} className="cursor-pointer rounded-xl border border-black/10 bg-white p-4 shadow-sm transition hover:shadow-md">
-                                <div className="flex items-start justify-between gap-3">
-                                    <div className="min-w-0">
-                                        <div className="flex items-center gap-2 text-xs font-extrabold text-black">
-                                            <CalendarDays className="h-4 w-4" />
-                                            <span className="truncate">{fecha}</span>
-                                        </div>
-                                        <div className="mt-1 flex items-center gap-2 text-xs font-bold text-slate-500">
-                                            <Building2 className="h-4 w-4" />
-                                            <span className="truncate">{row.agencia || "—"}</span>
-                                        </div>
+        <div className={["flex shrink-0 items-center justify-center rounded-full bg-neutral-200 font-semibold text-neutral-600", sizeClass].join(" ")}>
+            {initialsOf(name)}
+        </div>
+    );
+}
+
+function EstatusPill({ row }) {
+    const e = estatusOf(row);
+    return (
+        <span className={["inline-flex items-center rounded-full border px-3 py-1 text-xs font-semibold", e.bg, e.text, e.border].join(" ")}>
+            {e.label}
+        </span>
+    );
+}
+
+// ─── KPI cards — exactamente como la imagen de referencia ───────────────────
+function KpiCard({ icon: Icon, iconBg, iconColor, label, value, sub }) {
+    return (
+        <div className="flex items-center gap-4 rounded-xl border border-black/8 bg-white px-5 py-4 shadow-sm">
+            <div className={["flex h-12 w-12 shrink-0 items-center justify-center rounded-full", iconBg].join(" ")}>
+                <Icon className={["h-6 w-6", iconColor].join(" ")} />
+            </div>
+            <div className="min-w-0 flex-1">
+                <div className="text-xs font-medium text-neutral-500 leading-tight">{label}</div>
+                <div className="mt-0.5 text-[28px] font-bold text-black leading-none tracking-tight">{value}</div>
+                {sub ? <div className="mt-0.5 text-[11px] text-neutral-400 leading-tight">{sub}</div> : null}
+            </div>
+        </div>
+    );
+}
+
+function KpiRow({ citas }) {
+    const stats = useMemo(() => {
+        const todayYMD = localYMD(new Date());
+        let citasHoy = 0, pendientes = 0, asistieron = 0, noAsistieron = 0;
+        citas.forEach((c) => {
+            const dt = parseLocalDT(c.fecha_hora_cita);
+            if (dt && localYMD(dt) === todayYMD) citasHoy++;
+            const e = estatusOf(c);
+            if (e.label === "Pendiente") pendientes++;
+            if (e.label === "Asistió") asistieron++;
+            if (e.label === "No asistió") noAsistieron++;
+        });
+        const totalDecidido = asistieron + noAsistieron;
+        const tasa = totalDecidido > 0 ? Math.round((asistieron / totalDecidido) * 100) : 0;
+        return { citasHoy, pendientes, asistieron, noAsistieron, tasa, totalDecidido };
+    }, [citas]);
+
+    return (
+        <div className="grid gap-3 grid-cols-1 sm:grid-cols-2 lg:grid-cols-5">
+            <KpiCard icon={CalendarDays}  iconBg="bg-blue-50"    iconColor="text-blue-500"   label="Citas de hoy"       value={stats.citasHoy} />
+            <KpiCard icon={Clock}         iconBg="bg-neutral-100" iconColor="text-neutral-500" label="Pendientes"         value={stats.pendientes} />
+            <KpiCard icon={CheckCircle2}  iconBg="bg-blue-50"    iconColor="text-blue-500"   label="Asistieron"         value={stats.asistieron} />
+            <KpiCard icon={XCircle}       iconBg="bg-red-50"     iconColor="text-red-400"    label="No asistieron"      value={stats.noAsistieron} />
+            <KpiCard icon={PieChart}      iconBg="bg-blue-50"    iconColor="text-blue-500"   label="Tasa de asistencia" value={`${stats.tasa}%`} sub={`${stats.asistieron} de ${stats.totalDecidido}`} />
+        </div>
+    );
+}
+
+// ─── Calendario mensual ──────────────────────────────────────────────────────
+function MonthCalendar({ citas, selectedDay, onSelectDay }) {
+    const [monthCursor, setMonthCursor] = useState(() => startOfMonth(new Date()));
+
+    const citasByDay = useMemo(() => {
+        const map = {};
+        citas.forEach((c) => {
+            const dt = parseLocalDT(c.fecha_hora_cita);
+            if (!dt) return;
+            const key = localYMD(dt);
+            map[key] = (map[key] || 0) + 1;
+        });
+        return map;
+    }, [citas]);
+
+    const gridDays = useMemo(() => {
+        const first = startOfMonth(monthCursor);
+        const firstWeekday = (first.getDay() + 6) % 7;
+        const start = addDays(first, -firstWeekday);
+        return Array.from({ length: 42 }, (_, i) => addDays(start, i));
+    }, [monthCursor]);
+
+    const todayYMD = localYMD(new Date());
+
+    return (
+        <div className="rounded-xl border border-black/10 bg-white p-4 shadow-sm">
+            {/* Encabezado mes */}
+            <div className="mb-4 flex items-center justify-between">
+                <button
+                    onClick={() => setMonthCursor((d) => addMonths(d, -1))}
+                    className="inline-flex h-7 w-7 items-center justify-center rounded-md text-black/40 hover:bg-neutral-100 transition"
+                >
+                    <ChevronLeft className="h-4 w-4" />
+                </button>
+                <span className="text-sm font-semibold text-black">
+                    {MESES[monthCursor.getMonth()]} {monthCursor.getFullYear()}
+                </span>
+                <button
+                    onClick={() => setMonthCursor((d) => addMonths(d, 1))}
+                    className="inline-flex h-7 w-7 items-center justify-center rounded-md text-black/40 hover:bg-neutral-100 transition"
+                >
+                    <ChevronRight className="h-4 w-4" />
+                </button>
+            </div>
+
+            {/* Cabecera días */}
+            <div className="grid grid-cols-7 mb-1">
+                {DIAS_CORTOS.map((d) => (
+                    <div key={d} className="text-center text-[11px] font-semibold text-neutral-400 py-1">{d}</div>
+                ))}
+            </div>
+
+            {/* Grid días */}
+            <div className="grid grid-cols-7 gap-y-1">
+                {gridDays.map((day, i) => {
+                    const ymd = localYMD(day);
+                    const inMonth = day.getMonth() === monthCursor.getMonth();
+                    const isToday = ymd === todayYMD;
+                    const isSelected = ymd === selectedDay;
+                    const count = citasByDay[ymd] || 0;
+                    return (
+                        <button
+                            key={i}
+                            onClick={() => onSelectDay(ymd)}
+                            className={[
+                                "relative mx-auto flex h-8 w-8 items-center justify-center rounded-full text-sm transition",
+                                !inMonth ? "text-neutral-300" : "text-black",
+                                isSelected
+                                    ? "bg-[#131E5C] text-white font-bold"
+                                    : isToday
+                                    ? "bg-neutral-900 text-white font-bold"
+                                    : "hover:bg-neutral-100",
+                            ].join(" ")}
+                        >
+                            {day.getDate()}
+                            {count > 0 && !isSelected && (
+                                <span className="absolute bottom-0.5 left-1/2 h-1 w-1 -translate-x-1/2 rounded-full bg-blue-500" />
+                            )}
+                        </button>
+                    );
+                })}
+            </div>
+        </div>
+    );
+}
+
+// ─── Panel de citas del día (tabla principal, igual a la imagen) ─────────────
+function DayCitasPanel({
+    allDayCitas,   // todas las citas del día (para el conteo y paginación)
+    dayCitas,      // las citas de la página actual
+    niceDate,
+    page,
+    pageSize,
+    totalPages,
+    onPageChange,
+    loading,
+    onEdit,
+    onContextMenu,
+    sort,
+    onToggleSort,
+}) {
+    return (
+        <div className="flex flex-col rounded-xl border border-black/10 bg-white shadow-sm overflow-hidden">
+            {/* Encabezado */}
+            <div className="flex items-center gap-3 border-b border-black/10 px-6 py-4">
+                <span className="text-sm font-semibold text-black">
+                    {niceDate}
+                </span>
+                <span className="rounded-full bg-neutral-100 px-2.5 py-0.5 text-xs font-semibold text-neutral-600">
+                    {allDayCitas.length} {allDayCitas.length === 1 ? "cita" : "citas"}
+                </span>
+            </div>
+
+            {/* Tabla */}
+            <div className="flex-1 overflow-x-auto">
+                <table className="min-w-full text-left text-sm">
+                    <thead className="border-b border-black/8 bg-neutral-50/70">
+                        <tr>
+                            <th className="whitespace-nowrap px-6 py-3 text-xs font-semibold text-neutral-500">
+                                <button
+                                    type="button"
+                                    onClick={() => onToggleSort("fecha_hora_cita")}
+                                    className="inline-flex items-center gap-1 font-semibold text-neutral-500 hover:text-black transition"
+                                >
+                                    Hora
+                                    {sort.key === "fecha_hora_cita" ? (
+                                        sort.dir === "asc"
+                                            ? <ChevronUp className="h-3.5 w-3.5" />
+                                            : <ChevronDown className="h-3.5 w-3.5" />
+                                    ) : null}
+                                </button>
+                            </th>
+                            <th className="whitespace-nowrap px-4 py-3 text-xs font-semibold text-neutral-500">Cliente</th>
+                            <th className="whitespace-nowrap px-4 py-3 text-xs font-semibold text-neutral-500">Vehículo de interés</th>
+                            <th className="whitespace-nowrap px-4 py-3 text-xs font-semibold text-neutral-500">Asesor</th>
+                            <th className="whitespace-nowrap px-4 py-3 text-xs font-semibold text-neutral-500">Tipo de cita</th>
+                            <th className="whitespace-nowrap px-4 py-3 text-xs font-semibold text-neutral-500">Estatus</th>
+                            <th className="px-4 py-3" />
+                        </tr>
+                    </thead>
+                    <tbody className="divide-y divide-black/5">
+                        {loading ? (
+                            Array.from({ length: 5 }).map((_, i) => (
+                                <tr key={i} className="animate-pulse">
+                                    {Array.from({ length: 7 }).map((_, j) => (
+                                        <td key={j} className="px-4 py-4">
+                                            <div className="h-4 w-24 rounded bg-slate-200/60" />
+                                        </td>
+                                    ))}
+                                </tr>
+                            ))
+                        ) : dayCitas.length === 0 ? (
+                            <tr>
+                                <td colSpan={7} className="px-4 py-16 text-center">
+                                    <div className="flex flex-col items-center gap-2">
+                                        <AlertCircle className="h-8 w-8 text-black/10" />
+                                        <p className="text-sm font-medium text-black/30">Sin citas este día</p>
                                     </div>
-                                    <button disabled={isUpdating} onClick={(e) => { e.stopPropagation(); onToggleAsistencia(row); }}
-                                        className={["shrink-0 inline-flex items-center gap-1.5 rounded-full border px-3 py-1 text-xs font-bold transition", row.asistencia ? "bg-emerald-100 text-emerald-800 border-emerald-300 hover:bg-emerald-200" : "bg-red-100 text-red-800 border-red-300 hover:bg-red-200", isUpdating ? "opacity-70 cursor-not-allowed" : ""].join(" ")}>
-                                        {isUpdating ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : null}
-                                        {row.asistencia ? "Sí" : "No"}
-                                    </button>
-                                </div>
-                                <div className="mt-3 grid gap-1.5">
-                                    <div className="flex items-center gap-2 text-sm font-bold text-black"><User className="h-4 w-4" /><span className="truncate">{nombreCliente}</span></div>
-                                    <div className="flex items-center gap-2 text-xs text-slate-500"><Phone className="h-4 w-4 text-black" /><span className="truncate">{telCliente}</span></div>
-                                    <div className="flex items-center gap-2 text-xs text-slate-500"><CarFront className="h-4 w-4 text-black" /><span className="truncate">{row.auto_interes || "—"}</span></div>
-                                    <div className="flex items-center gap-2 text-xs text-slate-500"><LayoutList className="h-4 w-4 text-black" /><span className="truncate">{row.tipo_cita || "—"}</span></div>
-                                    <div className="flex items-center gap-2 text-xs text-slate-500"><UserMinus className="h-4 w-4 text-black" /><span className="truncate">{row.asesor_digital || "—"}</span></div>
-                                    <div className="flex items-center gap-2 text-xs text-slate-500"><UserStar className="h-4 w-4 text-black" /><span className="truncate">{row.asesor_piso || "—"}</span></div>
-                                    <div className="flex items-start gap-2 text-xs text-slate-500"><MessageSquareText className="mt-0.5 h-4 w-4 shrink-0 text-black" /><span className="line-clamp-2">{row.comentarios || "—"}</span></div>
-                                </div>
-                            </div>
-                        );
-                    })}
+                                </td>
+                            </tr>
+                        ) : (
+                            dayCitas.map((row) => {
+                                const dt = row._dt;
+                                const asesor = row.asesor_piso || row.asesor_digital || "—";
+                                return (
+                                    <tr
+                                        key={row.id}
+                                        onDoubleClick={() => onEdit(row)}
+                                        onContextMenu={(e) => onContextMenu(e, row)}
+                                        className="cursor-pointer transition-colors hover:bg-neutral-50/80"
+                                    >
+                                        {/* Hora */}
+                                        <td className="px-6 py-4 font-bold text-black whitespace-nowrap text-sm">
+                                            {dt ? localHHMM(dt) : "—"}
+                                        </td>
+
+                                        {/* Cliente */}
+                                        <td className="px-4 py-4">
+                                            <div className="flex items-center gap-3">
+                                                <Avatar name={row?.cliente?.nombre} size={9} />
+                                                <div className="min-w-0">
+                                                    <div className="font-semibold text-black text-sm leading-tight">
+                                                        {row?.cliente?.nombre || "—"}
+                                                    </div>
+                                                    <div className="text-xs text-neutral-400 mt-0.5">
+                                                        {row?.cliente?.telefono || "—"}
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </td>
+
+                                        {/* Vehículo de interés — modelo + año en dos líneas, sin imagen */}
+                                        <td className="px-4 py-4">
+                                            {row.auto_interes ? (
+                                                <div>
+                                                    <div className="font-semibold text-black text-sm leading-tight">
+                                                        {row.auto_interes}
+                                                    </div>
+                                                    <div className="text-xs text-neutral-400 mt-0.5">
+                                                        {new Date().getFullYear()}
+                                                    </div>
+                                                </div>
+                                            ) : (
+                                                <span className="text-neutral-400">—</span>
+                                            )}
+                                        </td>
+
+                                        {/* Asesor */}
+                                        <td className="px-4 py-4 whitespace-nowrap">
+                                            <div className="flex items-center gap-2">
+                                                <Avatar name={asesor} size={7} />
+                                                <span className="text-sm text-neutral-700 truncate max-w-[140px]">{asesor}</span>
+                                            </div>
+                                        </td>
+
+                                        {/* Tipo de cita */}
+                                        <td className="px-4 py-4 text-sm text-neutral-700 whitespace-nowrap">
+                                            {row.tipo_cita || "—"}
+                                        </td>
+
+                                        {/* Estatus */}
+                                        <td className="px-4 py-4">
+                                            <EstatusPill row={row} />
+                                        </td>
+
+                                        {/* Acciones */}
+                                        <td className="px-4 py-4 text-right whitespace-nowrap">
+                                            <div className="inline-flex items-center gap-1">
+                                                <button
+                                                    onClick={(e) => { e.stopPropagation(); onEdit(row); }}
+                                                    title="Ver / editar cita"
+                                                    className="inline-flex h-8 w-8 items-center justify-center rounded-md border border-black/10 text-black/40 hover:bg-neutral-100 hover:text-black transition"
+                                                >
+                                                    <CalendarDays className="h-4 w-4" />
+                                                </button>
+                                                <button
+                                                    onClick={(e) => onContextMenu(e, row)}
+                                                    title="Más acciones"
+                                                    className="inline-flex h-8 w-8 items-center justify-center rounded-md text-black/40 hover:bg-neutral-100 hover:text-black transition"
+                                                >
+                                                    <MoreVertical className="h-4 w-4" />
+                                                </button>
+                                            </div>
+                                        </td>
+                                    </tr>
+                                );
+                            })
+                        )}
+                    </tbody>
+                </table>
+            </div>
+
+            {/* Paginación — fuera de la tabla, siempre visible abajo */}
+            {!loading && allDayCitas.length > 0 && (
+                <div className="flex items-center justify-between border-t border-black/8 bg-white px-6 py-3">
+                    <span className="text-xs text-neutral-500">
+                        Mostrando {(page - 1) * pageSize + 1}–{Math.min(page * pageSize, allDayCitas.length)} de {allDayCitas.length} citas
+                    </span>
+                    <div className="flex items-center gap-1">
+                        <button
+                            onClick={() => onPageChange(Math.max(1, page - 1))}
+                            disabled={page === 1}
+                            className="inline-flex h-8 w-8 items-center justify-center rounded-md border border-black/10 text-black/50 hover:bg-neutral-50 disabled:opacity-40 transition"
+                        >
+                            <ChevronLeft className="h-4 w-4" />
+                        </button>
+                        {Array.from({ length: totalPages }).map((_, i) => {
+                            const n = i + 1;
+                            return (
+                                <button
+                                    key={n}
+                                    onClick={() => onPageChange(n)}
+                                    className={[
+                                        "inline-flex h-8 w-8 items-center justify-center rounded-md text-xs font-semibold transition",
+                                        n === page
+                                            ? "bg-[#131E5C] text-white"
+                                            : "text-black/60 hover:bg-neutral-100 border border-black/10",
+                                    ].join(" ")}
+                                >
+                                    {n}
+                                </button>
+                            );
+                        })}
+                        <button
+                            onClick={() => onPageChange(Math.min(totalPages, page + 1))}
+                            disabled={page === totalPages}
+                            className="inline-flex h-8 w-8 items-center justify-center rounded-md border border-black/10 text-black/50 hover:bg-neutral-50 disabled:opacity-40 transition"
+                        >
+                            <ChevronRight className="h-4 w-4" />
+                        </button>
+                    </div>
                 </div>
             )}
         </div>
     );
 }
 
-// ─── Agenda sub-components ───────────────────────────────────────────────────
-
+// ─── Agenda sub-components ──────────────────────────────────────────────────
 function AsistenciaBadge({ value }) {
     if (value === true)
         return <span className="inline-flex items-center gap-1 rounded-full bg-emerald-100 border border-emerald-300 px-2 py-0.5 text-xs font-bold text-emerald-800"><CheckCircle2 className="h-3 w-3" /> Asistió</span>;
@@ -314,7 +624,6 @@ function CitaBlock({ cita, topPct, onClick, selected }) {
     const dt = parseLocalDT(cita.fecha_hora_cita);
     const color = colorFor(cita.tipo_cita);
     const isSelected = selected?.id === cita.id;
-    // altura fija: 45 min
     const heightPct = (45 / TIMELINE_RANGE) * 100;
     return (
         <button
@@ -336,7 +645,7 @@ function CitaBlock({ cita, topPct, onClick, selected }) {
     );
 }
 
-// ─── Vista Agenda (embebida) ─────────────────────────────────────────────────
+// ─── Vista Agenda ─────────────────────────────────────────────────────────────
 function AgendaView({ citas, loadingList, onEditCita }) {
     const [selectedCita, setSelectedCita]   = useState(null);
     const [weekStart, setWeekStart]         = useState(() => startOfWeek(new Date()));
@@ -385,7 +694,6 @@ function AgendaView({ citas, loadingList, onEditCita }) {
 
     return (
         <div className="space-y-4">
-            {/* ── Selector de semana ── */}
             <div className="rounded-xl border border-black/10 bg-white shadow-sm overflow-hidden">
                 <div className="flex items-center justify-between gap-3 border-b border-black/10 px-5 py-3">
                     <div className="flex items-center gap-3">
@@ -404,8 +712,6 @@ function AgendaView({ citas, loadingList, onEditCita }) {
                         </button>
                     </div>
                 </div>
-
-                {/* Días */}
                 <div className="grid grid-cols-7">
                     {weekDays.map((day, i) => {
                         const ymd = localYMD(day);
@@ -438,11 +744,7 @@ function AgendaView({ citas, loadingList, onEditCita }) {
                     })}
                 </div>
             </div>
-
-            {/* ── Timeline + Panel ── */}
             <div className="grid gap-4 lg:grid-cols-[1fr_300px]">
-
-                {/* Timeline del día */}
                 <div className="rounded-xl border border-black/10 bg-white shadow-sm overflow-hidden">
                     <div className="border-b border-black/10 px-5 py-3 flex items-center justify-between">
                         <div>
@@ -457,7 +759,6 @@ function AgendaView({ citas, loadingList, onEditCita }) {
                             {todayCitas.length} {todayCitas.length === 1 ? "cita" : "citas"}
                         </span>
                     </div>
-
                     <div className="relative overflow-auto" style={{ maxHeight: "520px" }}>
                         {todayCitas.length === 0 && !loadingList && (
                             <div className="absolute inset-0 flex flex-col items-center justify-center gap-2 pointer-events-none z-30">
@@ -473,8 +774,6 @@ function AgendaView({ citas, loadingList, onEditCita }) {
                                     </span>
                                 </div>
                             ))}
-
-                            {/* Línea "ahora" */}
                             {selectedDay === todayYMD && (() => {
                                 const now  = new Date();
                                 const mins = now.getHours() * 60 + now.getMinutes();
@@ -487,42 +786,26 @@ function AgendaView({ citas, loadingList, onEditCita }) {
                                     </div>
                                 );
                             })()}
-
-                            {/* Bloques de citas */}
                             <div className="absolute left-14 right-2 top-0 bottom-0">
                                 {todayCitas.map((cita) => (
-                                    <CitaBlock
-                                        key={cita.id}
-                                        cita={cita}
-                                        topPct={citaTopPct(cita._dt)}
-                                        onClick={(c) => { setSelectedCita(c); }}
-                                        selected={selectedCita}
-                                    />
+                                    <CitaBlock key={cita.id} cita={cita} topPct={citaTopPct(cita._dt)} onClick={(c) => { setSelectedCita(c); }} selected={selectedCita} />
                                 ))}
                             </div>
                         </div>
                     </div>
                 </div>
-
-                {/* Panel lateral */}
                 <div className="flex flex-col gap-4">
-                    {/* Detalle */}
                     <div className="rounded-xl border border-black/10 bg-white shadow-sm overflow-hidden" style={{ minHeight: 240 }}>
                         <div className="border-b border-black/10 px-4 py-3 flex items-center justify-between">
                             <span className="text-xs font-extrabold uppercase tracking-widest text-black/50">Detalle</span>
                             {selectedCita && (
-                                <button
-                                    onClick={() => onEditCita(selectedCita)}
-                                    className="rounded-lg border border-black/20 bg-white px-2.5 py-1 text-xs font-bold text-black hover:bg-black hover:text-white transition"
-                                >
+                                <button onClick={() => onEditCita(selectedCita)} className="rounded-lg border border-black/20 bg-white px-2.5 py-1 text-xs font-bold text-black hover:bg-black hover:text-white transition">
                                     Editar
                                 </button>
                             )}
                         </div>
                         <CitaDetailPanel cita={selectedCita} onClose={() => setSelectedCita(null)} />
                     </div>
-
-                    {/* Próximos 7 días */}
                     <div className="rounded-xl border border-black/10 bg-white shadow-sm overflow-hidden">
                         <div className="border-b border-black/10 px-4 py-3">
                             <span className="text-xs font-extrabold uppercase tracking-widest text-black/50">Próximos 7 días</span>
@@ -571,8 +854,6 @@ function AgendaView({ citas, loadingList, onEditCita }) {
                             </div>
                         )}
                     </div>
-
-                    {/* Leyenda */}
                     <div className="rounded-xl border border-black/10 bg-white px-4 py-3 shadow-sm">
                         <div className="mb-2 text-[10px] font-extrabold uppercase tracking-widest text-black/40">Tipos de cita</div>
                         <div className="flex flex-wrap gap-2">
@@ -602,7 +883,8 @@ export default function RegistroCitas() {
     const userAgencia = String(user?.agencia || "").trim();
 
     const [citas, setCitas]       = useState([]);
-    const [vista, setVista]       = useState("tabla"); // "tabla" | "agenda"
+    const [vista, setVista]       = useState("tabla");
+    const [selectedDay, setSelectedDay] = useState(() => localYMD(new Date()));
 
     const DEALERS = useMemo(() => ["Volvo"], []);
     const ASESORES_DIGITALES = ["Mariana Tlamani"];
@@ -623,7 +905,7 @@ export default function RegistroCitas() {
     const TIPO_CITA = ["Prueba de Manejo", "Tradicional", "Digital"];
 
     const [ctxMenu, setCtxMenu]             = useState({ open: false, x: 0, y: 0, row: null });
-    const [sort, setSort]                   = useState({ key: "fecha_hora_cita", dir: "desc" });
+    const [sort, setSort]                   = useState({ key: "fecha_hora_cita", dir: "asc" });
     const [filters, setFilters]             = useState({ q: "", agencia: "Todos", asesorDigital: "Todos", rangoDesde: "", rangoHasta: "" });
     const [openModal, setOpenModal]         = useState(false);
     const [mode, setMode]                   = useState("create");
@@ -633,6 +915,8 @@ export default function RegistroCitas() {
     const [saving, setSaving]               = useState(false);
     const [touchedSave, setTouchedSave]     = useState(false);
     const [updatingInline, setUpdatingInline] = useState({});
+    const [page, setPage]                   = useState(1);
+    const PAGE_SIZE = 5;
 
     const REQUIRED = useMemo(() => ({ cliente_telefono: "Teléfono", fecha_hora_cita: "Fecha y hora" }), []);
 
@@ -646,10 +930,10 @@ export default function RegistroCitas() {
 
     const isInvalid = (key) => touchedSave && missing.includes(key);
 
-    const telDigits      = useMemo(() => String(draft?.cliente_telefono || "").replace(/\D/g, ""), [draft?.cliente_telefono]);
-    const telIsOk        = useMemo(() => /^(?:\d{10}|52\d{10})$/.test(telDigits), [telDigits]);
+    const telDigits       = useMemo(() => String(draft?.cliente_telefono || "").replace(/\D/g, ""), [draft?.cliente_telefono]);
+    const telIsOk         = useMemo(() => /^(?:\d{10}|52\d{10})$/.test(telDigits), [telDigits]);
     const telIsNormalized = useMemo(() => /^52\d{10}$/.test(telDigits), [telDigits]);
-    const telError       = useMemo(() => {
+    const telError        = useMemo(() => {
         if (!openModal || !draft || !telDigits) return "";
         if (/^\d{10}$/.test(telDigits) || /^52\d{10}$/.test(telDigits)) return "";
         if (telDigits.length < 10)  return "Número incompleto (mínimo 10 dígitos)";
@@ -722,17 +1006,30 @@ export default function RegistroCitas() {
         });
     }, [citas, filters, isAdmin, userAgencia]);
 
-    const sorted = useMemo(() => {
-        const data  = [...filtered];
-        const { key, dir } = sort;
-        const mult  = dir === "asc" ? 1 : -1;
-        return data.sort((a, b) => {
-            if (key === "fecha_hora_cita") return (new Date(a[key] || 0).getTime() - new Date(b[key] || 0).getTime()) * mult;
-            const va = normalizeStr(a?.[key]).toLowerCase();
-            const vb = normalizeStr(b?.[key]).toLowerCase();
-            return va < vb ? -1 * mult : va > vb ? 1 * mult : 0;
-        });
-    }, [filtered, sort]);
+    // ── Todas las citas del día seleccionado (sin paginar) ───────────────────
+    const dayCitasAll = useMemo(() => {
+        const data = filtered
+            .map((c) => ({ ...c, _dt: parseLocalDT(c.fecha_hora_cita) }))
+            .filter((c) => c._dt && localYMD(c._dt) === selectedDay);
+        const mult = sort.dir === "asc" ? 1 : -1;
+        data.sort((a, b) => (a._dt.getTime() - b._dt.getTime()) * mult);
+        return data;
+    }, [filtered, selectedDay, sort]);
+
+    const niceSelectedDate = useMemo(() => {
+        const d = new Date(selectedDay + "T12:00:00");
+        return `${DIAS_LARGOS[(d.getDay() + 6) % 7]}, ${d.getDate()} de ${MESES[d.getMonth()]} de ${d.getFullYear()}`;
+    }, [selectedDay]);
+
+    useEffect(() => { setPage(1); }, [filters, sort, selectedDay]);
+
+    const totalPages = Math.max(1, Math.ceil(dayCitasAll.length / PAGE_SIZE));
+
+    // ── Sólo la página actual ─────────────────────────────────────────────────
+    const dayPageRows = useMemo(() => {
+        const start = (page - 1) * PAGE_SIZE;
+        return dayCitasAll.slice(start, start + PAGE_SIZE);
+    }, [dayCitasAll, page]);
 
     const openCreate = () => {
         setTouchedSave(false); setMode("create");
@@ -789,185 +1086,180 @@ export default function RegistroCitas() {
         finally { setUpdatingInline((p) => { const n = { ...p }; delete n[id]; return n; }); }
     };
 
+    const hasActiveFilters = useMemo(() => {
+        return !!(filters.q.trim() || filters.agencia !== "Todos" || filters.asesorDigital !== "Todos" || filters.rangoDesde || filters.rangoHasta);
+    }, [filters]);
+
     const resetFilters = () => setFilters({ q: "", agencia: "Todos", asesorDigital: "Todos", rangoDesde: "", rangoHasta: "" });
-    const setHoy = () => { const hoy = toYMDLocal(new Date()); setFilters((p) => ({ ...p, rangoDesde: hoy, rangoHasta: hoy })); };
+    const setHoy = () => {
+        const hoy = toYMDLocal(new Date());
+        setFilters((p) => ({ ...p, rangoDesde: hoy, rangoHasta: hoy }));
+        setSelectedDay(hoy);
+    };
 
     // ─── render ───────────────────────────────────────────────────────────────
     return (
-        <div className="w-full space-y-4">
-            <CitasTopNav />
+        <div className="w-full space-y-5">
 
-            {/* título + toggle de vista + botón nuevo */}
-            <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-                <div>
-                    <h2 className="text-lg font-extrabold text-black">Citas</h2>
-                    {!isAdmin && userAgencia ? (
-                        <p className="mt-1 text-xs font-semibold text-slate-500">
-                            Agencia: <span className="text-black">{userAgencia}</span>
-                        </p>
-                    ) : null}
-                </div>
-
-                <div className="flex items-center gap-2">
-                    {/* Toggle Tabla / Agenda */}
-                    <div className="flex rounded-lg border border-black/15 bg-white overflow-hidden shadow-sm">
-                        
-                        <div className="w-px bg-black/10" />
-                        
-                    </div>
-
-                    <button
-                        onClick={openCreate}
-                        className="inline-flex items-center justify-center gap-2 rounded-lg bg-black px-4 py-2 text-sm font-bold text-white shadow-sm hover:bg-black/80 transition"
-                    >
-                        <Plus className="h-4 w-4" /> Nueva Cita
-                    </button>
-                </div>
+            {/* Título + botón nueva cita */}
+            <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+                <CitasTopNav />
+                <button
+                    onClick={openCreate}
+                    className="inline-flex shrink-0 items-center justify-center gap-2 rounded-lg bg-[#131E5C] px-4 py-2.5 text-sm font-bold text-white shadow-sm hover:bg-[#0f1747] transition"
+                >
+                    <Plus className="h-4 w-4" /> Nueva Cita
+                </button>
             </div>
 
             {/* ── Vista Tabla ── */}
             {vista === "tabla" && (
                 <>
-                    {/* filtros */}
-                    <div className="rounded-xl border border-black/10 bg-white p-4 shadow-sm">
-                        <div className="grid gap-3 md:grid-cols-12">
-                            <div className="md:col-span-3">
+                    {/* Filtros */}
+                    <div className="rounded-xl border border-black/10 bg-white px-5 py-4 shadow-sm">
+                        <div className="flex flex-wrap items-end gap-3">
+                            {/* Búsqueda */}
+                            <div className="min-w-[200px] flex-1 basis-[220px]">
                                 <FilterBlock label="Búsqueda">
-                                    <div className="flex items-center gap-2 rounded-lg border border-black bg-white px-3 py-2">
-                                        <Search className="h-4 w-4 text-black" />
-                                        <input value={filters.q} onChange={(e) => setFilters((p) => ({ ...p, q: e.target.value }))} placeholder="Dealer, cliente, asesor…" className="w-full text-sm text-black outline-none placeholder:text-black/50" />
-                                        {filters.q ? <button onClick={() => setFilters((p) => ({ ...p, q: "" }))} className="p-1 text-black hover:text-red-500"><X className="h-4 w-4" /></button> : null}
+                                    <div className="flex h-10 items-center gap-2 rounded-lg border border-black/15 bg-white px-3">
+                                        <Search className="h-4 w-4 shrink-0 text-black/40" />
+                                        <input
+                                            value={filters.q}
+                                            onChange={(e) => setFilters((p) => ({ ...p, q: e.target.value }))}
+                                            placeholder="Dealer, cliente, asesor…"
+                                            className="w-full text-sm text-black outline-none placeholder:text-black/35"
+                                        />
+                                        {filters.q ? (
+                                            <button onClick={() => setFilters((p) => ({ ...p, q: "" }))} className="shrink-0 text-black/40 hover:text-red-500">
+                                                <X className="h-4 w-4" />
+                                            </button>
+                                        ) : null}
                                     </div>
                                 </FilterBlock>
                             </div>
-                            <div className="md:col-span-3">
+
+                            {/* Dealer */}
+                            <div className="w-44 shrink-0">
                                 <FilterBlock label="Dealer">
-                                    <select value={filters.agencia} onChange={(e) => setFilters((p) => ({ ...p, agencia: e.target.value }))} className="w-full rounded-lg border border-black bg-white px-3 py-2 text-sm text-black outline-none">
+                                    <select
+                                        value={filters.agencia}
+                                        onChange={(e) => setFilters((p) => ({ ...p, agencia: e.target.value }))}
+                                        className="h-10 w-full rounded-lg border border-black/15 bg-white px-3 text-sm text-black outline-none"
+                                    >
                                         {dealers.map((d) => <option key={d} value={d}>{d}</option>)}
                                     </select>
                                 </FilterBlock>
                             </div>
-                            <div className="md:col-span-3">
-                                <FilterBlock label="Asesor Digital">
-                                    <select value={filters.asesorDigital} onChange={(e) => setFilters((p) => ({ ...p, asesorDigital: e.target.value }))} className="w-full rounded-lg border border-black bg-white px-3 py-2 text-sm text-black outline-none">
+
+                            {/* Asesor digital */}
+                            <div className="w-48 shrink-0">
+                                <FilterBlock label="Asesor digital">
+                                    <select
+                                        value={filters.asesorDigital}
+                                        onChange={(e) => setFilters((p) => ({ ...p, asesorDigital: e.target.value }))}
+                                        className="h-10 w-full rounded-lg border border-black/15 bg-white px-3 text-sm text-black outline-none"
+                                    >
                                         {asesoresDigitalesFiltro.map((a) => <option key={a} value={a}>{a}</option>)}
                                     </select>
                                 </FilterBlock>
                             </div>
-                            <div className="md:col-span-3">
-                                <FilterBlock label="Acciones">
-                                    <div className="grid grid-cols-2 gap-2">
-                                        <button onClick={setHoy} className="inline-flex items-center justify-center gap-2 rounded-lg bg-emerald-600 px-3 py-2 text-sm font-semibold text-white hover:bg-emerald-700">
-                                            <CalendarDays className="h-4 w-4" /> Hoy
-                                        </button>
-                                        <button onClick={resetFilters} className="inline-flex items-center justify-center gap-2 rounded-lg border border-black bg-white px-3 py-2 text-sm font-semibold text-black hover:bg-black hover:text-white transition">
-                                            <X className="h-4 w-4" /> Limpiar
-                                        </button>
-                                    </div>
+
+                            {/* Fecha desde */}
+                            <div className="w-40 shrink-0">
+                                <FilterBlock label="Fecha desde">
+                                    <input
+                                        type="date"
+                                        value={filters.rangoDesde}
+                                        onChange={(e) => setFilters((p) => ({ ...p, rangoDesde: e.target.value }))}
+                                        className="h-10 w-full rounded-lg border border-black/15 bg-white px-3 text-sm text-black outline-none"
+                                    />
                                 </FilterBlock>
                             </div>
-                            <div className="md:col-span-6">
-                                <FilterBlock label="Desde">
-                                    <input type="date" value={filters.rangoDesde} onChange={(e) => setFilters((p) => ({ ...p, rangoDesde: e.target.value }))} className="w-full rounded-lg border border-black bg-white px-3 py-2 text-sm text-black outline-none" />
+
+                            {/* Fecha hasta */}
+                            <div className="w-40 shrink-0">
+                                <FilterBlock label="Fecha hasta">
+                                    <input
+                                        type="date"
+                                        value={filters.rangoHasta}
+                                        onChange={(e) => setFilters((p) => ({ ...p, rangoHasta: e.target.value }))}
+                                        className="h-10 w-full rounded-lg border border-black/15 bg-white px-3 text-sm text-black outline-none"
+                                    />
                                 </FilterBlock>
                             </div>
-                            <div className="md:col-span-6">
-                                <FilterBlock label="Hasta">
-                                    <input type="date" value={filters.rangoHasta} onChange={(e) => setFilters((p) => ({ ...p, rangoHasta: e.target.value }))} className="w-full rounded-lg border border-black bg-white px-3 py-2 text-sm text-black outline-none" />
-                                </FilterBlock>
+
+                            {/* Botones */}
+                            <div className="flex shrink-0 items-center gap-2">
+                                <button
+                                    onClick={setHoy}
+                                    className="inline-flex h-10 items-center gap-2 rounded-lg bg-[#131E5C] px-4 text-sm font-semibold text-white hover:bg-[#0f1747] transition"
+                                >
+                                    <CalendarDays className="h-4 w-4" /> Hoy
+                                </button>
+                                {hasActiveFilters && (
+                                    <button
+                                        onClick={resetFilters}
+                                        className="inline-flex h-10 items-center gap-2 rounded-lg border border-black/15 bg-white px-4 text-sm font-semibold text-black hover:bg-neutral-50 transition"
+                                    >
+                                        <X className="h-4 w-4" /> Limpiar
+                                    </button>
+                                )}
                             </div>
                         </div>
                     </div>
 
-                    {/* mobile cards */}
-                    <MobileCardList rows={sorted} loading={loadingList} onEdit={openEdit} onContext={onRowContextMenu} onToggleAsistencia={toggleAsistenciaInline} updatingInline={updatingInline} />
+                    {/* KPI cards */}
+                    <KpiRow citas={filtered} />
 
-                    {/* desktop tabla */}
-                    <div className="hidden overflow-hidden rounded-xl shadow-sm lg:block">
-                        <div className="overflow-auto">
-                            <table className="min-w-full text-left text-sm">
-                                <thead className="border border-black bg-black text-xs text-white">
-                                    <tr>
-                                        {[
-                                            { label: "Fecha y Hora Cita", key: "fecha_hora_cita" },
-                                            { label: "Dealer", key: "agencia" },
-                                        ].map(({ label, key }) => (
-                                            <th key={key} className="px-4 py-3">
-                                                <button type="button" onClick={() => toggleSort(key)} className="inline-flex items-center gap-1 font-bold">
-                                                    {label}
-                                                    <span className="opacity-60">
-                                                        {sort.key === key ? sort.dir === "asc" ? <ChevronUp className="h-4" /> : <ChevronDown className="h-4" /> : <ArrowUpDown className="h-4" />}
-                                                    </span>
-                                                </button>
-                                            </th>
-                                        ))}
-                                        <th className="px-4 py-3">Cliente</th>
-                                        <th className="px-4 py-3">Auto interés</th>
-                                        <th className="px-4 py-3">Asesor Digital</th>
-                                        <th className="px-4 py-3">Asesor Piso</th>
-                                        <th className="px-4 py-3">Tipo Cita</th>
-                                        <th className="px-4 py-3">Comentarios</th>
-                                        <th className="px-4 py-3">¿Asistió?</th>
-                                    </tr>
-                                </thead>
-                                <tbody className="divide-y divide-black/10 bg-white">
-                                    {loadingList ? (
-                                        Array.from({ length: 8 }).map((_, i) => <SkeletonRow key={i} />)
-                                    ) : sorted.length === 0 ? (
-                                        <tr><td colSpan={9} className="px-4 py-10 text-center text-black">No hay resultados con esos filtros.</td></tr>
-                                    ) : (
-                                        sorted.map((row) => {
-                                            const isUpdating = !!updatingInline[row.id];
-                                            return (
-                                                <tr key={row.id} onDoubleClick={() => openEdit(row)} onContextMenu={(e) => onRowContextMenu(e, row)} className="cursor-pointer transition hover:bg-slate-50">
-                                                    <td className="px-4 py-3 font-semibold text-black">{row.fecha_hora_cita ? toDTLocal(row.fecha_hora_cita).replace("T", " ") : "—"}</td>
-                                                    <td className="px-4 py-3 font-semibold text-black">{row.agencia || "—"}</td>
-                                                    <td className="px-4 py-3 font-bold text-black">{row?.cliente?.nombre || "—"}</td>
-                                                    <td className="px-4 py-3 text-black">{row.auto_interes || "—"}</td>
-                                                    <td className="px-4 py-3 text-black">{row.asesor_digital || "—"}</td>
-                                                    <td className="px-4 py-3 text-black">{row.asesor_piso || "—"}</td>
-                                                    <td className="px-4 py-3 text-black">{row.tipo_cita || "—"}</td>
-                                                    <td className="px-4 py-3 text-black"><span className="line-clamp-2">{row.comentarios || "—"}</span></td>
-                                                    <td className="px-4 py-3">
-                                                        <button disabled={isUpdating} onClick={(e) => { e.stopPropagation(); toggleAsistenciaInline(row); }}
-                                                            className={["inline-flex items-center gap-1.5 rounded-full border px-3 py-1 text-xs font-bold transition", row.asistencia ? "bg-emerald-100 text-emerald-800 border-emerald-300 hover:bg-emerald-200" : "bg-red-100 text-red-800 border-red-300 hover:bg-red-200", isUpdating ? "opacity-70 cursor-not-allowed" : ""].join(" ")}>
-                                                            {isUpdating ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : null}
-                                                            {row.asistencia ? "Sí" : "No"}
-                                                        </button>
-                                                    </td>
-                                                </tr>
-                                            );
-                                        })
-                                    )}
-                                </tbody>
-                            </table>
-                        </div>
+                    {/* Calendario + Tabla de citas del día
+                        Layout: calendario ~280px fijo, tabla ocupa el resto */}
+                    <div className="grid gap-4 lg:grid-cols-[280px_1fr]">
+                        <MonthCalendar
+                            citas={filtered}
+                            selectedDay={selectedDay}
+                            onSelectDay={(ymd) => { setSelectedDay(ymd); setPage(1); }}
+                        />
+                        <DayCitasPanel
+                            allDayCitas={dayCitasAll}
+                            dayCitas={dayPageRows}
+                            niceDate={niceSelectedDate}
+                            page={page}
+                            pageSize={PAGE_SIZE}
+                            totalPages={totalPages}
+                            onPageChange={setPage}
+                            loading={loadingList}
+                            onEdit={openEdit}
+                            onContextMenu={onRowContextMenu}
+                            sort={sort}
+                            onToggleSort={toggleSort}
+                        />
                     </div>
 
-                    <ContextMenu ctxMenu={ctxMenu} onDelete={eliminarCita} onClose={() => setCtxMenu({ open: false, x: 0, y: 0, row: null })} />
+                    <ContextMenu
+                        ctxMenu={ctxMenu}
+                        onDelete={eliminarCita}
+                        onToggleAsistencia={toggleAsistenciaInline}
+                        onClose={() => setCtxMenu({ open: false, x: 0, y: 0, row: null })}
+                    />
                 </>
             )}
 
             {/* ── Vista Agenda ── */}
             {vista === "agenda" && (
-                <AgendaView
-                    citas={citas}
-                    loadingList={loadingList}
-                    onEditCita={openEdit}
-                />
+                <AgendaView citas={citas} loadingList={loadingList} onEditCita={openEdit} />
             )}
 
-            {/* Modal (compartido por ambas vistas) */}
+            {/* Modal compartido */}
             <Modal
                 open={openModal}
                 title={mode === "create" ? "Nueva Cita" : `Editar Cita • ${draft?.id}`}
                 onClose={closeModal}
                 footer={
                     <>
-                        <button onClick={closeModal} disabled={saving} className="inline-flex items-center gap-2 rounded-lg bg-red-500 px-4 py-2 text-sm font-semibold text-white hover:bg-red-600 disabled:opacity-60">
+                        <button onClick={closeModal} disabled={saving} className="inline-flex items-center gap-2 rounded-lg border border-black/15 bg-white px-4 py-2 text-sm font-semibold text-black hover:bg-neutral-50 disabled:opacity-60">
                             <X className="h-4 w-4" /> Cancelar
                         </button>
-                        <button onClick={save} disabled={saving || loadingDetail || telInvalid || (draft?.cliente_telefono ? !telIsOk : false)} className="inline-flex items-center gap-2 rounded-lg bg-black px-4 py-2 text-sm font-bold text-white hover:bg-black/80 disabled:opacity-60 transition">
+                        <button onClick={save} disabled={saving || loadingDetail || telInvalid || (draft?.cliente_telefono ? !telIsOk : false)} className="inline-flex items-center gap-2 rounded-lg bg-[#131E5C] px-4 py-2 text-sm font-bold text-white hover:bg-[#0f1747] disabled:opacity-60 transition">
                             {saving ? <Loader2 className="h-4 w-4 animate-spin" /> : <Save className="h-4 w-4" />}
                             {saving ? "Guardando..." : "Guardar cambios"}
                         </button>
@@ -1016,7 +1308,7 @@ export default function RegistroCitas() {
                         </Field>
                         <Field label="Asistencia" icon={UserCheck}>
                             <label className="flex items-center gap-3 text-sm font-semibold text-black">
-                                <input type="checkbox" checked={!!draft.asistencia} onChange={(e) => setDraft((p) => ({ ...p, asistencia: e.target.checked }))} className="h-4 w-4 accent-black" />
+                                <input type="checkbox" checked={!!draft.asistencia} onChange={(e) => setDraft((p) => ({ ...p, asistencia: e.target.checked }))} className="h-4 w-4 accent-[#131E5C]" />
                                 ¿Asistió?
                             </label>
                         </Field>

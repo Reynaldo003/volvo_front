@@ -22,9 +22,9 @@ const DIAS_SEMANA= ["Dom","Lun","Mar","Mié","Jue","Vie","Sáb"];
 const DIAS_CORTOS= ["LUN","MAR","MIÉ","JUE","VIE","SÁB","DOM"];
 
 const VIEWS = [
-    { key: "tabla",    label: "Tabla",   Icon: LayoutList   },
-    { key: "agenda",   label: "Agenda",  Icon: CalendarRange },
-    { key: "graficas", label: "Gráficas",Icon: BarChart2     },
+    { key: "tabla",    label: "Tabla",    Icon: LayoutList   },
+    { key: "agenda",   label: "Agenda",   Icon: CalendarRange },
+    { key: "graficas", label: "Gráficas", Icon: BarChart2     },
 ];
 
 const DEALERS  = ["Volvo"];
@@ -157,14 +157,6 @@ function Field({ label, icon: Icon, children }) {
         </div>
     );
 }
-function FilterBlock({ label, children }) {
-    return (
-        <div>
-            <div className="mb-2 text-xs font-extrabold tracking-wide text-black">{label}</div>
-            {children}
-        </div>
-    );
-}
 function ContextMenu({ ctxMenu, onDelete, onClose }) {
     if (!ctxMenu.open || !ctxMenu.row) return null;
     return createPortal(
@@ -182,31 +174,34 @@ function ContextMenu({ ctxMenu, onDelete, onClose }) {
 }
 
 // ─── Badge Be Back ────────────────────────────────────────────────────────────
-function BeBackBadge({ value }) {
+function BeBackBadge({ value, onClick, isUpdating }) {
+    const base = "inline-flex items-center gap-1.5 rounded-full border px-3 py-1 text-xs font-semibold transition-all duration-200 cursor-pointer select-none";
     if (value === true)
         return (
-            <span className="inline-flex items-center gap-1 rounded-full bg-emerald-100 border border-emerald-300 px-2 py-0.5 text-[10px] font-bold text-emerald-800 whitespace-nowrap">
-                <CheckCircle2 className="h-3 w-3" /> Be Back
-            </span>
-        );
-    if (value === false)
-        return (
-            <span className="inline-flex items-center gap-1 rounded-full bg-red-100 border border-red-300 px-2 py-0.5 text-[10px] font-bold text-red-700 whitespace-nowrap">
-                <XCircle className="h-3 w-3" /> No regresó
-            </span>
+            <button
+                onClick={onClick}
+                disabled={isUpdating}
+                className={`${base} bg-emerald-50 text-emerald-700 border-emerald-200 hover:bg-emerald-100 hover:scale-105 active:scale-95`}
+            >
+                {isUpdating ? <Loader2 className="h-3 w-3 animate-spin"/> : <CheckCircle2 className="h-3 w-3" />}
+                Sí
+            </button>
         );
     return (
-        <span className="inline-flex items-center gap-1 rounded-full bg-slate-100 border border-slate-300 px-2 py-0.5 text-[10px] font-bold text-slate-600 whitespace-nowrap">
-            <Circle className="h-3 w-3" /> Sin definir
-        </span>
+        <button
+            onClick={onClick}
+            disabled={isUpdating}
+            className={`${base} bg-red-50 text-red-600 border-red-200 hover:bg-red-100 hover:scale-105 active:scale-95`}
+        >
+            {isUpdating ? <Loader2 className="h-3 w-3 animate-spin"/> : <XCircle className="h-3 w-3" />}
+            No
+        </button>
     );
 }
 
 // ═══════════════════════════════════════════════════════════════════════════════
-//  VISTA AGENDA — KANBAN SEMANAL (reemplaza AgendaView anterior)
+//  VISTA AGENDA — KANBAN SEMANAL
 // ═══════════════════════════════════════════════════════════════════════════════
-
-// Tarjeta de ingreso
 function PisoCard({ registro, onOpenEdit }) {
     const dt = parseLocalDT(registro.fecha_hora_cita);
     if (!dt) return null;
@@ -221,41 +216,36 @@ function PisoCard({ registro, onOpenEdit }) {
                 c.card, c.accent,
             ].join(" ")}
         >
-            {/* Cabecera */}
             <div className={["flex items-center justify-between gap-2 px-2.5 py-1.5", c.header].join(" ")}>
                 <span className="text-[11px] font-extrabold text-black/70 shrink-0">
                     {localHHMM(dt)}
                 </span>
-                <BeBackBadge value={registro.be_back} />
+                <span className={`text-[9px] font-bold px-1.5 py-0.5 rounded-full border ${registro.be_back ? "bg-emerald-100 border-emerald-300 text-emerald-700" : "bg-red-100 border-red-200 text-red-600"}`}>
+                    {registro.be_back ? "Be Back" : "No regresó"}
+                </span>
             </div>
-
-            {/* Cuerpo */}
             <div className="px-2.5 py-2 space-y-1.5">
                 <p className={["text-[12px] font-extrabold leading-snug", c.name].join(" ")}>
                     {registro?.cliente?.nombre || "Cliente sin nombre"}
                 </p>
-
                 {registro.auto_interes && (
                     <div className={["flex items-center gap-1.5 text-[11px] font-semibold", c.meta].join(" ")}>
                         <Car className="h-3 w-3 shrink-0 opacity-70" />
                         <span>{registro.auto_interes}</span>
                     </div>
                 )}
-
                 {registro?.cliente?.telefono && (
                     <div className={["flex items-center gap-1.5 text-[11px]", c.meta].join(" ")}>
                         <Phone className="h-3 w-3 shrink-0 opacity-70" />
                         <span>{registro.cliente.telefono}</span>
                     </div>
                 )}
-
                 {registro.agencia && (
                     <div className={["flex items-center gap-1.5 text-[11px]", c.meta].join(" ")}>
                         <Building2 className="h-3 w-3 shrink-0 opacity-70" />
                         <span>{registro.agencia}</span>
                     </div>
                 )}
-
                 {(registro.asesor_piso || registro.fuente_prospeccion) && (
                     <div className="border-t border-black/[.07] pt-1 space-y-1">
                         {registro.asesor_piso && (
@@ -272,14 +262,12 @@ function PisoCard({ registro, onOpenEdit }) {
                         )}
                     </div>
                 )}
-
                 {registro.folio && (
                     <div className={["flex items-center gap-1.5 text-[10px] border-t border-black/[.07] pt-1", c.meta].join(" ")}>
                         <Hash className="h-3 w-3 shrink-0 opacity-60" />
                         <span><span className="opacity-60">Folio: </span>{registro.folio}</span>
                     </div>
                 )}
-
                 {registro.comentarios_cliente && (
                     <div className={["flex items-start gap-1.5 text-[10px] border-t border-black/[.07] pt-1", c.meta].join(" ")}>
                         <MessageSquare className="h-3 w-3 shrink-0 opacity-60 mt-px" />
@@ -293,14 +281,12 @@ function PisoCard({ registro, onOpenEdit }) {
     );
 }
 
-// Columna de un día
 function DayColumn({ day, registros, isToday, onOpenEdit }) {
     const bebacks   = registros.filter((r) => r.be_back === true).length;
     const noRegreso = registros.filter((r) => r.be_back === false).length;
 
     return (
         <div className={["border-l border-black/[.07]", isToday ? "bg-blue-50/20" : "bg-white"].join(" ")}>
-            {/* Cabecera sticky */}
             <div className={[
                 "sticky top-0 z-10 flex flex-col items-center py-2 px-1 border-b border-black/[.07] backdrop-blur-sm",
                 isToday ? "bg-blue-50/80" : "bg-white/95",
@@ -336,8 +322,6 @@ function DayColumn({ day, registros, isToday, onOpenEdit }) {
                     <span className="h-3.5" />
                 )}
             </div>
-
-            {/* Tarjetas */}
             <div className="p-1.5">
                 {registros.length === 0 ? (
                     <div className="flex items-center justify-center py-8 text-[10px] text-black/20 font-semibold">
@@ -363,7 +347,6 @@ function DayColumn({ day, registros, isToday, onOpenEdit }) {
     );
 }
 
-// Kanban semanal completo
 function KanbanAgenda({ filtered, onOpenEdit, onOpenCreate, loading }) {
     const [weekStart, setWeekStart] = useState(() => startOfWeek(new Date()));
     const [search,    setSearch]    = useState("");
@@ -381,7 +364,6 @@ function KanbanAgenda({ filtered, onOpenEdit, onOpenCreate, loading }) {
         return `${from.getDate()} ${MESES[from.getMonth()].slice(0,3)} – ${to.getDate()} ${MESES[to.getMonth()].slice(0,3)} ${to.getFullYear()}`;
     }, [weekDays]);
 
-    // Búsqueda local dentro de la agenda
     const searched = useMemo(() => {
         if (!search.trim()) return filtered;
         const q = search.toLowerCase();
@@ -426,9 +408,7 @@ function KanbanAgenda({ filtered, onOpenEdit, onOpenCreate, loading }) {
             className="rounded-xl border border-black/10 bg-white shadow-sm overflow-hidden flex flex-col"
             style={{ height: "calc(100vh - 310px)", minHeight: 480 }}
         >
-            {/* Top bar */}
             <div className="flex items-center gap-3 px-4 py-3 border-b border-black/10 shrink-0 flex-wrap">
-                {/* Búsqueda */}
                 <div className="flex items-center gap-2 flex-1 min-w-[180px] max-w-xs border border-black/15 rounded-lg px-3 py-1.5 bg-slate-50">
                     <Search className="h-3.5 w-3.5 text-black/30 shrink-0" />
                     <input
@@ -444,8 +424,6 @@ function KanbanAgenda({ filtered, onOpenEdit, onOpenCreate, loading }) {
                         </button>
                     )}
                 </div>
-
-                {/* Nav semana */}
                 <div className="flex items-center gap-1.5 ml-auto">
                     {loading && <Loader2 className="h-4 w-4 animate-spin text-black/30" />}
                     <button
@@ -478,7 +456,6 @@ function KanbanAgenda({ filtered, onOpenEdit, onOpenCreate, loading }) {
                 </div>
             </div>
 
-            {/* Leyenda + stats */}
             <div className="flex items-center gap-4 px-4 py-2 border-b border-black/[.06] shrink-0 bg-slate-50/50 flex-wrap">
                 <div className="flex items-center gap-1.5">
                     <span className="h-2 w-2 rounded-full bg-emerald-500" />
@@ -514,7 +491,6 @@ function KanbanAgenda({ filtered, onOpenEdit, onOpenCreate, loading }) {
                 </div>
             </div>
 
-            {/* Grid kanban */}
             <div className="flex-1 overflow-x-auto overflow-y-auto">
                 <div className="grid" style={{ gridTemplateColumns: "repeat(7, minmax(160px, 1fr))" }}>
                     {weekDays.map((day) => {
@@ -536,41 +512,70 @@ function KanbanAgenda({ filtered, onOpenEdit, onOpenCreate, loading }) {
     );
 }
 
-// ─── VISTA GRÁFICAS ───────────────────────────────────────────────────────────
+// ─── VISTA GRÁFICAS — interactiva ────────────────────────────────────────────
 function TooltipCustom({ active, payload, label }) {
     if (!active || !payload?.length) return null;
     return (
-        <div className="rounded-xl border border-black/10 bg-white p-3 text-xs shadow-md">
-            <div className="mb-1 font-extrabold text-black">{label}</div>
+        <div className="rounded-xl border border-gray-200 bg-white p-3 text-xs shadow-lg">
+            <div className="mb-1.5 font-bold text-gray-800">{label}</div>
             {payload.map(p => (
-                <div key={p.dataKey} className="flex items-center justify-between gap-6">
-                    <span className="text-slate-500">{p.name}</span>
-                    <span className="font-bold text-black">{p.value}</span>
+                <div key={p.dataKey} className="flex items-center justify-between gap-5">
+                    <div className="flex items-center gap-1.5">
+                        <div className="h-2 w-2 rounded-full" style={{background: p.fill || p.stroke || "#1a1a1a"}}/>
+                        <span className="text-gray-500">{p.name}</span>
+                    </div>
+                    <span className="font-bold text-gray-900">{p.value}</span>
                 </div>
             ))}
         </div>
     );
 }
 
+// Stat card interactiva
+function StatCard({ label, value, sub, color, onClick, selected }) {
+    return (
+        <button
+            onClick={onClick}
+            className={[
+                "relative overflow-hidden rounded-2xl border p-5 text-left w-full transition-all duration-200",
+                "hover:-translate-y-0.5 hover:shadow-md active:translate-y-0",
+                selected
+                    ? "border-gray-900 bg-gray-900 text-white shadow-md"
+                    : "border-gray-200 bg-white hover:border-gray-300",
+            ].join(" ")}
+        >
+            <div className={["pointer-events-none absolute -right-6 -top-6 h-24 w-24 rounded-full blur-2xl opacity-20", selected ? "bg-white" : ""].join(" ")} style={!selected ? {background: color} : {}}/>
+            <div className={["text-[10px] font-bold uppercase tracking-widest mb-1", selected ? "text-white/60" : "text-gray-400"].join(" ")}>{label}</div>
+            <div className={["text-3xl font-bold leading-none", selected ? "text-white" : "text-gray-900"].join(" ")}>{value}</div>
+            {sub && <div className={["text-xs mt-1.5 font-medium", selected ? "text-white/50" : "text-gray-400"].join(" ")}>{sub}</div>}
+        </button>
+    );
+}
+
 function GraficasView({ registros }) {
+    const [selectedStat, setSelectedStat] = useState(null);
+
     const total     = registros.length;
     const bebacks   = registros.filter(r=>r.be_back).length;
     const sinBeback = total - bebacks;
+    const tasaBBNum = total > 0 ? Math.round((bebacks/total)*100) : 0;
 
     const trendData = useMemo(() => {
         const hoy = new Date();
-        return Array.from({length:7},(_,i)=>{
-            const d = new Date(hoy); d.setDate(d.getDate()-(6-i));
+        return Array.from({length:14},(_,i)=>{
+            const d = new Date(hoy); d.setDate(d.getDate()-(13-i));
             const key = toYMDLocal(d);
             const count = registros.filter(r=>r.fecha_hora_cita && toYMDLocal(r.fecha_hora_cita)===key).length;
-            return { name: DIAS_SEMANA[d.getDay()], citas: count };
+            const bb    = registros.filter(r=>r.fecha_hora_cita && toYMDLocal(r.fecha_hora_cita)===key && r.be_back).length;
+            const label = `${PAD(d.getDate())}/${PAD(d.getMonth()+1)}`;
+            return { name: label, ingresos: count, bebacks: bb };
         });
     },[registros]);
 
     const porAsesor = useMemo(()=>{
         const map={};
         registros.forEach(r=>{ const k=(r.asesor_piso||"Sin asignar").split(" ").slice(0,2).join(" "); map[k]=(map[k]||0)+1; });
-        return Object.entries(map).map(([name,value])=>({name,value})).sort((a,b)=>b.value-a.value).slice(0,5);
+        return Object.entries(map).map(([name,value])=>({name,value})).sort((a,b)=>b.value-a.value).slice(0,6);
     },[registros]);
 
     const porFuente = useMemo(()=>{
@@ -581,104 +586,212 @@ function GraficasView({ registros }) {
 
     const porAuto = useMemo(()=>{
         const map={};
-        registros.forEach(r=>{ const k=r.auto_interes||"—"; map[k]=(map[k]||0)+1; });
-        return Object.entries(map).map(([name,value])=>({name,value})).sort((a,b)=>b.value-a.value).slice(0,6);
+        registros.forEach(r=>{ const k=r.auto_interes||"Sin modelo"; map[k]=(map[k]||0)+1; });
+        return Object.entries(map).map(([name,value])=>({name,value})).sort((a,b)=>b.value-a.value).slice(0,7);
     },[registros]);
 
-    const pieData = [{ name:"Be Back", value:bebacks },{ name:"No regresó", value:sinBeback }];
-    const card = "rounded-2xl border border-black/10 bg-white p-5 shadow-sm";
+    const pieData = [
+        { name:"Be Back",    value:bebacks,   fill:"#1a1a1a" },
+        { name:"No regresó", value:sinBeback, fill:"#e5e7eb" },
+    ];
+
+    // Barra personalizada con animación de hover
+    const AnimatedBar = (props) => {
+        const { x, y, width, height, fill } = props;
+        const [hovered, setHovered] = useState(false);
+        return (
+            <g>
+                <rect
+                    x={x} y={hovered ? y - 2 : y}
+                    width={width} height={hovered ? height + 2 : height}
+                    fill={hovered ? "#111" : fill}
+                    rx={4} ry={4}
+                    style={{ transition: "all 0.15s ease", cursor: "pointer" }}
+                    onMouseEnter={() => setHovered(true)}
+                    onMouseLeave={() => setHovered(false)}
+                />
+            </g>
+        );
+    };
+
+    const card = "rounded-2xl border border-gray-200 bg-white p-5 shadow-sm";
 
     return (
         <div className="space-y-5">
-            <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-                {[
-                    { label:"Total ingresos",  value:total,    bg:"#1a1a1a" },
-                    { label:"Be Back",          value:bebacks,  bg:"#2d5a27" },
-                    { label:"No regresaron",    value:sinBeback,bg:"#5a2727" },
-                    { label:"Tasa Be Back",     value:total>0?Math.round((bebacks/total)*100)+"%":"0%", bg:"#2d3a1e" },
-                ].map(k=>(
-                    <div key={k.label} className="relative overflow-hidden rounded-2xl border border-black/10 bg-white p-5 shadow-sm">
-                        <div className="pointer-events-none absolute -right-8 -top-8 h-28 w-28 rounded-full blur-3xl" style={{background:k.bg,opacity:0.15}}/>
-                        <div className="text-[11px] font-extrabold uppercase tracking-wide text-black/50">{k.label}</div>
-                        <div className="mt-1 text-3xl font-extrabold text-black">{k.value}</div>
-                    </div>
-                ))}
+
+            {/* Stat cards — clicables para filtrar visualmente */}
+            <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+                <StatCard
+                    label="Total ingresos"
+                    value={total}
+                    sub="todos los registros"
+                    color="#6b7280"
+                    selected={selectedStat === "total"}
+                    onClick={() => setSelectedStat(s => s === "total" ? null : "total")}
+                />
+                <StatCard
+                    label="Be Back"
+                    value={bebacks}
+                    sub={`${tasaBBNum}% del total`}
+                    color="#10b981"
+                    selected={selectedStat === "beback"}
+                    onClick={() => setSelectedStat(s => s === "beback" ? null : "beback")}
+                />
+                <StatCard
+                    label="No regresaron"
+                    value={sinBeback}
+                    sub={`${total > 0 ? 100 - tasaBBNum : 0}% del total`}
+                    color="#ef4444"
+                    selected={selectedStat === "no"}
+                    onClick={() => setSelectedStat(s => s === "no" ? null : "no")}
+                />
+                <StatCard
+                    label="Tasa Be Back"
+                    value={`${tasaBBNum}%`}
+                    sub={`${bebacks} de ${total} regresaron`}
+                    color="#3b82f6"
+                    selected={selectedStat === "tasa"}
+                    onClick={() => setSelectedStat(s => s === "tasa" ? null : "tasa")}
+                />
             </div>
+
+            {/* Fila 2 — Tendencia 14 días + Pie Be Back */}
             <div className="grid gap-5 lg:grid-cols-3">
-                <div className={"lg:col-span-2 "+card}>
-                    <p className="mb-1 text-sm font-extrabold text-black">Ingresos últimos 7 días</p>
-                    <p className="mb-4 text-xs text-black/40">Citas registradas por día</p>
-                    <ResponsiveContainer width="100%" height={220}>
-                        <AreaChart data={trendData} margin={{top:5,right:10,left:-20,bottom:0}}>
-                            <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb"/>
-                            <XAxis dataKey="name" tick={{fontSize:11,fill:"#6b7280"}}/>
-                            <YAxis tick={{fontSize:11,fill:"#6b7280"}}/>
-                            <Tooltip content={<TooltipCustom/>}/>
-                            <Area type="monotone" dataKey="citas" name="Citas" stroke="#1a1a1a" fill="#1a1a1a" fillOpacity={0.08} strokeWidth={2}/>
-                        </AreaChart>
-                    </ResponsiveContainer>
-                </div>
-                <div className={card}>
-                    <p className="mb-1 text-sm font-extrabold text-black">Be Back</p>
-                    <p className="mb-4 text-xs text-black/40">¿Regresaron?</p>
-                    <div className="flex items-center justify-center gap-6">
-                        <ResponsiveContainer width="55%" height={160}>
-                            <PieChart>
-                                <Pie data={pieData} cx="50%" cy="50%" innerRadius={45} outerRadius={70} dataKey="value" paddingAngle={3}>
-                                    <Cell fill="#1a1a1a"/><Cell fill="#d1d5db"/>
-                                </Pie>
-                                <Tooltip content={<TooltipCustom/>}/>
-                            </PieChart>
-                        </ResponsiveContainer>
-                        <div className="space-y-2">
-                            {pieData.map((item,i)=>(
-                                <div key={item.name} className="flex items-center gap-2">
-                                    <div className="h-3 w-3 rounded-full" style={{background:i===0?"#1a1a1a":"#d1d5db"}}/>
-                                    <span className="text-xs font-semibold text-black/60">{item.name}</span>
-                                    <span className="text-sm font-extrabold text-black">{item.value}</span>
-                                </div>
-                            ))}
+                <div className={`lg:col-span-2 ${card}`}>
+                    <div className="flex items-start justify-between mb-4">
+                        <div>
+                            <p className="text-sm font-bold text-gray-900">Tendencia — últimos 14 días</p>
+                            <p className="text-xs text-gray-400 mt-0.5">Ingresos y Be Backs por día</p>
+                        </div>
+                        <div className="flex items-center gap-3 text-[11px] font-semibold">
+                            <span className="flex items-center gap-1.5"><span className="h-2 w-4 rounded-full bg-gray-900 inline-block"/><span className="text-gray-600">Ingresos</span></span>
+                            <span className="flex items-center gap-1.5"><span className="h-2 w-4 rounded-full bg-gray-300 inline-block"/><span className="text-gray-600">Be Back</span></span>
                         </div>
                     </div>
+                    <ResponsiveContainer width="100%" height={230}>
+                        <BarChart data={trendData} margin={{top:4,right:4,left:-20,bottom:0}} barGap={2}>
+                            <CartesianGrid strokeDasharray="3 3" stroke="#f3f4f6" vertical={false}/>
+                            <XAxis dataKey="name" tick={{fontSize:10,fill:"#9ca3af"}} axisLine={false} tickLine={false}/>
+                            <YAxis tick={{fontSize:10,fill:"#9ca3af"}} axisLine={false} tickLine={false} allowDecimals={false}/>
+                            <Tooltip content={<TooltipCustom/>} cursor={{fill:"#f9fafb"}}/>
+                            <Bar dataKey="ingresos" name="Ingresos" fill="#1a1a1a" radius={[4,4,0,0]} shape={<AnimatedBar/>}/>
+                            <Bar dataKey="bebacks"  name="Be Back"  fill="#d1d5db" radius={[4,4,0,0]} shape={<AnimatedBar/>}/>
+                        </BarChart>
+                    </ResponsiveContainer>
+                </div>
+
+                <div className={card}>
+                    <div className="mb-4">
+                        <p className="text-sm font-bold text-gray-900">Be Back</p>
+                        <p className="text-xs text-gray-400 mt-0.5">¿Qué porcentaje regresó?</p>
+                    </div>
+                    <ResponsiveContainer width="100%" height={160}>
+                        <PieChart>
+                            <Pie
+                                data={pieData}
+                                cx="50%" cy="50%"
+                                innerRadius={50} outerRadius={72}
+                                dataKey="value"
+                                paddingAngle={3}
+                                strokeWidth={0}
+                            >
+                                {pieData.map((entry, i) => (
+                                    <Cell key={i} fill={entry.fill}/>
+                                ))}
+                            </Pie>
+                            <Tooltip content={<TooltipCustom/>}/>
+                        </PieChart>
+                    </ResponsiveContainer>
+                    {/* Leyenda manual */}
+                    <div className="mt-3 space-y-2">
+                        {pieData.map(item => (
+                            <div key={item.name} className="flex items-center justify-between">
+                                <div className="flex items-center gap-2">
+                                    <div className="h-3 w-3 rounded-full" style={{background:item.fill}}/>
+                                    <span className="text-xs text-gray-500 font-medium">{item.name}</span>
+                                </div>
+                                <div className="text-right">
+                                    <span className="text-sm font-bold text-gray-900">{item.value}</span>
+                                    <span className="text-[10px] text-gray-400 ml-1">
+                                        {total > 0 ? Math.round((item.value/total)*100) : 0}%
+                                    </span>
+                                </div>
+                            </div>
+                        ))}
+                    </div>
+                    {/* Tasa BB prominente */}
+                    <div className="mt-4 rounded-xl bg-gray-50 border border-gray-100 p-3 text-center">
+                        <div className="text-2xl font-bold text-gray-900">{tasaBBNum}%</div>
+                        <div className="text-[10px] font-semibold text-gray-400 uppercase tracking-wide">tasa be back</div>
+                    </div>
                 </div>
             </div>
+
+            {/* Fila 3 — Asesores + Fuente + Auto */}
             <div className="grid gap-5 lg:grid-cols-3">
+                {/* Top asesores — barras horizontales custom */}
                 <div className={card}>
-                    <p className="mb-1 text-sm font-extrabold text-black">Top asesores</p>
-                    <p className="mb-4 text-xs text-black/40">Por número de citas</p>
-                    <ResponsiveContainer width="100%" height={200}>
-                        <BarChart data={porAsesor} margin={{top:0,right:0,left:-20,bottom:0}}>
-                            <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb"/>
-                            <XAxis dataKey="name" tick={{fontSize:9,fill:"#6b7280"}}/>
-                            <YAxis tick={{fontSize:11,fill:"#6b7280"}} allowDecimals={false}/>
-                            <Tooltip content={<TooltipCustom/>}/>
-                            <Bar dataKey="value" name="Citas" fill="#1a1a1a" radius={[4,4,0,0]}/>
-                        </BarChart>
-                    </ResponsiveContainer>
+                    <p className="mb-1 text-sm font-bold text-gray-900">Top asesores</p>
+                    <p className="mb-4 text-xs text-gray-400">Por número de ingresos</p>
+                    <div className="space-y-3">
+                        {porAsesor.map((a, i) => {
+                            const pct = porAsesor[0]?.value > 0 ? (a.value / porAsesor[0].value) * 100 : 0;
+                            return (
+                                <div key={a.name}>
+                                    <div className="flex items-center justify-between mb-1">
+                                        <span className="text-xs font-semibold text-gray-700 truncate max-w-[70%]">{a.name}</span>
+                                        <span className="text-xs font-bold text-gray-900">{a.value}</span>
+                                    </div>
+                                    <div className="h-1.5 w-full rounded-full bg-gray-100 overflow-hidden">
+                                        <div
+                                            className="h-full rounded-full bg-gray-900 transition-all duration-500"
+                                            style={{width: `${pct}%`}}
+                                        />
+                                    </div>
+                                </div>
+                            );
+                        })}
+                        {porAsesor.length === 0 && <div className="text-xs text-gray-400 text-center py-4">Sin datos</div>}
+                    </div>
                 </div>
+
+                {/* Fuente de prospección */}
                 <div className={card}>
-                    <p className="mb-1 text-sm font-extrabold text-black">Fuente de prospección</p>
-                    <p className="mb-4 text-xs text-black/40">Origen de los ingresos</p>
-                    <ResponsiveContainer width="100%" height={200}>
-                        <BarChart data={porFuente} layout="vertical" margin={{top:0,right:0,left:10,bottom:0}}>
-                            <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" horizontal={false}/>
-                            <XAxis type="number" tick={{fontSize:11,fill:"#6b7280"}} allowDecimals={false}/>
-                            <YAxis type="category" dataKey="name" tick={{fontSize:9,fill:"#6b7280"}} width={80}/>
-                            <Tooltip content={<TooltipCustom/>}/>
-                            <Bar dataKey="value" name="Citas" fill="#3d3d3d" radius={[0,4,4,0]}/>
-                        </BarChart>
-                    </ResponsiveContainer>
+                    <p className="mb-1 text-sm font-bold text-gray-900">Fuente de prospección</p>
+                    <p className="mb-4 text-xs text-gray-400">Origen de los ingresos</p>
+                    <div className="space-y-3">
+                        {porFuente.map((f) => {
+                            const pct = porFuente[0]?.value > 0 ? (f.value / porFuente[0].value) * 100 : 0;
+                            return (
+                                <div key={f.name}>
+                                    <div className="flex items-center justify-between mb-1">
+                                        <span className="text-xs font-semibold text-gray-700 truncate max-w-[75%]">{f.name}</span>
+                                        <span className="text-xs font-bold text-gray-900">{f.value}</span>
+                                    </div>
+                                    <div className="h-1.5 w-full rounded-full bg-gray-100 overflow-hidden">
+                                        <div
+                                            className="h-full rounded-full bg-gray-700 transition-all duration-500"
+                                            style={{width: `${pct}%`}}
+                                        />
+                                    </div>
+                                </div>
+                            );
+                        })}
+                        {porFuente.length === 0 && <div className="text-xs text-gray-400 text-center py-4">Sin datos</div>}
+                    </div>
                 </div>
+
+                {/* Auto de interés */}
                 <div className={card}>
-                    <p className="mb-1 text-sm font-extrabold text-black">Auto de interés</p>
-                    <p className="mb-4 text-xs text-black/40">Modelos más solicitados</p>
-                    <ResponsiveContainer width="100%" height={200}>
-                        <BarChart data={porAuto} layout="vertical" margin={{top:0,right:0,left:20,bottom:0}}>
-                            <CartesianGrid strokeDasharray="3 3" stroke="#e5e7eb" horizontal={false}/>
-                            <XAxis type="number" tick={{fontSize:11,fill:"#6b7280"}} allowDecimals={false}/>
-                            <YAxis type="category" dataKey="name" tick={{fontSize:10,fill:"#6b7280"}} width={60}/>
-                            <Tooltip content={<TooltipCustom/>}/>
-                            <Bar dataKey="value" name="Citas" fill="#616161" radius={[0,4,4,0]}/>
+                    <p className="mb-1 text-sm font-bold text-gray-900">Auto de interés</p>
+                    <p className="mb-4 text-xs text-gray-400">Modelos más solicitados</p>
+                    <ResponsiveContainer width="100%" height={220}>
+                        <BarChart data={porAuto} layout="vertical" margin={{top:0,right:8,left:0,bottom:0}}>
+                            <CartesianGrid strokeDasharray="3 3" stroke="#f3f4f6" horizontal={false}/>
+                            <XAxis type="number" tick={{fontSize:10,fill:"#9ca3af"}} axisLine={false} tickLine={false} allowDecimals={false}/>
+                            <YAxis type="category" dataKey="name" tick={{fontSize:10,fill:"#6b7280"}} width={62} axisLine={false} tickLine={false}/>
+                            <Tooltip content={<TooltipCustom/>} cursor={{fill:"#f9fafb"}}/>
+                            <Bar dataKey="value" name="Ingresos" fill="#1a1a1a" radius={[0,4,4,0]} shape={<AnimatedBar/>}/>
                         </BarChart>
                     </ResponsiveContainer>
                 </div>
@@ -898,252 +1011,169 @@ export default function RegistroCitasPiso() {
     const resetFilters=()=>setFilters({q:"",agencia:"Todos",rangoDesde:"",rangoHasta:""});
     const setHoy=()=>{ const h=toYMDLocal(new Date()); setFilters(p=>({...p,rangoDesde:h,rangoHasta:h})); };
 
+    // ── Stats para el header limpio ──
+    const totalRegistros  = registros.length;
+    const totalBeBack     = registros.filter(r=>r.be_back).length;
+    const tasaBB          = totalRegistros > 0 ? Math.round((totalBeBack/totalRegistros)*100) + "%" : "0%";
+
+    // ── ¿hay filtros activos? ──
+    const hasActiveFilters = filters.q !== "" || filters.agencia !== "Todos" || filters.rangoDesde !== "" || filters.rangoHasta !== "";
+
     return (
-        <div className="w-full space-y-4">
+        <div className="w-full space-y-5">
 
-            {/* ── Header oscuro con selector de vista ── */}
-          {/* ── Header premium Control de Piso ── */}
-<div
-    className="relative overflow-hidden rounded-2xl"
-    style={{
-        background: "linear-gradient(135deg, #0d0d0d 0%, #181818 40%, #111111 70%, #0a0a0a 100%)",
-        border: "0.5px solid rgba(255,255,255,0.06)",
-    }}
->
-    {/* Línea de acento superior */}
-    <div
-        className="absolute top-0 left-0 right-0"
-        style={{
-            height: "1px",
-            background:
-                "linear-gradient(90deg, transparent 0%, rgba(255,255,255,0) 10%, rgba(255,255,255,0.55) 40%, rgba(255,255,255,0.55) 60%, rgba(255,255,255,0) 90%, transparent 100%)",
-        }}
-    />
+           {/* ══════════════════════════════════════════════════════
+                HEADER — título + subtítulo
+                Botones de vista (Tabla/Agenda/Gráficas) + Nuevo ingreso arriba a la derecha
+            ══════════════════════════════════════════════════════ */}
+            <div className="flex items-start justify-between gap-4">
+                <div>
+                    <h1 className="text-3xl font-bold text-gray-900 tracking-tight">Control de Piso</h1>
+                    <p className="mt-1 text-sm text-gray-500">
+                        Registro y seguimiento de ingresos a piso de ventas.
+                    </p>
+                    {!isAdmin && userAgencia && (
+                        <p className="mt-0.5 text-xs text-gray-400">
+                            Agencia: <span className="font-semibold text-gray-600">{userAgencia}</span>
+                        </p>
+                    )}
+                </div>
 
-    {/* Glows */}
-    <div
-        className="pointer-events-none absolute"
-        style={{
-            top: "-60px", left: "-60px",
-            width: "260px", height: "200px",
-            background: "radial-gradient(ellipse, rgba(255,255,255,0.03) 0%, transparent 70%)",
-        }}
-    />
-    <div
-        className="pointer-events-none absolute"
-        style={{
-            bottom: "-40px", right: "-20px",
-            width: "220px", height: "160px",
-            background: "radial-gradient(ellipse, rgba(255,255,255,0.02) 0%, transparent 70%)",
-        }}
-    />
+                <div className="flex items-center gap-3">
+                    {/* Pill-group de vistas */}
+                    <div className="flex gap-0.5 rounded-lg bg-gray-100 p-0.5">
+                        {VIEWS.map(({ key, label, Icon }) => {
+                            const active = activeView === key;
+                            return (
+                                <button
+                                    key={key}
+                                    onClick={() => setActiveView(key)}
+                                    className={[
+                                        "inline-flex items-center gap-1.5 rounded-md px-3.5 py-1.5 text-sm font-medium transition-all duration-200",
+                                        active
+                                            ? "bg-white text-gray-900 shadow-sm"
+                                            : "text-gray-500 hover:text-gray-700",
+                                    ].join(" ")}
+                                >
+                                    <Icon className="h-3.5 w-3.5" />
+                                    {label}
+                                </button>
+                            );
+                        })}
+                    </div>
 
-    <div className="relative px-6 pt-5 pb-0" style={{ zIndex: 1 }}>
+                    {/* Botón Nuevo ingreso */}
+                    {activeView !== "agenda" && (
+                        <button
+                            onClick={openCreate}
+                            className="inline-flex items-center gap-2 rounded-xl bg-gray-900 px-4 py-2.5 text-sm font-semibold text-white shadow-sm
+                                       transition-all duration-200 hover:bg-gray-700 hover:shadow-md hover:-translate-y-0.5 active:translate-y-0 active:shadow-sm"
+                        >
+                            <Plus className="h-4 w-4" />
+                            Nuevo ingreso
+                        </button>
+                    )}
+                </div>
+            </div>
 
-        {/* Fila 1 — breadcrumb + vista tabs */}
-        <div className="flex items-center justify-between mb-5">
-
-            {/* Breadcrumb */}
-            <div className="flex items-center gap-2.5">
-                <div
-                    className="rounded-full"
-                    style={{ width: 6, height: 6, background: "rgba(255,255,255,0.9)" }}
-                />
-                <span
-                    style={{
-                        fontSize: 11,
-                        color: "rgba(255,255,255,0.35)",
-                        letterSpacing: "0.08em",
-                        textTransform: "uppercase",
-                    }}
-                >
-                    Comercial &nbsp;/&nbsp; Control piso
+            {/* ══════════════════════════════════════════════════════
+                STATS CHIPS — barra inferior, solo conteos
+            ══════════════════════════════════════════════════════ */}
+            <div className="flex items-center justify-end gap-2 border-b border-gray-200 pb-3">
+                <span className="inline-flex items-center gap-1.5 rounded-full bg-gray-100 px-3 py-1 text-xs font-semibold text-gray-600">
+                    <span className="h-1.5 w-1.5 rounded-full bg-gray-400" />
+                    {totalRegistros} total
+                </span>
+                <span className="inline-flex items-center gap-1.5 rounded-full bg-emerald-50 px-3 py-1 text-xs font-semibold text-emerald-700 border border-emerald-200">
+                    <span className="h-1.5 w-1.5 rounded-full bg-emerald-500" />
+                    {totalBeBack} be back
+                </span>
+                <span className="inline-flex items-center gap-1.5 rounded-full bg-slate-100 px-3 py-1 text-xs font-semibold text-slate-600">
+                    {tasaBB} tasa BB
                 </span>
             </div>
 
-            {/* Selector de vista en pill-group */}
-            <div
-                className="flex gap-1 p-[3px] rounded-[10px]"
-                style={{
-                    background: "rgba(255,255,255,0.05)",
-                    border: "0.5px solid rgba(255,255,255,0.08)",
-                }}
-            >
-                {VIEWS.map(({ key, label, Icon }) => {
-                    const active = activeView === key;
-                    return (
-                        <button
-                            key={key}
-                            onClick={() => setActiveView(key)}
-                            className="inline-flex items-center gap-1.5 whitespace-nowrap transition-all"
-                            style={{
-                                padding: "6px 14px",
-                                borderRadius: 7,
-                                fontSize: 12,
-                                fontWeight: 500,
-                                border: active
-                                    ? "0.5px solid rgba(255,255,255,0.18)"
-                                    : "0.5px solid transparent",
-                                background: active ? "rgba(255,255,255,0.12)" : "transparent",
-                                color: active ? "#ffffff" : "rgba(255,255,255,0.38)",
-                            }}
-                        >
-                            <Icon size={13} />
-                            {label}
-                        </button>
-                    );
-                })}
-            </div>
-        </div>
-
-        {/* Divisor */}
-        <div
-            style={{
-                height: "0.5px",
-                background:
-                    "linear-gradient(90deg, transparent, rgba(255,255,255,0.08) 15%, rgba(255,255,255,0.08) 85%, transparent)",
-                marginBottom: 18,
-            }}
-        />
-
-        {/* Fila 2 — título + stats + botón */}
-        <div className="flex items-end justify-between gap-4 pb-5">
-
-            <div>
-                <h2
-                    style={{
-                        fontSize: 26,
-                        fontWeight: 500,
-                        color: "#ffffff",
-                        margin: "0 0 5px",
-                        letterSpacing: "-0.02em",
-                        lineHeight: 1.1,
-                    }}
-                >
-                    Control de Piso
-                </h2>
-                <p style={{ fontSize: 13, color: "rgba(255,255,255,0.35)", margin: 0 }}>
-                    {activeView === "tabla"
-                        ? "Doble clic para editar un registro."
-                        : activeView === "agenda"
-                        ? "Vista semanal de ingresos."
-                        : "Estadísticas de ingresos."}
-                </p>
-                {!isAdmin && userAgencia && (
-                    <p style={{ fontSize: 11, color: "rgba(255,255,255,0.3)", marginTop: 4 }}>
-                        Agencia: <span style={{ color: "rgba(255,255,255,0.6)" }}>{userAgencia}</span>
-                    </p>
-                )}
-            </div>
-
-            <div className="flex items-center gap-3">
-                {/* Mini-stats */}
-                <div
-                    className="flex items-stretch overflow-hidden rounded-[10px]"
-                    style={{ border: "0.5px solid rgba(255,255,255,0.1)" }}
-                >
-                    {[
-                        { n: registros.length,                                                           l: "Total"     },
-                        { n: registros.filter(r => r.be_back).length,                                    l: "Be Back"   },
-                        { n: registros.length > 0 ? Math.round((registros.filter(r => r.be_back).length / registros.length) * 100) + "%" : "0%", l: "Tasa BB" },
-                    ].map((s, i) => (
-                        <div
-                            key={i}
-                            className="text-center px-[16px] py-[9px]"
-                            style={{
-                                background: "rgba(255,255,255,0.04)",
-                                borderLeft: i > 0 ? "0.5px solid rgba(255,255,255,0.08)" : "none",
-                            }}
-                        >
-                            <div style={{ fontSize: 18, fontWeight: 500, color: "#fff", lineHeight: 1 }}>
-                                {s.n}
-                            </div>
-                            <div style={{ fontSize: 10, color: "rgba(255,255,255,0.3)", marginTop: 3, textTransform: "uppercase", letterSpacing: "0.06em" }}>
-                                {s.l}
-                            </div>
-                        </div>
-                    ))}
-                </div>
-
-                {/* Botón nuevo ingreso — oculto en agenda porque el kanban tiene el suyo */}
-                {activeView !== "agenda" && (
-                    <button
-                        onClick={openCreate}
-                        className="inline-flex items-center gap-2 whitespace-nowrap transition-all"
-                        style={{
-                            padding: "8px 16px",
-                            borderRadius: 9,
-                            fontSize: 13,
-                            fontWeight: 500,
-                            background: "rgba(255,255,255,0.1)",
-                            border: "0.5px solid rgba(255,255,255,0.18)",
-                            color: "#ffffff",
-                        }}
-                    >
-                        <Plus size={14} />
-                        Nuevo ingreso
-                    </button>
-                )}
-            </div>
-        </div>
-    </div>
-
-    {/* Franja inferior decorativa */}
-    <div
-        style={{
-            height: 3,
-            background: "linear-gradient(90deg, #1a1a1a 0%, #2a2a2a 30%, #1f1f1f 60%, #111 100%)",
-        }}
-    />
-</div>
-            {/* ── Filtros — solo visibles en tabla y gráficas ── */}
+            {/* ══════════════════════════════════════════════════════
+                FILTROS — solo en tabla y gráficas
+                Estilo limpio como la imagen de Citas
+            ══════════════════════════════════════════════════════ */}
             {activeView !== "agenda" && (
-                <div className="rounded-xl border border-black/10 bg-white p-4 shadow-sm">
-                    <div className="grid gap-3 md:grid-cols-12">
-                        <div className="md:col-span-6">
-                            <FilterBlock label="Búsqueda">
-                                <div className="flex items-center gap-2 rounded-lg border border-black bg-white px-3 py-2">
-                                    <Search className="h-4 w-4 text-black"/>
-                                    <input value={filters.q} onChange={e=>setFilters(p=>({...p,q:e.target.value}))}
-                                        placeholder="Dealer, cliente, teléfono, asesor, fuente…"
-                                        className="w-full text-sm text-black outline-none placeholder:text-black/40"/>
-                                    {filters.q&&<button onClick={()=>setFilters(p=>({...p,q:""}))} className="p-1 text-black hover:text-red-500"><X className="h-4 w-4"/></button>}
-                                </div>
-                            </FilterBlock>
-                        </div>
-                        <div className="md:col-span-3">
-                            <FilterBlock label="Dealer">
-                                <select value={filters.agencia} onChange={e=>setFilters(p=>({...p,agencia:e.target.value}))}
-                                    className="w-full rounded-lg border border-black bg-white px-3 py-2 text-sm text-black outline-none">
-                                    {dealers.map(d=><option key={d} value={d}>{d}</option>)}
-                                </select>
-                            </FilterBlock>
-                        </div>
-                        <div className="md:col-span-3">
-                            <FilterBlock label="Acciones">
-                                <div className="grid grid-cols-2 gap-2">
-                                    <button onClick={setHoy}
-                                        className="inline-flex items-center justify-center gap-2 rounded-lg bg-emerald-600 px-3 py-2 text-sm font-semibold text-white hover:bg-emerald-700">
-                                        <CalendarDays className="h-4 w-4"/> Hoy
+                <div className="rounded-2xl border border-gray-200 bg-white p-4 shadow-sm">
+                    <div className="flex flex-wrap items-end gap-3">
+
+                        {/* Búsqueda — crece */}
+                        <div className="flex-1 min-w-[200px]">
+                            <label className="mb-1.5 block text-xs font-semibold text-gray-500 uppercase tracking-wide">Búsqueda</label>
+                            <div className="flex items-center gap-2 rounded-xl border border-gray-300 bg-white px-3 py-2 transition-all duration-200 focus-within:border-gray-500 focus-within:ring-2 focus-within:ring-gray-100">
+                                <Search className="h-4 w-4 text-gray-400 shrink-0"/>
+                                <input
+                                    value={filters.q}
+                                    onChange={e=>setFilters(p=>({...p,q:e.target.value}))}
+                                    placeholder="Dealer, cliente, teléfono, asesor, fuente…"
+                                    className="w-full text-sm text-gray-800 outline-none placeholder:text-gray-400"
+                                />
+                                {filters.q && (
+                                    <button onClick={()=>setFilters(p=>({...p,q:""}))} className="text-gray-400 hover:text-gray-700 transition-colors">
+                                        <X className="h-3.5 w-3.5"/>
                                     </button>
-                                    <button onClick={resetFilters}
-                                        className="inline-flex items-center justify-center gap-2 rounded-lg border border-black bg-white px-3 py-2 text-sm font-semibold text-black hover:bg-black hover:text-white transition">
-                                        <X className="h-4 w-4"/> Limpiar
-                                    </button>
-                                </div>
-                            </FilterBlock>
+                                )}
+                            </div>
                         </div>
-                        <div className="md:col-span-6">
-                            <FilterBlock label="Desde">
-                                <input type="date" value={filters.rangoDesde} onChange={e=>setFilters(p=>({...p,rangoDesde:e.target.value}))}
-                                    className="w-full rounded-lg border border-black bg-white px-3 py-2 text-sm text-black outline-none"/>
-                            </FilterBlock>
+
+                        {/* Dealer */}
+                        <div className="w-36">
+                            <label className="mb-1.5 block text-xs font-semibold text-gray-500 uppercase tracking-wide">Dealer</label>
+                            <select
+                                value={filters.agencia}
+                                onChange={e=>setFilters(p=>({...p,agencia:e.target.value}))}
+                                className="w-full rounded-xl border border-gray-300 bg-white px-3 py-2 text-sm text-gray-800 outline-none transition-all duration-200 focus:border-gray-500 focus:ring-2 focus:ring-gray-100"
+                            >
+                                {dealers.map(d=><option key={d} value={d}>{d}</option>)}
+                            </select>
                         </div>
-                        <div className="md:col-span-6">
-                            <FilterBlock label="Hasta">
-                                <input type="date" value={filters.rangoHasta} onChange={e=>setFilters(p=>({...p,rangoHasta:e.target.value}))}
-                                    className="w-full rounded-lg border border-black bg-white px-3 py-2 text-sm text-black outline-none"/>
-                            </FilterBlock>
+
+                        {/* Desde */}
+                        <div className="w-40">
+                            <label className="mb-1.5 block text-xs font-semibold text-gray-500 uppercase tracking-wide">Desde</label>
+                            <input
+                                type="date"
+                                value={filters.rangoDesde}
+                                onChange={e=>setFilters(p=>({...p,rangoDesde:e.target.value}))}
+                                className="w-full rounded-xl border border-gray-300 bg-white px-3 py-2 text-sm text-gray-800 outline-none transition-all duration-200 focus:border-gray-500 focus:ring-2 focus:ring-gray-100"
+                            />
+                        </div>
+
+                        {/* Hasta */}
+                        <div className="w-40">
+                            <label className="mb-1.5 block text-xs font-semibold text-gray-500 uppercase tracking-wide">Hasta</label>
+                            <input
+                                type="date"
+                                value={filters.rangoHasta}
+                                onChange={e=>setFilters(p=>({...p,rangoHasta:e.target.value}))}
+                                className="w-full rounded-xl border border-gray-300 bg-white px-3 py-2 text-sm text-gray-800 outline-none transition-all duration-200 focus:border-gray-500 focus:ring-2 focus:ring-gray-100"
+                            />
+                        </div>
+
+                        {/* Hoy siempre visible + Limpiar solo cuando hay filtros */}
+                        <div className="flex items-end gap-2">
+                            <button
+                                onClick={setHoy}
+                                className="inline-flex items-center gap-1.5 rounded-xl bg-gray-900 px-4 py-2 text-sm font-semibold text-white
+                                           transition-all duration-200 hover:bg-gray-700 hover:shadow-sm hover:-translate-y-px active:translate-y-0"
+                            >
+                                <CalendarDays className="h-4 w-4"/>
+                                Hoy
+                            </button>
+                            {hasActiveFilters && (
+                                <button
+                                    onClick={resetFilters}
+                                    className="inline-flex items-center gap-1.5 rounded-xl border border-gray-300 bg-white px-4 py-2 text-sm font-semibold text-gray-700
+                                               transition-all duration-200 hover:bg-gray-50 hover:border-gray-400 hover:shadow-sm active:bg-gray-100"
+                                >
+                                    <X className="h-4 w-4"/>
+                                    Limpiar
+                                </button>
+                            )}
                         </div>
                     </div>
                 </div>
@@ -1164,122 +1194,217 @@ export default function RegistroCitasPiso() {
                 <GraficasView registros={filtered}/>
             )}
 
-            {/* ── Vista Tabla ── */}
+            {/* ══════════════════════════════════════════════════════
+                VISTA TABLA — diseño estilo Citas
+            ══════════════════════════════════════════════════════ */}
             {activeView === "tabla" && (
                 <>
-                    <div className="hidden overflow-hidden rounded-xl shadow-sm lg:block">
+                    <div className="hidden overflow-hidden rounded-2xl border border-gray-200 shadow-sm lg:block">
                         <div className="overflow-auto">
                             <table className="min-w-full text-left text-sm">
-                                <thead className="border border-black bg-black text-xs text-white">
-                                    <tr>
-                                        {[{label:"Fecha y Hora",key:"fecha_hora_cita"},{label:"Dealer",key:"agencia"}].map(({label,key})=>(
-                                            <th key={key} className="px-4 py-3">
-                                                <button type="button" onClick={()=>toggleSort(key)} className="inline-flex items-center gap-1 font-bold">
+                                <thead>
+                                    <tr className="border-b border-gray-200 bg-gray-50">
+                                        {[
+                                            {label:"Fecha y Hora", key:"fecha_hora_cita"},
+                                            {label:"Dealer",       key:"agencia"},
+                                        ].map(({label,key})=>(
+                                            <th key={key} className="px-5 py-3.5 text-xs font-semibold text-gray-500 uppercase tracking-wide">
+                                                <button
+                                                    type="button"
+                                                    onClick={()=>toggleSort(key)}
+                                                    className="inline-flex items-center gap-1.5 hover:text-gray-800 transition-colors duration-150"
+                                                >
                                                     {label}
-                                                    <span className="opacity-60">
-                                                        {sort.key===key ? sort.dir==="asc"?<ChevronUp className="h-4"/>:<ChevronDown className="h-4"/> : <ArrowUpDown className="h-4"/>}
+                                                    <span className="text-gray-400">
+                                                        {sort.key===key
+                                                            ? sort.dir==="asc"
+                                                                ? <ChevronUp className="h-3.5 w-3.5"/>
+                                                                : <ChevronDown className="h-3.5 w-3.5"/>
+                                                            : <ArrowUpDown className="h-3.5 w-3.5"/>
+                                                        }
                                                     </span>
                                                 </button>
                                             </th>
                                         ))}
                                         {["Cliente","Auto interés","Asesor piso","Folio","Fuente prospección","Be Back"].map(h=>(
-                                            <th key={h} className="px-4 py-3">{h}</th>
+                                            <th key={h} className="px-5 py-3.5 text-xs font-semibold text-gray-500 uppercase tracking-wide">
+                                                {h}
+                                            </th>
                                         ))}
                                     </tr>
                                 </thead>
-                                <tbody className="divide-y divide-black/10 bg-white">
-                                    {loadingList ? Array.from({length:8}).map((_,i)=><SkeletonRow key={i}/>) : sorted.length===0 ? (
-                                        <tr><td colSpan={8} className="px-4 py-10 text-center text-black/40">No hay resultados.</td></tr>
-                                    ) : sorted.map(row=>{
-                                        const isUpdating=!!updatingInline[row.id];
-                                        return (
-                                            <tr key={row.id} onDoubleClick={()=>openEdit(row)} onContextMenu={e=>onRowContextMenu(e,row)}
-                                                className="cursor-pointer hover:bg-slate-50 transition">
-                                                <td className="px-4 py-3 font-semibold text-black">{row.fecha_hora_cita?toDTLocal(row.fecha_hora_cita).replace("T"," "):"—"}</td>
-                                                <td className="px-4 py-3 font-semibold text-black">{row.agencia||"—"}</td>
-                                                <td className="px-4 py-3 text-black"><div className="font-bold">{row?.cliente?.nombre||"—"}</div></td>
-                                                <td className="px-4 py-3 text-black">{row.auto_interes||"—"}</td>
-                                                <td className="px-4 py-3 text-black">{row.asesor_piso||"—"}</td>
-                                                <td className="px-4 py-3" onClick={e=>e.stopPropagation()}>
-                                                    <input defaultValue={row.folio||""} disabled={isUpdating} placeholder="—"
-                                                        className="w-full max-w-[140px] rounded-lg border border-black/10 bg-white px-2 py-1 text-xs font-bold text-black outline-none focus:ring-2 focus:ring-black/20"
-                                                        onKeyDown={e=>{ if (e.key==="Enter") e.currentTarget.blur(); if (e.key==="Escape"){e.currentTarget.value=row.folio||"";e.currentTarget.blur();} }}
-                                                        onBlur={e=>{ if ((e.currentTarget.value||"")!==(row.folio||"")) updateFolioInline(row,e.currentTarget.value); }}/>
-                                                </td>
-                                                <td className="px-4 py-3" onClick={e=>e.stopPropagation()}>
-                                                    <select value={row.fuente_prospeccion||""} disabled={isUpdating} onChange={e=>changeFuenteInline(row,e.target.value)}
-                                                        className="w-full max-w-[200px] rounded-lg border border-black/10 px-2 py-1 text-xs font-bold text-black">
-                                                        <option value="">—</option>
-                                                        {FUENTE.map(s=><option key={s} value={s}>{s}</option>)}
-                                                    </select>
-                                                </td>
-                                                <td className="px-4 py-3">
-                                                    <button disabled={isUpdating} onClick={e=>{e.stopPropagation();toggleBeBackInline(row);}}
-                                                        className={["inline-flex items-center gap-1.5 rounded-full border px-3 py-1 text-xs font-bold transition",
-                                                            row.be_back?"bg-emerald-100 text-emerald-800 border-emerald-300 hover:bg-emerald-200":"bg-red-50 text-red-700 border-red-200 hover:bg-red-100",
-                                                            isUpdating?"opacity-70 cursor-not-allowed":""].join(" ")}>
-                                                        {isUpdating?<Loader2 className="h-3.5 w-3.5 animate-spin"/>:null}
-                                                        {row.be_back?"Sí":"No"}
-                                                    </button>
+                                <tbody className="divide-y divide-gray-100 bg-white">
+                                    {loadingList
+                                        ? Array.from({length:8}).map((_,i)=><SkeletonRow key={i}/>)
+                                        : sorted.length===0
+                                        ? (
+                                            <tr>
+                                                <td colSpan={8} className="px-5 py-14 text-center">
+                                                    <div className="flex flex-col items-center gap-2">
+                                                        <Search className="h-8 w-8 text-gray-300"/>
+                                                        <span className="text-sm text-gray-400 font-medium">No hay resultados</span>
+                                                        <span className="text-xs text-gray-400">Intenta ajustar los filtros</span>
+                                                    </div>
                                                 </td>
                                             </tr>
-                                        );
-                                    })}
+                                        )
+                                        : sorted.map(row=>{
+                                            const isUpdating=!!updatingInline[row.id];
+                                            return (
+                                                <tr
+                                                    key={row.id}
+                                                    onDoubleClick={()=>openEdit(row)}
+                                                    onContextMenu={e=>onRowContextMenu(e,row)}
+                                                    className="group cursor-pointer transition-colors duration-150 hover:bg-gray-50"
+                                                >
+                                                    <td className="px-5 py-3.5">
+                                                        <span className="font-semibold text-gray-900 text-sm">
+                                                            {row.fecha_hora_cita ? toDTLocal(row.fecha_hora_cita).replace("T"," ") : "—"}
+                                                        </span>
+                                                    </td>
+                                                    <td className="px-5 py-3.5">
+                                                        <span className="inline-flex items-center gap-1.5 rounded-full bg-gray-100 px-2.5 py-1 text-xs font-semibold text-gray-700">
+                                                            {row.agencia || "—"}
+                                                        </span>
+                                                    </td>
+                                                    <td className="px-5 py-3.5">
+                                                        <div className="font-semibold text-gray-900">{row?.cliente?.nombre || "—"}</div>
+                                                        {row?.cliente?.telefono && (
+                                                            <div className="text-xs text-gray-500 mt-0.5">{row.cliente.telefono}</div>
+                                                        )}
+                                                    </td>
+                                                    <td className="px-5 py-3.5 text-sm text-gray-600">{row.auto_interes || "—"}</td>
+                                                    <td className="px-5 py-3.5 text-sm text-gray-600">{row.asesor_piso || "—"}</td>
+                                                    <td className="px-5 py-3.5" onClick={e=>e.stopPropagation()}>
+                                                        <input
+                                                            defaultValue={row.folio||""}
+                                                            disabled={isUpdating}
+                                                            placeholder="—"
+                                                            className="w-full max-w-[130px] rounded-lg border border-gray-200 bg-white px-2.5 py-1.5 text-xs font-medium text-gray-800
+                                                                       outline-none transition-all duration-200 focus:border-gray-400 focus:ring-2 focus:ring-gray-100
+                                                                       hover:border-gray-300"
+                                                            onKeyDown={e=>{
+                                                                if (e.key==="Enter") e.currentTarget.blur();
+                                                                if (e.key==="Escape"){e.currentTarget.value=row.folio||"";e.currentTarget.blur();}
+                                                            }}
+                                                            onBlur={e=>{
+                                                                if ((e.currentTarget.value||"")!==(row.folio||"")) updateFolioInline(row,e.currentTarget.value);
+                                                            }}
+                                                        />
+                                                    </td>
+                                                    <td className="px-5 py-3.5" onClick={e=>e.stopPropagation()}>
+                                                        <select
+                                                            value={row.fuente_prospeccion||""}
+                                                            disabled={isUpdating}
+                                                            onChange={e=>changeFuenteInline(row,e.target.value)}
+                                                            className="w-full max-w-[190px] rounded-lg border border-gray-200 bg-white px-2.5 py-1.5 text-xs font-medium text-gray-800
+                                                                       outline-none transition-all duration-200 focus:border-gray-400 hover:border-gray-300"
+                                                        >
+                                                            <option value="">—</option>
+                                                            {FUENTE.map(s=><option key={s} value={s}>{s}</option>)}
+                                                        </select>
+                                                    </td>
+                                                    <td className="px-5 py-3.5">
+                                                        <BeBackBadge
+                                                            value={row.be_back}
+                                                            isUpdating={isUpdating}
+                                                            onClick={e=>{e.stopPropagation();toggleBeBackInline(row);}}
+                                                        />
+                                                    </td>
+                                                </tr>
+                                            );
+                                        })
+                                    }
                                 </tbody>
                             </table>
                         </div>
+
+                        {/* Footer de la tabla con conteo */}
+                        {!loadingList && sorted.length > 0 && (
+                            <div className="border-t border-gray-100 bg-gray-50 px-5 py-3">
+                                <span className="text-xs text-gray-500">
+                                    Mostrando {sorted.length} registro{sorted.length !== 1 ? "s" : ""}
+                                    {filters.q || filters.agencia !== "Todos" || filters.rangoDesde || filters.rangoHasta
+                                        ? " (filtrado)"
+                                        : ""
+                                    }
+                                </span>
+                            </div>
+                        )}
                     </div>
 
                     {/* Mobile cards */}
                     <div className="grid gap-3 lg:hidden">
                         {loadingList ? (
-                            <div className="rounded-xl border border-black/10 bg-white p-6 shadow-sm">
-                                <div className="flex items-center gap-2 font-bold text-black"><Loader2 className="h-5 w-5 animate-spin"/>Cargando...</div>
+                            <div className="rounded-2xl border border-gray-200 bg-white p-6 shadow-sm">
+                                <div className="flex items-center gap-2 font-semibold text-gray-800">
+                                    <Loader2 className="h-5 w-5 animate-spin text-gray-400"/>
+                                    Cargando…
+                                </div>
                             </div>
                         ) : sorted.length===0 ? (
-                            <div className="rounded-xl border border-black/10 bg-white p-10 text-center text-black/40">No hay resultados.</div>
+                            <div className="rounded-2xl border border-gray-200 bg-white p-10 text-center text-gray-400">
+                                No hay resultados.
+                            </div>
                         ) : sorted.map(row=>(
-                            <button key={row.id} onClick={()=>openEdit(row)}
-                                className="text-left rounded-xl border border-black/10 bg-white p-4 shadow-sm hover:bg-slate-50 transition">
+                            <button
+                                key={row.id}
+                                onClick={()=>openEdit(row)}
+                                className="text-left rounded-2xl border border-gray-200 bg-white p-4 shadow-sm
+                                           transition-all duration-200 hover:shadow-md hover:-translate-y-0.5 hover:border-gray-300 active:translate-y-0"
+                            >
                                 <div className="flex items-start justify-between gap-3">
                                     <div className="min-w-0">
-                                        <div className="truncate text-sm font-extrabold text-black">{row?.cliente?.nombre||"—"}</div>
-                                        <div className="mt-1 text-xs text-black/50">{row.agencia||"—"} · {row?.cliente?.telefono||"—"}</div>
-                                        <div className="mt-1 text-xs text-black/50">{row.fecha_hora_cita?toDTLocal(row.fecha_hora_cita).replace("T"," "):"—"}</div>
-                                        <div className="mt-1 text-xs text-black/50">{row.fuente_prospeccion||"—"}</div>
+                                        <div className="truncate text-sm font-bold text-gray-900">{row?.cliente?.nombre||"—"}</div>
+                                        <div className="mt-1 text-xs text-gray-500">{row.agencia||"—"} · {row?.cliente?.telefono||"—"}</div>
+                                        <div className="mt-1 text-xs text-gray-500">{row.fecha_hora_cita?toDTLocal(row.fecha_hora_cita).replace("T"," "):"—"}</div>
+                                        <div className="mt-1 text-xs text-gray-400">{row.fuente_prospeccion||"—"}</div>
                                     </div>
-                                    <span className={["shrink-0 rounded-full border px-3 py-1 text-xs font-bold",
-                                        row.be_back?"bg-emerald-100 text-emerald-800 border-emerald-300":"bg-red-50 text-red-700 border-red-200"].join(" ")}>
-                                        {row.be_back?"Be Back":"No regresó"}
-                                    </span>
+                                    <BeBackBadge value={row.be_back} isUpdating={false} onClick={e=>{e.stopPropagation();toggleBeBackInline(row);}} />
                                 </div>
-                                <div className="mt-2 line-clamp-2 text-xs text-black/40">{row.comentarios_cliente||"—"}</div>
+                                {row.comentarios_cliente && (
+                                    <div className="mt-2 line-clamp-2 text-xs text-gray-400">{row.comentarios_cliente}</div>
+                                )}
                             </button>
                         ))}
                     </div>
                 </>
             )}
 
-            <ContextMenu ctxMenu={ctxMenu}
+            <ContextMenu
+                ctxMenu={ctxMenu}
                 onDelete={async(row)=>{ await eliminarRegistro(row); setCtxMenu({open:false,x:0,y:0,row:null}); }}
-                onClose={()=>setCtxMenu({open:false,x:0,y:0,row:null})}/>
+                onClose={()=>setCtxMenu({open:false,x:0,y:0,row:null})}
+            />
 
             {/* ── Modal crear/editar ── */}
-            <Modal open={openModal} title={mode==="create"?"Nuevo ingreso a piso":`Editar • ${draft?.id}`} onClose={closeModal}
+            <Modal
+                open={openModal}
+                title={mode==="create" ? "Nuevo ingreso a piso" : `Editar registro • ${draft?.id}`}
+                onClose={closeModal}
                 footer={
                     <>
-                        <button onClick={closeModal} disabled={saving}
-                            className="inline-flex items-center gap-2 rounded-full border border-black/15 px-4 py-2 text-sm font-medium text-black/60 transition hover:bg-black/5 hover:text-black disabled:opacity-50">
+                        <button
+                            onClick={closeModal}
+                            disabled={saving}
+                            className="inline-flex items-center gap-2 rounded-xl border border-gray-200 px-4 py-2 text-sm font-medium text-gray-600
+                                       transition-all duration-200 hover:bg-gray-50 hover:border-gray-300 disabled:opacity-50"
+                        >
                             Cancelar
                         </button>
-                        <button onClick={save} disabled={saving||loadingDetail||telInvalid||(draft?.cliente_telefono?!telIsOk:false)}
-                            className="inline-flex items-center gap-2 rounded-full bg-black px-5 py-2 text-sm font-medium text-white transition hover:bg-black/85 disabled:opacity-50">
-                            {saving?<Loader2 className="h-4 w-4 animate-spin"/>:null}
-                            {saving?"Guardando...":"Guardar cambios"}
+                        <button
+                            onClick={save}
+                            disabled={saving||loadingDetail||telInvalid||(draft?.cliente_telefono?!telIsOk:false)}
+                            className="inline-flex items-center gap-2 rounded-xl bg-gray-900 px-5 py-2 text-sm font-semibold text-white
+                                       transition-all duration-200 hover:bg-gray-700 hover:shadow-md hover:-translate-y-px active:translate-y-0 disabled:opacity-50 disabled:cursor-not-allowed"
+                        >
+                            {saving ? <Loader2 className="h-4 w-4 animate-spin"/> : <Save className="h-4 w-4"/>}
+                            {saving ? "Guardando…" : "Guardar cambios"}
                         </button>
                     </>
-                }>
-                {loadingDetail?<ModalSkeleton/>:!draft?null:(
+                }
+            >
+                {loadingDetail ? <ModalSkeleton/> : !draft ? null : (
                     <div className="grid gap-3 md:grid-cols-3">
                         <Field label="Dealer" icon={Building2}>
                             <select value={draft.agencia||""} onChange={e=>setDraft(p=>({...p,agencia:e.target.value}))} disabled={!isAdmin}
@@ -1327,16 +1452,21 @@ export default function RegistroCitasPiso() {
                                 {ASESORES.map(d=><option key={d} value={d}>{d}</option>)}
                             </select>
                         </Field>
-                        <Field label="Folio" icon={UserSearch}>
+                        <Field label="Folio" icon={Hash}>
                             <input value={draft.folio||""} onChange={e=>setDraft(p=>({...p,folio:e.target.value}))}
                                 className={[inputBase,inputOk].join(" ")} placeholder="A12B9981"/>
                         </Field>
                         <Field label="Be Back" icon={UserCheck}>
                             <button type="button" onClick={()=>setDraft(p=>({...p,be_back:!p.be_back}))}
-                                className={["inline-flex w-full items-center justify-center gap-1.5 rounded-full border px-3 py-2 text-sm font-medium transition",
-                                    draft.be_back?"border-emerald-200 bg-emerald-50 text-emerald-700":"border-red-200 bg-red-50 text-red-600"].join(" ")}>
-                                {draft.be_back?<CheckCircle2 className="h-4 w-4"/>:<X className="h-4 w-4"/>}
-                                {draft.be_back?"Regresó":"No regresó"}
+                                className={[
+                                    "inline-flex w-full items-center justify-center gap-1.5 rounded-xl border px-3 py-2 text-sm font-semibold",
+                                    "transition-all duration-200 hover:scale-[1.02] active:scale-[0.98]",
+                                    draft.be_back
+                                        ? "border-emerald-200 bg-emerald-50 text-emerald-700 hover:bg-emerald-100"
+                                        : "border-red-200 bg-red-50 text-red-600 hover:bg-red-100",
+                                ].join(" ")}>
+                                {draft.be_back ? <CheckCircle2 className="h-4 w-4"/> : <X className="h-4 w-4"/>}
+                                {draft.be_back ? "Regresó" : "No regresó"}
                             </button>
                         </Field>
                         <div className="md:col-span-3">

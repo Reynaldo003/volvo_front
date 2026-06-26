@@ -25,7 +25,7 @@ export default function AppShell() {
 
     return (
         // h-screen + overflow-hidden en el wrapper => el scroll queda solo en <main>
-        <div className="flex h-screen overflow-hidden bg-slate-100">
+        <div className="flex h-screen overflow-hidden bg-[#ffffff]">
 
             {/* Sidebar desktop (fijo, altura completa) */}
             <div className="hidden h-full lg:block">

@@ -32,6 +32,11 @@ import {
     Table2,
     BarChart3,
     Clock3,
+    CalendarClock,
+    CheckCircle2,
+    XCircle,
+    MoreVertical,
+    Gauge,
 } from "lucide-react";
 import CONCESIONARIO from "/concesionario.png";
 import WAP from "/whatsapp.svg";
@@ -44,7 +49,7 @@ import { apiCitas } from "../../lib/apiCitas";
 import { useAuth } from "../../auth/AuthContext";
 import * as XLSX from "xlsx";
 
-const BRAND_BLUE = "#003057";
+const BRAND_BLACK = "#0A0A0A";
 const PAGE_SIZE = 200;
 
 const ImgIcon = (src, alt) => (props) => <img src={src} alt={alt} {...props} />;
@@ -299,7 +304,7 @@ function LineaPicker({ value, onChange }) {
                         className={[
                             "flex h-14 w-full items-center justify-center gap-2 rounded-xl border px-4 text-center transition",
                             active
-                                ? "border-[#003057]/50 bg-white ring-2 ring-[#003057]/20"
+                                ? "border-black/50 bg-white ring-2 ring-black/20"
                                 : "border-black/10 bg-neutral-50 hover:bg-white",
                         ].join(" ")}
                     >
@@ -307,14 +312,14 @@ function LineaPicker({ value, onChange }) {
                             className={[
                                 "inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-full border",
                                 active
-                                    ? "border-[#003057]/40 bg-[#003057]/10"
+                                    ? "border-black/40 bg-black/10"
                                     : "border-black/10 bg-white",
                             ].join(" ")}
                         >
-                            <Icon className="h-4 w-4 text-[#003057]" />
+                            <Icon className="h-4 w-4 text-black" />
                         </span>
 
-                        <span className="truncate text-sm font-semibold text-[#003057]">
+                        <span className="truncate text-sm font-semibold text-black">
                             {meta.label}
                         </span>
                     </button>
@@ -340,7 +345,7 @@ function OrigenPicker({ value, onChange }) {
                         className={[
                             "flex h-14 w-full items-center gap-3 rounded-xl border px-4 text-left transition",
                             active
-                                ? "border-[#003057]/50 bg-white ring-2 ring-[#003057]/20"
+                                ? "border-black/50 bg-white ring-2 ring-black/20"
                                 : "border-black/10 bg-neutral-50 hover:bg-white",
                         ].join(" ")}
                     >
@@ -348,7 +353,7 @@ function OrigenPicker({ value, onChange }) {
                             className={[
                                 "flex h-8 w-8 shrink-0 items-center justify-center rounded-full border",
                                 active
-                                    ? "border-[#003057]/40 bg-[#003057]/10"
+                                    ? "border-black/40 bg-black/10"
                                     : "border-black/10 bg-white",
                             ].join(" ")}
                         >
@@ -356,7 +361,7 @@ function OrigenPicker({ value, onChange }) {
                         </div>
 
                         <div className="min-w-0 flex-1">
-                            <div className="truncate text-sm font-semibold text-[#003057]">
+                            <div className="truncate text-sm font-semibold text-black">
                                 {meta.label}
                             </div>
                         </div>
@@ -377,10 +382,10 @@ function Modal({ open, title, onClose, children, footer }) {
             />
 
             <div className="absolute inset-0 flex items-end justify-center p-2 sm:items-center sm:p-4">
-                <div className="flex max-h-[88vh] w-full max-w-4xl flex-col overflow-hidden rounded-lg border border-[#003057]/20 bg-neutral-100 shadow-xl">
+                <div className="flex max-h-[88vh] w-full max-w-4xl flex-col overflow-hidden rounded-lg border border-black/20 bg-neutral-100 shadow-xl">
                     <div
                         className="flex shrink-0 items-center justify-between gap-3 px-5 py-4"
-                        style={{ backgroundColor: BRAND_BLUE }}
+                        style={{ backgroundColor: BRAND_BLACK }}
                     >
                         <div className="min-w-0">
                             <div className="truncate text-base font-extrabold text-white">
@@ -403,7 +408,7 @@ function Modal({ open, title, onClose, children, footer }) {
                     </div>
 
                     {footer ? (
-                        <div className="flex shrink-0 flex-col gap-2 border-t border-[#003057]/10 bg-white px-5 py-4 sm:flex-row sm:items-center sm:justify-end">
+                        <div className="flex shrink-0 flex-col gap-2 border-t border-black/10 bg-white px-5 py-4 sm:flex-row sm:items-center sm:justify-end">
                             {footer}
                         </div>
                     ) : null}
@@ -416,7 +421,7 @@ function Modal({ open, title, onClose, children, footer }) {
 function Field({ label, icon: Icon, children }) {
     return (
         <div className="h-full rounded-lg border border-white/10 bg-neutral-200/50 p-4">
-            <div className="mb-3 flex items-center gap-2 text-sm font-bold text-[#003057]">
+            <div className="mb-3 flex items-center gap-2 text-sm font-bold text-black">
                 {Icon ? <Icon className="h-4 w-4 shrink-0" /> : null}
                 <span>{label}</span>
             </div>
@@ -689,8 +694,8 @@ function VistaGraficos({ rows }) {
     const maxHora = Math.max(...statsPorHora.map(([, c]) => c), 1);
 
     const colorBar = [
-        "bg-[#003057]",
-        "bg-sky-500",
+        "bg-black",
+        "bg-neutral-600",
         "bg-emerald-500",
         "bg-amber-500",
         "bg-violet-500",
@@ -702,7 +707,7 @@ function VistaGraficos({ rows }) {
     function BarGroup({ title, data, max, icon: Icon, colorIndex = 0 }) {
         return (
             <div className="overflow-hidden rounded-2xl border border-black/10 bg-white shadow-sm">
-                <div className="flex items-center gap-2 px-5 py-3" style={{ backgroundColor: BRAND_BLUE }}>
+                <div className="flex items-center gap-2 px-5 py-3" style={{ backgroundColor: BRAND_BLACK }}>
                     <Icon className="h-4 w-4 text-white/70" />
                     <span className="text-sm font-extrabold text-white">{title}</span>
                     <span className="ml-auto rounded-full bg-white/20 px-2.5 py-0.5 text-xs font-bold text-white">
@@ -712,7 +717,7 @@ function VistaGraficos({ rows }) {
                 <div className="space-y-3 p-5 max-h-[300px] overflow-y-auto">
                     {data.map(([label, count], i) => (
                         <div key={label}>
-                            <div className="mb-1 flex items-center justify-between text-xs font-semibold text-[#003057]">
+                            <div className="mb-1 flex items-center justify-between text-xs font-semibold text-black">
                                 <span className="truncate max-w-[150px]" title={label}>{label}</span>
                                 <span className="ml-2 shrink-0">{count}</span>
                             </div>
@@ -735,7 +740,7 @@ function VistaGraficos({ rows }) {
     function DonutCard({ title, data, icon: Icon, total }) {
         return (
             <div className="overflow-hidden rounded-2xl border border-black/10 bg-white shadow-sm">
-                <div className="flex items-center gap-2 px-5 py-3" style={{ backgroundColor: BRAND_BLUE }}>
+                <div className="flex items-center gap-2 px-5 py-3" style={{ backgroundColor: BRAND_BLACK }}>
                     <Icon className="h-4 w-4 text-white/70" />
                     <span className="text-sm font-extrabold text-white">{title}</span>
                     <span className="ml-auto rounded-full bg-white/20 px-2.5 py-0.5 text-xs font-bold text-white">
@@ -750,7 +755,7 @@ function VistaGraficos({ rows }) {
                                 <div key={label} className="flex items-center justify-between">
                                     <div className="flex items-center gap-2">
                                         <div className={`h-3 w-3 rounded-full ${colorBar[i % colorBar.length]}`} />
-                                        <span className="text-xs font-semibold text-[#003057] truncate max-w-[120px]" title={label}>
+                                        <span className="text-xs font-semibold text-black truncate max-w-[120px]" title={label}>
                                             {label}
                                         </span>
                                     </div>
@@ -793,13 +798,13 @@ function VistaGraficos({ rows }) {
 
             {/* Tarjeta de resumen */}
             <div className="overflow-hidden rounded-2xl border border-black/10 bg-white shadow-sm">
-                <div className="flex items-center gap-2 px-5 py-3" style={{ backgroundColor: BRAND_BLUE }}>
+                <div className="flex items-center gap-2 px-5 py-3" style={{ backgroundColor: BRAND_BLACK }}>
                     <ClipboardCheck className="h-4 w-4 text-white/70" />
                     <span className="text-sm font-extrabold text-white">Resumen general</span>
                 </div>
                 <div className="grid grid-cols-2 gap-4 p-5 md:grid-cols-4">
                     <div className="text-center">
-                        <div className="text-2xl font-black text-[#003057]">{totalProspectos}</div>
+                        <div className="text-2xl font-black text-black">{totalProspectos}</div>
                         <div className="text-xs text-black/50">Total prospectos</div>
                     </div>
                     <div className="text-center">
@@ -820,6 +825,461 @@ function VistaGraficos({ rows }) {
     );
 }
 
+// ─────────────────────────────────────────────────────────────────────────────
+// Vista: Agenda — combina citas agendadas (apiCitas) + prospectos con
+// seguimiento pendiente, en el layout tipo "Citas" (calendario + lista lateral)
+// ─────────────────────────────────────────────────────────────────────────────
+const MESES_LARGOS = [
+    "enero", "febrero", "marzo", "abril", "mayo", "junio",
+    "julio", "agosto", "septiembre", "octubre", "noviembre", "diciembre",
+];
+const DIAS_SEMANA_CORTOS = ["Lun", "Mar", "Mié", "Jue", "Vie", "Sáb", "Dom"];
+
+function buildCalendarMatrix(year, month) {
+    // month: 0-indexed
+    const firstDay = new Date(year, month, 1);
+    const startWeekday = (firstDay.getDay() + 6) % 7; // 0 = Lunes
+    const daysInMonth = new Date(year, month + 1, 0).getDate();
+
+    const cells = [];
+    for (let i = 0; i < startWeekday; i++) cells.push(null);
+    for (let d = 1; d <= daysInMonth; d++) cells.push(d);
+    while (cells.length % 7 !== 0) cells.push(null);
+
+    const weeks = [];
+    for (let i = 0; i < cells.length; i += 7) weeks.push(cells.slice(i, i + 7));
+    return weeks;
+}
+
+function VistaAgenda({ rows, isAdmin, abrirAgendaCita, fmtDTIntl }) {
+    const hoy = new Date();
+    const [calRef, setCalRef] = useState(new Date(hoy.getFullYear(), hoy.getMonth(), 1));
+    const [selectedDate, setSelectedDate] = useState(formatDateYMDLocal(hoy));
+    const [citas, setCitas] = useState([]);
+    const [loadingCitas, setLoadingCitas] = useState(false);
+    const [agendaPage, setAgendaPage] = useState(1);
+    const AGENDA_PAGE_SIZE = 5;
+
+    useEffect(() => {
+        (async () => {
+            setLoadingCitas(true);
+            try {
+                const data = await apiCitas.list?.();
+                setCitas(Array.isArray(data) ? data : Array.isArray(data?.results) ? data.results : []);
+            } catch (e) {
+                console.error("No se pudieron cargar las citas para la Agenda:", e);
+                setCitas([]);
+            } finally {
+                setLoadingCitas(false);
+            }
+        })();
+    }, []);
+
+    // Prospectos con seguimiento pendiente: estado "Sin Respuesta" o sin último contacto registrado
+    const seguimientosPendientes = useMemo(() => {
+        return rows.filter((r) => {
+            const estado = normalizeText(r.estado);
+            return estado === "sin respuesta" || (!r.ultimo_contacto_at && estado !== "descalificado");
+        });
+    }, [rows]);
+
+    // Eventos combinados: citas agendadas + seguimientos pendientes, normalizados a una forma común
+    const eventos = useMemo(() => {
+        const fromCitas = (citas || []).map((c) => {
+            const fechaIso = c.fecha_hora_cita || "";
+            const dt = fechaIso ? new Date(fechaIso) : null;
+            const dtValido = dt && !Number.isNaN(dt.getTime());
+
+            // El backend regresa la cita con un objeto "cliente" anidado:
+            // { id_cliente, nombre, telefono, correo, creado_en, actualizado_en }
+            const clienteNombre = c?.cliente?.nombre || "Sin nombre";
+            const clienteTelefono = c?.cliente?.telefono || "";
+
+            // No hay campo "estatus" en la API; se deriva igual que en RegistroCitas.jsx
+            let estatus = "Pendiente";
+            if (c.asistencia === true) {
+                estatus = "Asistió";
+            } else if (c.asistencia === false && dtValido && dt < new Date()) {
+                estatus = "No asistió";
+            }
+
+            return {
+                tipo: "cita",
+                id: `cita-${c.id ?? Math.random()}`,
+                fecha: onlyDate(fechaIso),
+                hora: dtValido
+                    ? `${String(dt.getHours()).padStart(2, "0")}:${String(dt.getMinutes()).padStart(2, "0")}`
+                    : "",
+                cliente: clienteNombre,
+                telefono: clienteTelefono,
+                vehiculo: c.auto_interes || "—",
+                asesor: c.asesor_piso || c.asesor_digital || "—",
+                detalle: c.tipo_cita || "Cita",
+                estatus,
+                raw: c,
+            };
+        });
+
+        const fromProspectos = seguimientosPendientes.map((p) => ({
+            tipo: "seguimiento",
+            id: `prospecto-${p.id_exp}`,
+            fecha: p.fecha_contacto || p.fecha_reclamacion || "",
+            hora: "",
+            cliente: `${p.cliente_nombre || ""} ${p.cliente_apellidos || ""}`.trim() || "Sin nombre",
+            telefono: p.telefono || "",
+            vehiculo: p.cliente_interes || "—",
+            asesor: p.asesor_solicita || p.asesor_digital || "—",
+            detalle: "Seguimiento pendiente",
+            estatus: p.estado || "Sin estado",
+            raw: p,
+        }));
+
+        return [...fromCitas, ...fromProspectos];
+    }, [citas, seguimientosPendientes]);
+
+    const eventosPorFecha = useMemo(() => {
+        const map = {};
+        for (const ev of eventos) {
+            const key = ev.fecha || "sin-fecha";
+            if (!map[key]) map[key] = [];
+            map[key].push(ev);
+        }
+        return map;
+    }, [eventos]);
+
+    const eventosDelDia = useMemo(() => {
+        const lista = eventosPorFecha[selectedDate] || [];
+        return [...lista].sort((a, b) => (a.hora || "").localeCompare(b.hora || ""));
+    }, [eventosPorFecha, selectedDate]);
+
+    useEffect(() => {
+        setAgendaPage(1);
+    }, [selectedDate]);
+
+    const totalAgendaPages = Math.max(1, Math.ceil(eventosDelDia.length / AGENDA_PAGE_SIZE));
+    const eventosPaginados = useMemo(() => {
+        const start = (agendaPage - 1) * AGENDA_PAGE_SIZE;
+        return eventosDelDia.slice(start, start + AGENDA_PAGE_SIZE);
+    }, [eventosDelDia, agendaPage]);
+
+    // Stats del día seleccionado
+    const statsDia = useMemo(() => {
+        const citasDelDia = eventosDelDia.filter((e) => e.tipo === "cita");
+        const pendientes = eventosDelDia.filter((e) => normalizeText(e.estatus) === "pendiente").length;
+        const asistieron = citasDelDia.filter((e) => normalizeText(e.estatus) === "asistio" || normalizeText(e.estatus) === "asistió").length;
+        const noAsistieron = citasDelDia.filter((e) => normalizeText(e.estatus) === "no asistio" || normalizeText(e.estatus) === "no asistió").length;
+        const base = asistieron + noAsistieron;
+        const tasa = base > 0 ? Math.round((asistieron / base) * 100) : 0;
+
+        return {
+            citasHoy: citasDelDia.length,
+            pendientes,
+            asistieron,
+            noAsistieron,
+            tasa,
+            base,
+            seguimientos: eventosDelDia.filter((e) => e.tipo === "seguimiento").length,
+        };
+    }, [eventosDelDia]);
+
+    const weeks = useMemo(() => buildCalendarMatrix(calRef.getFullYear(), calRef.getMonth()), [calRef]);
+
+    const goPrevMonth = () => setCalRef((d) => new Date(d.getFullYear(), d.getMonth() - 1, 1));
+    const goNextMonth = () => setCalRef((d) => new Date(d.getFullYear(), d.getMonth() + 1, 1));
+
+    const tituloFechaSeleccionada = useMemo(() => {
+        const [y, m, d] = selectedDate.split("-").map(Number);
+        if (!y) return "";
+        const dt = new Date(y, m - 1, d);
+        const diaSemana = ["domingo", "lunes", "martes", "miércoles", "jueves", "viernes", "sábado"][dt.getDay()];
+        const diaSemanaCap = diaSemana.charAt(0).toUpperCase() + diaSemana.slice(1);
+        return `${diaSemanaCap}, ${d} de ${MESES_LARGOS[m - 1]} de ${y}`;
+    }, [selectedDate]);
+
+    function estatusBadgeCls(estatus) {
+        const key = normalizeText(estatus);
+        if (key === "asistio" || key === "asistió") return "bg-emerald-50 text-emerald-700 border-emerald-200";
+        if (key === "no asistio" || key === "no asistió") return "bg-red-50 text-red-600 border-red-200";
+        if (key === "pendiente") return "bg-amber-50 text-amber-700 border-amber-200";
+        return "bg-neutral-100 text-neutral-600 border-neutral-200";
+    }
+
+    function iniciales(nombre) {
+        const partes = String(nombre || "").trim().split(/\s+/).filter(Boolean);
+        if (!partes.length) return "—";
+        if (partes.length === 1) return partes[0].slice(0, 2).toUpperCase();
+        return (partes[0][0] + partes[1][0]).toUpperCase();
+    }
+
+    return (
+        <div className="grid gap-4">
+            {/* Stat cards del día seleccionado */}
+            <div className="grid grid-cols-2 gap-3 md:grid-cols-5">
+                <div className="rounded-2xl border border-black/10 bg-white p-4 shadow-sm transition hover:shadow-md">
+                    <div className="flex items-center gap-3">
+                        <span className="inline-flex h-10 w-10 items-center justify-center rounded-xl bg-neutral-100">
+                            <CalendarDays className="h-5 w-5 text-black" />
+                        </span>
+                        <div>
+                            <div className="text-xs font-semibold text-neutral-500">Eventos del día</div>
+                            <div className="text-xl font-extrabold text-black">{eventosDelDia.length}</div>
+                        </div>
+                    </div>
+                </div>
+
+                <div className="rounded-2xl border border-black/10 bg-white p-4 shadow-sm transition hover:shadow-md">
+                    <div className="flex items-center gap-3">
+                        <span className="inline-flex h-10 w-10 items-center justify-center rounded-xl bg-amber-50">
+                            <Clock3 className="h-5 w-5 text-amber-600" />
+                        </span>
+                        <div>
+                            <div className="text-xs font-semibold text-neutral-500">Pendientes</div>
+                            <div className="text-xl font-extrabold text-black">{statsDia.pendientes}</div>
+                        </div>
+                    </div>
+                </div>
+
+                <div className="rounded-2xl border border-black/10 bg-white p-4 shadow-sm transition hover:shadow-md">
+                    <div className="flex items-center gap-3">
+                        <span className="inline-flex h-10 w-10 items-center justify-center rounded-xl bg-emerald-50">
+                            <CheckCircle2 className="h-5 w-5 text-emerald-600" />
+                        </span>
+                        <div>
+                            <div className="text-xs font-semibold text-neutral-500">Asistieron</div>
+                            <div className="text-xl font-extrabold text-black">{statsDia.asistieron}</div>
+                        </div>
+                    </div>
+                </div>
+
+                <div className="rounded-2xl border border-black/10 bg-white p-4 shadow-sm transition hover:shadow-md">
+                    <div className="flex items-center gap-3">
+                        <span className="inline-flex h-10 w-10 items-center justify-center rounded-xl bg-red-50">
+                            <XCircle className="h-5 w-5 text-red-500" />
+                        </span>
+                        <div>
+                            <div className="text-xs font-semibold text-neutral-500">No asistieron</div>
+                            <div className="text-xl font-extrabold text-black">{statsDia.noAsistieron}</div>
+                        </div>
+                    </div>
+                </div>
+
+                <div className="rounded-2xl border border-black/10 bg-white p-4 shadow-sm transition hover:shadow-md">
+                    <div className="flex items-center gap-3">
+                        <span className="inline-flex h-10 w-10 items-center justify-center rounded-xl bg-neutral-100">
+                            <Gauge className="h-5 w-5 text-black" />
+                        </span>
+                        <div>
+                            <div className="text-xs font-semibold text-neutral-500">Tasa de asistencia</div>
+                            <div className="text-xl font-extrabold text-black">
+                                {statsDia.tasa}%
+                                <span className="ml-1 text-xs font-semibold text-neutral-400">
+                                    {statsDia.asistieron} de {statsDia.base}
+                                </span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div className="grid gap-4 lg:grid-cols-[320px_1fr]">
+                {/* Calendario */}
+                <div className="rounded-2xl border border-black/10 bg-white p-4 shadow-sm">
+                    <div className="mb-3 flex items-center justify-between">
+                        <button
+                            type="button"
+                            onClick={goPrevMonth}
+                            className="inline-flex h-8 w-8 items-center justify-center rounded-lg text-neutral-500 transition hover:bg-neutral-100 active:scale-90"
+                        >
+                            <ChevronLeft className="h-4 w-4" />
+                        </button>
+                        <div className="text-sm font-bold text-black">
+                            {MESES_LARGOS[calRef.getMonth()].charAt(0).toUpperCase() + MESES_LARGOS[calRef.getMonth()].slice(1)} {calRef.getFullYear()}
+                        </div>
+                        <button
+                            type="button"
+                            onClick={goNextMonth}
+                            className="inline-flex h-8 w-8 items-center justify-center rounded-lg text-neutral-500 transition hover:bg-neutral-100 active:scale-90"
+                        >
+                            <ChevronRight className="h-4 w-4" />
+                        </button>
+                    </div>
+
+                    <div className="grid grid-cols-7 gap-1 text-center text-[11px] font-semibold text-neutral-400">
+                        {DIAS_SEMANA_CORTOS.map((d) => (
+                            <div key={d} className="py-1">{d}</div>
+                        ))}
+                    </div>
+
+                    <div className="mt-1 grid grid-cols-7 gap-1">
+                        {weeks.flat().map((day, idx) => {
+                            if (!day) return <div key={idx} className="h-9" />;
+
+                            const dateStr = formatDateYMDLocal(new Date(calRef.getFullYear(), calRef.getMonth(), day));
+                            const isSelected = dateStr === selectedDate;
+                            const isToday = dateStr === formatDateYMDLocal(hoy);
+                            const count = eventosPorFecha[dateStr]?.length || 0;
+
+                            return (
+                                <button
+                                    key={idx}
+                                    type="button"
+                                    onClick={() => setSelectedDate(dateStr)}
+                                    className={[
+                                        "relative h-9 rounded-lg text-sm font-semibold transition active:scale-90",
+                                        isSelected
+                                            ? "bg-black text-white shadow-md"
+                                            : isToday
+                                                ? "border border-black/30 text-black hover:bg-neutral-100"
+                                                : "text-neutral-700 hover:bg-neutral-100",
+                                    ].join(" ")}
+                                >
+                                    {day}
+                                    {count > 0 && !isSelected ? (
+                                        <span className="absolute bottom-1 left-1/2 h-1 w-1 -translate-x-1/2 rounded-full bg-black" />
+                                    ) : null}
+                                </button>
+                            );
+                        })}
+                    </div>
+                </div>
+
+                {/* Lista de eventos del día seleccionado */}
+                <div className="overflow-hidden rounded-2xl border border-black/10 bg-white shadow-sm">
+                    <div className="flex flex-wrap items-center gap-2 border-b border-black/10 px-5 py-4">
+                        <span className="text-sm font-bold text-black">{tituloFechaSeleccionada || "Selecciona un día"}</span>
+                        <span className="rounded-full bg-neutral-100 px-2.5 py-0.5 text-xs font-semibold text-neutral-600">
+                            {eventosDelDia.length} {eventosDelDia.length === 1 ? "evento" : "eventos"}
+                        </span>
+                        {statsDia.seguimientos > 0 ? (
+                            <span className="rounded-full bg-amber-50 px-2.5 py-0.5 text-xs font-semibold text-amber-700">
+                                {statsDia.seguimientos} seguimiento{statsDia.seguimientos === 1 ? "" : "s"}
+                            </span>
+                        ) : null}
+                    </div>
+
+                    <div className="overflow-x-auto">
+                        <table className="min-w-full text-left text-sm">
+                            <thead className="border-b border-black/10 text-xs font-semibold text-neutral-400">
+                                <tr>
+                                    <th className="px-5 py-3">Hora</th>
+                                    <th className="px-5 py-3">Cliente</th>
+                                    <th className="px-5 py-3">Interés / Vehículo</th>
+                                    <th className="px-5 py-3">Asesor</th>
+                                    <th className="px-5 py-3">Tipo</th>
+                                    <th className="px-5 py-3">Estatus</th>
+                                    <th className="px-5 py-3"></th>
+                                </tr>
+                            </thead>
+                            <tbody className="divide-y divide-black/5">
+                                {loadingCitas ? (
+                                    Array.from({ length: 4 }).map((_, i) => (
+                                        <tr key={i} className="animate-pulse">
+                                            <td className="px-5 py-3"><div className="h-4 w-12 rounded bg-neutral-200" /></td>
+                                            <td className="px-5 py-3"><div className="h-4 w-32 rounded bg-neutral-200" /></td>
+                                            <td className="px-5 py-3"><div className="h-4 w-20 rounded bg-neutral-200" /></td>
+                                            <td className="px-5 py-3"><div className="h-4 w-24 rounded bg-neutral-200" /></td>
+                                            <td className="px-5 py-3"><div className="h-4 w-20 rounded bg-neutral-200" /></td>
+                                            <td className="px-5 py-3"><div className="h-6 w-20 rounded-full bg-neutral-200" /></td>
+                                            <td className="px-5 py-3" />
+                                        </tr>
+                                    ))
+                                ) : eventosPaginados.length === 0 ? (
+                                    <tr>
+                                        <td colSpan={7} className="px-5 py-10 text-center text-sm text-neutral-400">
+                                            No hay citas ni seguimientos pendientes para este día.
+                                        </td>
+                                    </tr>
+                                ) : (
+                                    eventosPaginados.map((ev) => (
+                                        <tr key={ev.id} className="transition hover:bg-neutral-50">
+                                            <td className="px-5 py-3 font-semibold text-black">{ev.hora || "—"}</td>
+                                            <td className="px-5 py-3">
+                                                <div className="flex items-center gap-2">
+                                                    <span className="inline-flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-neutral-100 text-[10px] font-bold text-neutral-600">
+                                                        {iniciales(ev.cliente)}
+                                                    </span>
+                                                    <div className="min-w-0">
+                                                        <div className="truncate text-sm font-semibold text-black">{ev.cliente}</div>
+                                                        <div className="truncate text-xs text-neutral-400">{formatTelefonoMx(ev.telefono)}</div>
+                                                    </div>
+                                                </div>
+                                            </td>
+                                            <td className="px-5 py-3 text-neutral-600">{ev.vehiculo || "—"}</td>
+                                            <td className="px-5 py-3 text-neutral-600">{ev.asesor || "—"}</td>
+                                            <td className="px-5 py-3">
+                                                <span className="inline-flex items-center gap-1 text-xs font-semibold text-neutral-500">
+                                                    {ev.tipo === "cita" ? <CalendarClock className="h-3.5 w-3.5" /> : <Clock3 className="h-3.5 w-3.5" />}
+                                                    {ev.detalle}
+                                                </span>
+                                            </td>
+                                            <td className="px-5 py-3">
+                                                <span className={["inline-flex items-center rounded-full border px-2.5 py-1 text-xs font-semibold", estatusBadgeCls(ev.estatus)].join(" ")}>
+                                                    {ev.estatus}
+                                                </span>
+                                            </td>
+                                            <td className="px-5 py-3 text-right">
+                                                {ev.tipo === "seguimiento" ? (
+                                                    <button
+                                                        type="button"
+                                                        onClick={() => abrirAgendaCita(ev.raw)}
+                                                        className="inline-flex h-8 w-8 items-center justify-center rounded-lg border border-black/10 bg-white text-black transition hover:bg-black hover:text-white active:scale-90"
+                                                        title="Agendar cita para este prospecto"
+                                                    >
+                                                        <CalendarPlus className="h-4 w-4" />
+                                                    </button>
+                                                ) : null}
+                                            </td>
+                                        </tr>
+                                    ))
+                                )}
+                            </tbody>
+                        </table>
+                    </div>
+
+                    {eventosDelDia.length > 0 ? (
+                        <div className="flex flex-col gap-2 border-t border-black/10 px-5 py-3 sm:flex-row sm:items-center sm:justify-between">
+                            <div className="text-xs font-semibold text-neutral-400">
+                                Mostrando {Math.min((agendaPage - 1) * AGENDA_PAGE_SIZE + 1, eventosDelDia.length)}–{Math.min(agendaPage * AGENDA_PAGE_SIZE, eventosDelDia.length)} de {eventosDelDia.length}
+                            </div>
+                            <div className="flex items-center gap-1">
+                                <button
+                                    type="button"
+                                    disabled={agendaPage === 1}
+                                    onClick={() => setAgendaPage((p) => Math.max(1, p - 1))}
+                                    className="inline-flex h-8 w-8 items-center justify-center rounded-lg border border-black/10 text-neutral-500 transition hover:bg-neutral-100 disabled:cursor-not-allowed disabled:opacity-40"
+                                >
+                                    <ChevronLeft className="h-4 w-4" />
+                                </button>
+                                {Array.from({ length: totalAgendaPages }).map((_, i) => (
+                                    <button
+                                        key={i}
+                                        type="button"
+                                        onClick={() => setAgendaPage(i + 1)}
+                                        className={[
+                                            "inline-flex h-8 w-8 items-center justify-center rounded-lg text-xs font-bold transition active:scale-90",
+                                            agendaPage === i + 1 ? "bg-black text-white" : "text-neutral-500 hover:bg-neutral-100",
+                                        ].join(" ")}
+                                    >
+                                        {i + 1}
+                                    </button>
+                                ))}
+                                <button
+                                    type="button"
+                                    disabled={agendaPage === totalAgendaPages}
+                                    onClick={() => setAgendaPage((p) => Math.min(totalAgendaPages, p + 1))}
+                                    className="inline-flex h-8 w-8 items-center justify-center rounded-lg border border-black/10 text-neutral-500 transition hover:bg-neutral-100 disabled:cursor-not-allowed disabled:opacity-40"
+                                >
+                                    <ChevronRight className="h-4 w-4" />
+                                </button>
+                            </div>
+                        </div>
+                    ) : null}
+                </div>
+            </div>
+        </div>
+    );
+}
+
 export default function DigitalesProspectos() {
     const navigate = useNavigate();
     const { user, ready } = useAuth();
@@ -831,6 +1291,7 @@ export default function DigitalesProspectos() {
     const VIEW_MODES = [
         { key: "tabla", label: "Tabla", Icon: Table2 },
         { key: "graficos", label: "Gráficos", Icon: BarChart3 },
+        { key: "agenda", label: "Agenda", Icon: CalendarRange },
     ];
 
     const isAdmin = useMemo(() => {
@@ -1041,13 +1502,13 @@ export default function DigitalesProspectos() {
 
     const telInvalid = !!telError;
 
-    const inputBase = "w-full rounded-lg border px-3 py-2.5 text-sm text-[#003057] font-semibold outline-none transition";
+    const inputBase = "w-full rounded-lg border px-3 py-2.5 text-sm text-black font-semibold outline-none transition";
     const inputOk = "border-black/10 bg-neutral-100";
     const inputBad = "border-red-500 bg-red-50";
 
-    const filterLabelCls = "mb-1.5 block text-xs font-bold text-[#003057]";
+    const filterLabelCls = "mb-1.5 block text-xs font-bold text-black";
     const filterControlCls =
-        "h-9 w-full rounded-lg border border-[#003057] placeholder:text-[#003057] bg-white px-3 text-sm text-[#003057] shadow-sm outline-none transition focus:border-[#003057] focus:ring-2 focus:ring-[#003057]/15";
+        "h-9 w-full rounded-lg border border-black/15 placeholder:text-neutral-400 bg-white px-3 text-sm text-black shadow-sm outline-none transition focus:border-black focus:ring-2 focus:ring-black/10";
 
     useEffect(() => {
         (async () => {
@@ -1698,26 +2159,26 @@ export default function DigitalesProspectos() {
 
     return (
         <div className="w-full">
-            {/* ── Encabezado con título + botones de vista ─────────────────────── */}
-            <div className="mb-4 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+            {/* ── Encabezado tipo Citas: título + descripción + botón principal ── */}
+            <div className="mb-5 flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
                 <div className="min-w-0">
-                    <h2 className="font-vw-header truncate text-lg font-extrabold text-[#003057]">Prospectos</h2>
-                    <p className="text-sm text-slate-400">Doble clic para editar la información del prospecto.</p>
+                    <h1 className="truncate text-2xl font-extrabold text-black">Prospectos</h1>
+                    <p className="mt-0.5 text-sm text-neutral-500">Doble clic para editar la información del prospecto.</p>
                 </div>
 
-                <div className="flex flex-col gap-2 sm:flex-row sm:items-center">
-                    {/* ── Botones Agenda / Tabla / Gráficos ── */}
-                    <div className="flex items-center rounded-xl border border-[#003057]/20 bg-white p-1 shadow-sm">
+                <div className="flex flex-wrap items-center gap-2">
+                    {/* Tabla / Gráficos / Agenda — los 3 selectores de vista, juntos */}
+                    <div className="flex items-center rounded-lg border border-black/15 bg-white p-1 shadow-sm">
                         {VIEW_MODES.map(({ key, label, Icon }) => (
                             <button
                                 key={key}
                                 type="button"
                                 onClick={() => setViewMode(key)}
                                 className={[
-                                    "inline-flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-sm font-semibold transition",
+                                    "inline-flex items-center gap-1.5 rounded-md px-3 py-1.5 text-sm font-semibold transition active:scale-[0.95]",
                                     viewMode === key
-                                        ? "bg-[#003057] text-white shadow"
-                                        : "text-[#003057] hover:bg-slate-100",
+                                        ? "bg-black text-white shadow"
+                                        : "text-black hover:bg-neutral-100",
                                 ].join(" ")}
                             >
                                 <Icon className="h-4 w-4" />
@@ -1730,7 +2191,7 @@ export default function DigitalesProspectos() {
                         type="button"
                         onClick={exportarExcelProspectos}
                         disabled={loadingCases || sorted.length === 0}
-                        className="inline-flex items-center justify-center gap-2 rounded-lg border border-[#003057]/20 bg-white px-4 py-2 text-sm font-semibold text-[#003057] shadow-sm transition hover:bg-slate-100 disabled:cursor-not-allowed disabled:opacity-50"
+                        className="inline-flex items-center justify-center gap-2 rounded-lg border border-black/15 bg-white px-4 py-2.5 text-sm font-semibold text-black shadow-sm transition hover:bg-neutral-50 active:scale-[0.97] disabled:cursor-not-allowed disabled:opacity-50"
                     >
                         <FileDown className="h-4 w-4" />
                         Exportar Excel
@@ -1738,21 +2199,21 @@ export default function DigitalesProspectos() {
 
                     <button
                         onClick={openCreate}
-                        className="inline-flex items-center justify-center gap-2 rounded-lg bg-[#003057] px-4 py-2 text-sm text-white shadow-sm hover:bg-[#003057]/80"
+                        className="inline-flex items-center justify-center gap-2 rounded-lg bg-black px-4 py-2.5 text-sm font-semibold text-white shadow-sm transition hover:bg-neutral-800 active:scale-[0.97]"
                     >
                         <Plus className="h-4 w-4" />
                         Nuevo Prospecto
                     </button>
                 </div>
             </div>
-            {/* ────────────────────────────────────────────────────────────────── */}
 
-            <div className="mb-4 rounded-2xl bg-white">
+            {/* ── Filtros: card blanca, borde sutil, mismos campos de siempre ── */}
+            <div className="mb-4 rounded-2xl border border-black/10 bg-white p-5 shadow-sm">
                 <div className="grid gap-4 xl:grid-cols-12">
-                    <div className="xl:col-span-6">
+                    <div className="xl:col-span-4">
                         <label className={filterLabelCls}>Búsqueda</label>
                         <div className="relative">
-                            <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-[#003057]/70" />
+                            <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-neutral-400" />
                             <input
                                 value={filters.q}
                                 onChange={(e) => updateFilter("q", e.target.value)}
@@ -1762,7 +2223,7 @@ export default function DigitalesProspectos() {
                             {filters.q ? (
                                 <button
                                     onClick={() => updateFilter("q", "")}
-                                    className="absolute right-2 top-1/2 inline-flex h-7 w-7 -translate-y-1/2 items-center justify-center rounded-lg text-[#003057] transition hover:bg-slate-100 hover:text-red-500"
+                                    className="absolute right-2 top-1/2 inline-flex h-7 w-7 -translate-y-1/2 items-center justify-center rounded-lg text-neutral-400 transition hover:bg-neutral-100 hover:text-red-500"
                                     aria-label="Limpiar búsqueda"
                                     type="button"
                                 >
@@ -1811,7 +2272,7 @@ export default function DigitalesProspectos() {
                         </select>
                     </div>
 
-                    <div className="xl:col-span-3">
+                    <div className="xl:col-span-2">
                         <label className={filterLabelCls}>Registro desde</label>
                         <input
                             type="date"
@@ -1850,43 +2311,50 @@ export default function DigitalesProspectos() {
                             className={filterControlCls}
                         />
                     </div>
+
+                    <div className="xl:col-span-3 flex items-end">
+                        {isAdmin ? (
+                            <select
+                                value={selectedNumeroAsesor}
+                                onChange={(e) => setSelectedNumeroAsesor(e.target.value)}
+                                className={filterControlCls}
+                                title="Filtrar por número de asesor"
+                            >
+                                {phoneOptions.map((numero) => (
+                                    <option key={numero} value={numero}>
+                                        {numero === "Todos"
+                                            ? "Todos los números"
+                                            : `${formatTelefonoMx(numero)} • ${getAsesorDigitalPorNumero(numero)}`}
+                                    </option>
+                                ))}
+                            </select>
+                        ) : null}
+                    </div>
                 </div>
 
-                <div className="mt-4 flex flex-col gap-3 border-t border-[#003057]/10 pt-4">
-                    <div className="flex flex-col gap-2 lg:flex-row lg:items-center lg:justify-between">
-                        <div className="text-sm font-semibold text-[#003057]">
-                            Mostrando {pageStart}-{pageEnd} de {sorted.length} prospectos
+                {/* ── Fila inferior: contador + accesos rápidos + Tabla/Gráficos (mismo lugar) ── */}
+                <div className="mt-4 flex flex-col gap-3 border-t border-black/10 pt-4">
+                    <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
+                        <div className="text-sm font-semibold text-neutral-500">
+                            {viewMode !== "agenda" ? (
+                                <>Mostrando {pageStart}-{pageEnd} de {sorted.length} prospectos</>
+                            ) : (
+                                <>Vista de agenda</>
+                            )}
                         </div>
 
-                        <div className="flex flex-col gap-2 sm:flex-row sm:flex-wrap">
-                            {isAdmin ? (
-                                <select
-                                    value={selectedNumeroAsesor}
-                                    onChange={(e) => setSelectedNumeroAsesor(e.target.value)}
-                                    className="h-11 min-w-[260px] rounded-xl border border-[#003057]/25 bg-white px-4 text-sm font-semibold text-[#003057] shadow-sm outline-none transition focus:border-[#003057] focus:ring-2 focus:ring-[#003057]/15"
-                                    title="Filtrar por número de asesor"
-                                >
-                                    {phoneOptions.map((numero) => (
-                                        <option key={numero} value={numero}>
-                                            {numero === "Todos"
-                                                ? "Todos los números"
-                                                : `${formatTelefonoMx(numero)} • ${getAsesorDigitalPorNumero(numero)}`}
-                                        </option>
-                                    ))}
-                                </select>
-                            ) : null}
-
+                        <div className="flex flex-wrap items-center gap-2">
                             <button
                                 type="button"
                                 onClick={() => applyQuickRegistroRange(todayStr, todayStr)}
                                 className={[
-                                    "inline-flex h-11 items-center justify-center gap-2 rounded-xl px-4 text-sm font-semibold shadow-sm transition",
+                                    "inline-flex h-9 items-center justify-center gap-1.5 rounded-lg px-3.5 text-sm font-semibold shadow-sm transition active:scale-[0.95]",
                                     isQuickActive(todayStr, todayStr)
-                                        ? "bg-[#003057] text-white"
-                                        : "bg-emerald-600 text-white hover:bg-emerald-700",
+                                        ? "bg-black text-white"
+                                        : "border border-black/15 bg-white text-black hover:bg-neutral-50",
                                 ].join(" ")}
                             >
-                                <CalendarDays className="h-4 w-4" />
+                                <CalendarDays className="h-3.5 w-3.5" />
                                 Hoy
                             </button>
 
@@ -1894,13 +2362,13 @@ export default function DigitalesProspectos() {
                                 type="button"
                                 onClick={() => applyQuickRegistroRange(yesterdayStr, yesterdayStr)}
                                 className={[
-                                    "inline-flex h-11 items-center justify-center gap-2 rounded-xl px-4 text-sm font-semibold shadow-sm transition",
+                                    "inline-flex h-9 items-center justify-center gap-1.5 rounded-lg px-3.5 text-sm font-semibold shadow-sm transition active:scale-[0.95]",
                                     isQuickActive(yesterdayStr, yesterdayStr)
-                                        ? "bg-[#003057] text-white"
-                                        : "bg-amber-500 text-white hover:bg-amber-600",
+                                        ? "bg-black text-white"
+                                        : "border border-black/15 bg-white text-black hover:bg-neutral-50",
                                 ].join(" ")}
                             >
-                                <CalendarDays className="h-4 w-4" />
+                                <CalendarDays className="h-3.5 w-3.5" />
                                 Ayer
                             </button>
 
@@ -1908,13 +2376,13 @@ export default function DigitalesProspectos() {
                                 type="button"
                                 onClick={() => applyQuickRegistroRange(weekStartStr, weekEndStr)}
                                 className={[
-                                    "inline-flex h-11 items-center justify-center gap-2 rounded-xl px-4 text-sm font-semibold shadow-sm transition",
+                                    "inline-flex h-9 items-center justify-center gap-1.5 rounded-lg px-3.5 text-sm font-semibold shadow-sm transition active:scale-[0.95]",
                                     isQuickActive(weekStartStr, weekEndStr)
-                                        ? "bg-[#003057] text-white"
-                                        : "bg-sky-600 text-white hover:bg-sky-700",
+                                        ? "bg-black text-white"
+                                        : "border border-black/15 bg-white text-black hover:bg-neutral-50",
                                 ].join(" ")}
                             >
-                                <CalendarDays className="h-4 w-4" />
+                                <CalendarDays className="h-3.5 w-3.5" />
                                 Esta semana
                             </button>
 
@@ -1922,30 +2390,30 @@ export default function DigitalesProspectos() {
                                 type="button"
                                 onClick={() => applyQuickRegistroRange(last7DaysStartStr, last7DaysEndStr)}
                                 className={[
-                                    "inline-flex h-11 items-center justify-center gap-2 rounded-xl px-4 text-sm font-semibold shadow-sm transition",
+                                    "inline-flex h-9 items-center justify-center gap-1.5 rounded-lg px-3.5 text-sm font-semibold shadow-sm transition active:scale-[0.95]",
                                     isQuickActive(last7DaysStartStr, last7DaysEndStr)
-                                        ? "bg-[#003057] text-white"
-                                        : "bg-violet-600 text-white hover:bg-violet-700",
+                                        ? "bg-black text-white"
+                                        : "border border-black/15 bg-white text-black hover:bg-neutral-50",
                                 ].join(" ")}
                             >
-                                <CalendarDays className="h-4 w-4" />
+                                <CalendarDays className="h-3.5 w-3.5" />
                                 Últimos 7 días
                             </button>
 
                             <button
                                 type="button"
                                 onClick={resetFilters}
-                                className="inline-flex h-11 items-center justify-center gap-2 rounded-xl border border-[#003057]/25 bg-white px-4 text-sm font-semibold text-[#003057] shadow-sm transition hover:bg-slate-50"
+                                className="inline-flex h-9 items-center justify-center gap-1.5 rounded-lg border border-black/15 bg-white px-3.5 text-sm font-semibold text-black shadow-sm transition hover:bg-neutral-50 active:scale-[0.95]"
                             >
-                                <X className="h-4 w-4" />
+                                <X className="h-3.5 w-3.5" />
                                 Limpiar
                             </button>
                         </div>
                     </div>
 
                     {!loadingCases && sorted.length > 0 && viewMode === "tabla" ? (
-                        <div className="flex flex-col gap-3 border-t border-[#003057]/10 pt-4 sm:flex-row sm:items-center sm:justify-between">
-                            <div className="text-xs font-semibold text-slate-500">
+                        <div className="flex flex-col gap-3 border-t border-black/10 pt-4 sm:flex-row sm:items-center sm:justify-between">
+                            <div className="text-xs font-semibold text-neutral-400">
                                 Página {page} de {totalPages} • {PAGE_SIZE} registros por página
                             </div>
 
@@ -1954,7 +2422,7 @@ export default function DigitalesProspectos() {
                                     type="button"
                                     onClick={() => setPage(1)}
                                     disabled={page === 1}
-                                    className="rounded-lg border border-[#003057]/20 px-3 py-2 text-sm font-semibold text-[#003057] disabled:cursor-not-allowed disabled:opacity-50"
+                                    className="rounded-lg border border-black/15 px-3 py-2 text-sm font-semibold text-black transition hover:bg-neutral-50 active:scale-[0.95] disabled:cursor-not-allowed disabled:opacity-50"
                                 >
                                     Inicio
                                 </button>
@@ -1963,7 +2431,7 @@ export default function DigitalesProspectos() {
                                     type="button"
                                     onClick={() => setPage((prev) => Math.max(prev - 1, 1))}
                                     disabled={page === 1}
-                                    className="rounded-lg border border-[#003057]/20 px-3 py-2 text-sm font-semibold text-[#003057] disabled:cursor-not-allowed disabled:opacity-50"
+                                    className="rounded-lg border border-black/15 px-3 py-2 text-sm font-semibold text-black transition hover:bg-neutral-50 active:scale-[0.95] disabled:cursor-not-allowed disabled:opacity-50"
                                 >
                                     Anterior
                                 </button>
@@ -1972,7 +2440,7 @@ export default function DigitalesProspectos() {
                                     type="button"
                                     onClick={() => setPage((prev) => Math.min(prev + 1, totalPages))}
                                     disabled={page === totalPages}
-                                    className="rounded-lg border border-[#003057]/20 px-3 py-2 text-sm font-semibold text-[#003057] disabled:cursor-not-allowed disabled:opacity-50"
+                                    className="rounded-lg border border-black/15 px-3 py-2 text-sm font-semibold text-black transition hover:bg-neutral-50 active:scale-[0.95] disabled:cursor-not-allowed disabled:opacity-50"
                                 >
                                     Siguiente
                                 </button>
@@ -1981,7 +2449,7 @@ export default function DigitalesProspectos() {
                                     type="button"
                                     onClick={() => setPage(totalPages)}
                                     disabled={page === totalPages}
-                                    className="rounded-lg border border-[#003057]/20 px-3 py-2 text-sm font-semibold text-[#003057] disabled:cursor-not-allowed disabled:opacity-50"
+                                    className="rounded-lg border border-black/15 px-3 py-2 text-sm font-semibold text-black transition hover:bg-neutral-50 active:scale-[0.95] disabled:cursor-not-allowed disabled:opacity-50"
                                 >
                                     Final
                                 </button>
@@ -1991,7 +2459,15 @@ export default function DigitalesProspectos() {
                 </div>
             </div>
 
-
+            {/* ── Vista: Agenda ──────────────────────────────────────────────────── */}
+            {viewMode === "agenda" && (
+                <VistaAgenda
+                    rows={sorted}
+                    isAdmin={isAdmin}
+                    abrirAgendaCita={abrirAgendaCita}
+                    fmtDTIntl={fmtDTIntl}
+                />
+            )}
 
             {/* ── Vista: Gráficos ───────────────────────────────────────────────── */}
             {viewMode === "graficos" && (
@@ -2001,22 +2477,22 @@ export default function DigitalesProspectos() {
             {/* ── Vista: Tabla (desktop) ────────────────────────────────────────── */}
             {viewMode === "tabla" && (
                 <>
-                    <div className="hidden overflow-hidden rounded-lg bg-white/[0.03] shadow-lg lg:block">
+                    <div className="hidden overflow-hidden rounded-2xl border border-black/10 bg-white shadow-sm lg:block">
                         <div className="overflow-auto">
                             <table className="min-w-full text-left text-sm">
-                                <thead className="font-vw-header border border-black bg-[#003057] text-xs text-white">
+                                <thead className="font-vw-header border-b border-black/10 bg-neutral-50 text-xs text-neutral-500">
                                     <tr>
                                         <th className="px-4 py-3">
-                                            <button type="button" onClick={() => toggleSort("agencia")} className="inline-flex items-center gap-1 text-xs font-bold">
+                                            <button type="button" onClick={() => toggleSort("agencia")} className="inline-flex items-center gap-1 text-xs font-bold text-black">
                                                 Dealer
                                                 <span className="opacity-60">
                                                     {sort.key === "agencia" ? (sort.dir === "asc" ? <ChevronUp className="h-4" /> : <ChevronDown className="h-4" />) : <ArrowUpDown className="h-4" />}
                                                 </span>
                                             </button>
                                         </th>
-                                        <th className="px-4 py-3">Cliente</th>
+                                        <th className="px-4 py-3 font-bold text-black">Cliente</th>
                                         <th className="px-4 py-3">
-                                            <button type="button" onClick={() => toggleSort("fecha_reclamacion")} className="inline-flex items-center gap-1 text-xs font-bold">
+                                            <button type="button" onClick={() => toggleSort("fecha_reclamacion")} className="inline-flex items-center gap-1 text-xs font-bold text-black">
                                                 Fecha de Registro
                                                 <span className="opacity-60">
                                                     {sort.key === "fecha_reclamacion" ? (sort.dir === "asc" ? <ChevronUp className="h-4" /> : <ChevronDown className="h-4" />) : <ArrowUpDown className="h-4" />}
@@ -2024,24 +2500,24 @@ export default function DigitalesProspectos() {
                                             </button>
                                         </th>
                                         <th className="px-4 py-3">
-                                            <button type="button" onClick={() => toggleSort("ultimo_contacto_at")} className="inline-flex items-center gap-1 text-xs font-bold">
+                                            <button type="button" onClick={() => toggleSort("ultimo_contacto_at")} className="inline-flex items-center gap-1 text-xs font-bold text-black">
                                                 Último Contacto
                                                 <span className="opacity-60">
                                                     {sort.key === "ultimo_contacto_at" ? (sort.dir === "asc" ? <ChevronUp className="h-4" /> : <ChevronDown className="h-4" />) : <ArrowUpDown className="h-4" />}
                                                 </span>
                                             </button>
                                         </th>
-                                        <th className="px-4 py-3">Business</th>
-                                        <th className="px-4 py-3">Asesor Digital</th>
-                                        <th className="px-4 py-3">Asignado a</th>
-                                        <th className="px-4 py-3">Estado</th>
-                                        <th className="w-40 px-4 py-3">Canal de Contacto</th>
-                                        <th className="px-4 py-3">Resumen</th>
-                                        <th className="px-4 py-3">Acciones</th>
+                                        <th className="px-4 py-3 font-bold text-black">Business</th>
+                                        <th className="px-4 py-3 font-bold text-black">Asesor Digital</th>
+                                        <th className="px-4 py-3 font-bold text-black">Asignado a</th>
+                                        <th className="px-4 py-3 font-bold text-black">Estado</th>
+                                        <th className="w-40 px-4 py-3 font-bold text-black">Canal de Contacto</th>
+                                        <th className="px-4 py-3 font-bold text-black">Resumen</th>
+                                        <th className="px-4 py-3 font-bold text-black">Acciones</th>
                                     </tr>
                                 </thead>
 
-                                <tbody className="divide-y divide-black/30">
+                                <tbody className="divide-y divide-black/5">
                                     {loadingCases ? (
                                         <>
                                             {Array.from({ length: 8 }).map((_, i) => (
@@ -2058,18 +2534,18 @@ export default function DigitalesProspectos() {
                                                         key={row.id_exp}
                                                         onDoubleClick={() => openEdit(row)}
                                                         onContextMenu={(e) => onRowContextMenu(e, row)}
-                                                        className="cursor-pointer hover:bg-white/[0.04]"
+                                                        className="cursor-pointer transition hover:bg-neutral-50"
                                                         title="Doble clic para editar"
                                                     >
-                                                        <td className="px-4 py-3 text-xs text-[#003057]">{row.agencia}</td>
-                                                        <td className="max-w-32 px-4 py-3 truncate text-[#003057]">
+                                                        <td className="px-4 py-3 text-xs text-black">{row.agencia}</td>
+                                                        <td className="max-w-32 px-4 py-3 truncate text-black">
                                                             {row.cliente_nombre + " " + row.cliente_apellidos}
                                                         </td>
-                                                        <td className="px-4 py-3 text-[#003057]">{row.fecha_reclamacion || "—"}</td>
-                                                        <td className="px-4 py-3 text-[#003057]">{fmtDTIntl(row.ultimo_contacto_at)}</td>
-                                                        <td className="max-w-28 px-4 py-3 truncate text-[#003057]">{row.linea || "—"}</td>
-                                                        <td className="max-w-28 px-4 py-3 truncate text-[#003057]">{row.asesor_digital || "—"}</td>
-                                                        <td className="max-w-28 px-4 py-3 truncate text-[#003057]">{row.asesor_solicita || "—"}</td>
+                                                        <td className="px-4 py-3 text-black">{row.fecha_reclamacion || "—"}</td>
+                                                        <td className="px-4 py-3 text-black">{fmtDTIntl(row.ultimo_contacto_at)}</td>
+                                                        <td className="max-w-28 px-4 py-3 truncate text-black">{row.linea || "—"}</td>
+                                                        <td className="max-w-28 px-4 py-3 truncate text-black">{row.asesor_digital || "—"}</td>
+                                                        <td className="max-w-28 px-4 py-3 truncate text-black">{row.asesor_solicita || "—"}</td>
 
                                                         <td className="px-4 py-3">
                                                             <div className="relative inline-flex items-center">
@@ -2089,7 +2565,7 @@ export default function DigitalesProspectos() {
                                                                     title="Cambiar estado"
                                                                 >
                                                                     {ESTADOS_PROSPECTO.map((s) => (
-                                                                        <option key={s} value={s} className="bg-white text-[#003057]">
+                                                                        <option key={s} value={s} className="bg-white text-black">
                                                                             {s}
                                                                         </option>
                                                                     ))}
@@ -2097,19 +2573,19 @@ export default function DigitalesProspectos() {
 
                                                                 <span className="pointer-events-none absolute right-2 inline-flex items-center">
                                                                     {isUpdating ? (
-                                                                        <Loader2 className="h-3.5 w-3.5 animate-spin text-[#003057]" />
+                                                                        <Loader2 className="h-3.5 w-3.5 animate-spin text-black" />
                                                                     ) : (
-                                                                        <ChevronDown className="h-3.5 w-3.5 text-[#003057]/70" />
+                                                                        <ChevronDown className="h-3.5 w-3.5 text-black/70" />
                                                                     )}
                                                                 </span>
                                                             </div>
                                                         </td>
 
-                                                        <td className="px-4 py-3 text-[#003057]">
+                                                        <td className="px-4 py-3 text-black">
                                                             <span className="line-clamp-2">{row.origen}</span>
                                                         </td>
 
-                                                        <td className="w-[320px] px-4 py-3 text-[#003057]">
+                                                        <td className="w-[320px] px-4 py-3 text-black">
                                                             <div className="flex items-start gap-2">
                                                                 <div className="min-w-0 flex-1">
                                                                     <button
@@ -2140,13 +2616,13 @@ export default function DigitalesProspectos() {
                                                                         generarResumenInline(row);
                                                                     }}
                                                                     disabled={!!generatingSummary[row.id_exp]}
-                                                                    className="inline-flex h-9 w-9 items-center justify-center rounded-xl border border-black/10 bg-white shadow-sm disabled:opacity-60"
+                                                                    className="inline-flex h-9 w-9 items-center justify-center rounded-xl border border-black/10 bg-white shadow-sm transition hover:bg-neutral-50 active:scale-[0.95] disabled:opacity-60"
                                                                     title="Generar resumen"
                                                                 >
                                                                     {generatingSummary[row.id_exp] ? (
-                                                                        <Loader2 className="h-5 w-5 animate-spin text-[#003057]" />
+                                                                        <Loader2 className="h-5 w-5 animate-spin text-black" />
                                                                     ) : (
-                                                                        <ClipboardCheck className="h-5 w-5 text-[#003057]" />
+                                                                        <ClipboardCheck className="h-5 w-5 text-black" />
                                                                     )}
                                                                 </button>
                                                             </div>
@@ -2161,10 +2637,10 @@ export default function DigitalesProspectos() {
                                                                         e.stopPropagation();
                                                                         abrirAgendaCita(row);
                                                                     }}
-                                                                    className="inline-flex h-9 w-9 items-center justify-center rounded-xl border border-black/10 bg-white shadow-sm transition hover:bg-neutral-50 hover:shadow focus:outline-none focus:ring-2 focus:ring-[#003057]/30 active:scale-[0.98]"
+                                                                    className="inline-flex h-9 w-9 items-center justify-center rounded-xl border border-black/10 bg-white shadow-sm transition hover:bg-black hover:text-white focus:outline-none focus:ring-2 focus:ring-black/20 active:scale-[0.95]"
                                                                     title="Agendar cita"
                                                                 >
-                                                                    <CalendarPlus className="h-5 w-5 text-[#003057]" />
+                                                                    <CalendarPlus className="h-5 w-5" />
                                                                 </button>
 
                                                                 <button
@@ -2176,13 +2652,13 @@ export default function DigitalesProspectos() {
                                                                             `/crm_volvo/comercial/prospectos/contacto?tel=${encodeURIComponent(row.telefono || "")}&direct=1`
                                                                         );
                                                                     }}
-                                                                    className="flex h-9 w-[150px] items-center justify-between rounded-xl border border-black/10 bg-white px-3 shadow-sm transition hover:bg-neutral-50 hover:shadow focus:outline-none focus:ring-2 focus:ring-[#003057]/30 active:scale-[0.98] disabled:opacity-50"
+                                                                    className="flex h-9 w-[150px] items-center justify-between rounded-xl border border-black/10 bg-white px-3 shadow-sm transition hover:bg-neutral-50 hover:shadow focus:outline-none focus:ring-2 focus:ring-black/20 active:scale-[0.95] disabled:opacity-50"
                                                                     title="Abrir chat"
                                                                     disabled={!row.telefono}
                                                                 >
                                                                     <div className="flex min-w-0 items-center gap-2">
-                                                                        <MessageSquareShare className="h-5 w-5 text-[#003057]" />
-                                                                        <span className="min-w-0 truncate text-sm font-medium text-[#003057]">
+                                                                        <MessageSquareShare className="h-5 w-5 text-black" />
+                                                                        <span className="min-w-0 truncate text-sm font-medium text-black">
                                                                             {row.telefono || "SIN TELÉFONO"}
                                                                         </span>
                                                                     </div>
@@ -2195,7 +2671,7 @@ export default function DigitalesProspectos() {
 
                                             {paginatedRows.length === 0 ? (
                                                 <tr>
-                                                    <td colSpan={11} className="px-4 py-10 text-center text-[#003057]">
+                                                    <td colSpan={11} className="px-4 py-10 text-center text-black">
                                                         No hay resultados con esos filtros.
                                                     </td>
                                                 </tr>
@@ -2232,11 +2708,11 @@ export default function DigitalesProspectos() {
                                     <button
                                         key={row.id_exp}
                                         onClick={() => openEdit(row)}
-                                        className="rounded-3xl border border-black/10 bg-white p-4 text-left shadow-sm hover:bg-slate-50"
+                                        className="rounded-3xl border border-black/10 bg-white p-4 text-left shadow-sm transition hover:bg-slate-50 active:scale-[0.99]"
                                     >
                                         <div className="flex items-start justify-between gap-3">
                                             <div className="min-w-0">
-                                                <div className="truncate text-sm font-extrabold text-[#003057]">
+                                                <div className="truncate text-sm font-extrabold text-black">
                                                     {row.cliente_nombre + " " + row.cliente_apellidos}
                                                 </div>
                                                 <div className="mt-1 text-xs text-slate-600">
@@ -2287,7 +2763,7 @@ export default function DigitalesProspectos() {
                         <button
                             onClick={save}
                             disabled={saving || loadingDetail || telInvalid || (draft?.telefono ? !telIsOk : false)}
-                            className="inline-flex items-center justify-center gap-2 rounded-lg bg-[#003057]/85 px-4 py-2 text-sm font-bold text-white/90 hover:bg-[#003057] hover:text-white disabled:opacity-60"
+                            className="inline-flex items-center justify-center gap-2 rounded-lg bg-black/85 px-4 py-2 text-sm font-bold text-white/90 hover:bg-black hover:text-white disabled:opacity-60"
                         >
                             {saving ? <Loader2 className="h-4 w-4 animate-spin" /> : <Save className="h-4 w-4" />}
                             {saving ? "Guardando..." : "Guardar cambios"}
@@ -2354,7 +2830,7 @@ export default function DigitalesProspectos() {
                             <Field label="Cliente" icon={User}>
                                 <div className="grid gap-3 md:grid-cols-3">
                                     <div>
-                                        <label className="inline-flex items-center gap-3 text-sm font-bold text-[#003057]">
+                                        <label className="inline-flex items-center gap-3 text-sm font-bold text-black">
                                             <input
                                                 type="checkbox"
                                                 checked={!!draft.tiene_nombre}
@@ -2383,7 +2859,7 @@ export default function DigitalesProspectos() {
                                     </div>
 
                                     <div>
-                                        <div className="mb-1 text-sm font-bold text-[#003057]">Teléfono</div>
+                                        <div className="mb-1 text-sm font-bold text-black">Teléfono</div>
                                         <input
                                             maxLength={12}
                                             disabled={telIsNormalized}
@@ -2409,7 +2885,7 @@ export default function DigitalesProspectos() {
                                     </div>
 
                                     <div>
-                                        <div className="mb-1 text-sm font-bold text-[#003057]">Volvo de sus sueños</div>
+                                        <div className="mb-1 text-sm font-bold text-black">Volvo de sus sueños</div>
                                         <select
                                             value={draft.cliente_interes || ""}
                                             onChange={(e) => setDraft((p) => ({ ...p, cliente_interes: e.target.value }))}
@@ -2425,7 +2901,7 @@ export default function DigitalesProspectos() {
 
                                 <div className="mt-5 grid gap-3 md:grid-cols-2">
                                     <div>
-                                        <div className="mb-1 text-sm font-bold text-[#003057]">Estado</div>
+                                        <div className="mb-1 text-sm font-bold text-black">Estado</div>
                                         <select
                                             value={draft.estado || ""}
                                             onChange={(e) => setDraft((p) => ({ ...p, estado: e.target.value }))}
@@ -2440,7 +2916,7 @@ export default function DigitalesProspectos() {
                                         </div>
                                     </div>
                                     <div>
-                                        <div className="mb-1 text-sm font-bold text-[#003057]">Canal de Contacto</div>
+                                        <div className="mb-1 text-sm font-bold text-black">Canal de Contacto</div>
                                         <OrigenPicker
                                             value={draft.origen}
                                             onChange={(v) => setDraft((p) => ({ ...p, origen: v }))}
@@ -2450,18 +2926,18 @@ export default function DigitalesProspectos() {
 
                                 <div className="mt-5 grid gap-3 md:grid-cols-2">
                                     <div>
-                                        <div className="mb-1 text-sm font-bold text-[#003057]">Business</div>
+                                        <div className="mb-1 text-sm font-bold text-black">Business</div>
                                         <LineaPicker
                                             value={draft.linea}
                                             onChange={(v) => setDraft((p) => ({ ...p, linea: v }))}
                                         />
                                     </div>
                                     <div className="mt-5">
-                                        <div className="mb-1 text-sm font-bold text-[#003057]">Pauta de Origen</div>
+                                        <div className="mb-1 text-sm font-bold text-black">Pauta de Origen</div>
                                         {loadingPautas ? (
                                             <div className="mt-2">
                                                 <Skeleton className="h-10 w-full rounded-lg" />
-                                                <div className="mt-2 flex items-center gap-2 text-xs font-semibold text-[#003057]">
+                                                <div className="mt-2 flex items-center gap-2 text-xs font-semibold text-black">
                                                     <Loader2 className="h-4 w-4 animate-spin" />
                                                     Cargando campañas recientes...
                                                 </div>
@@ -2506,7 +2982,7 @@ export default function DigitalesProspectos() {
                                     value={draft.resumen || ""}
                                     disabled
                                     rows={5}
-                                    className="w-full rounded-lg border border-black/10 bg-neutral-100 px-3 py-2 text-sm font-semibold text-[#003057] outline-none"
+                                    className="w-full rounded-lg border border-black/10 bg-neutral-100 px-3 py-2 text-sm font-semibold text-black outline-none"
                                 />
                                 {draft.resumen_actualizado_at ? (
                                     <div className="mt-2 text-xs font-semibold text-slate-500">
@@ -2540,7 +3016,7 @@ export default function DigitalesProspectos() {
                             <input
                                 value={summaryInfo.nombre || "—"}
                                 disabled
-                                className="w-full rounded-lg border border-black/10 bg-neutral-100 px-3 py-2 text-sm font-semibold text-[#003057]"
+                                className="w-full rounded-lg border border-black/10 bg-neutral-100 px-3 py-2 text-sm font-semibold text-black"
                             />
                         </Field>
                         <Field label="Resumen generado" icon={ClipboardCheck}>
@@ -2548,7 +3024,7 @@ export default function DigitalesProspectos() {
                                 value={summaryInfo.resumen || "Sin resumen disponible"}
                                 disabled
                                 rows={10}
-                                className="w-full rounded-lg border border-black/10 bg-neutral-100 px-3 py-2 text-sm font-semibold text-[#003057] outline-none"
+                                className="w-full rounded-lg border border-black/10 bg-neutral-100 px-3 py-2 text-sm font-semibold text-black outline-none"
                             />
                         </Field>
                         <div className="grid gap-3 md:grid-cols-2">
@@ -2556,14 +3032,14 @@ export default function DigitalesProspectos() {
                                 <input
                                     value={summaryInfo.resumen_actualizado_at ? fmtDTIntl(summaryInfo.resumen_actualizado_at) : "—"}
                                     disabled
-                                    className="w-full rounded-lg border border-black/10 bg-neutral-100 px-3 py-2 text-sm font-semibold text-[#003057]"
+                                    className="w-full rounded-lg border border-black/10 bg-neutral-100 px-3 py-2 text-sm font-semibold text-black"
                                 />
                             </Field>
                             <Field label="Fuente" icon={BrainCircuit}>
                                 <input
                                     value={summaryInfo.resumen_fuente || "—"}
                                     disabled
-                                    className="w-full rounded-lg border border-black/10 bg-neutral-100 px-3 py-2 text-sm font-semibold text-[#003057]"
+                                    className="w-full rounded-lg border border-black/10 bg-neutral-100 px-3 py-2 text-sm font-semibold text-black"
                                 />
                             </Field>
                         </div>
@@ -2587,7 +3063,7 @@ export default function DigitalesProspectos() {
                         <button
                             onClick={handleAgendar}
                             disabled={!agendaInfo || savingo}
-                            className="inline-flex items-center justify-center gap-2 rounded-2xl bg-[#003057]/85 px-4 py-2 text-sm font-bold text-white/90 hover:bg-[#003057] hover:text-white disabled:opacity-60"
+                            className="inline-flex items-center justify-center gap-2 rounded-2xl bg-black/85 px-4 py-2 text-sm font-bold text-white/90 hover:bg-black hover:text-white disabled:opacity-60"
                         >
                             <CalendarCheck className="h-4 w-4" />
                             {savingo ? "Guardando..." : "Agendar"}
@@ -2601,21 +3077,21 @@ export default function DigitalesProspectos() {
                             <input
                                 value={agendaInfo.nombre}
                                 disabled
-                                className="w-full rounded-lg border border-black/10 bg-neutral-100 px-3 py-2 text-sm font-semibold text-[#003057]"
+                                className="w-full rounded-lg border border-black/10 bg-neutral-100 px-3 py-2 text-sm font-semibold text-black"
                             />
                         </Field>
                         <Field label="Volvo de sus sueños" icon={CarFront}>
                             <input
                                 value={agendaInfo.auto_interes || "—"}
                                 disabled
-                                className="w-full rounded-lg border border-black/10 bg-neutral-100 px-3 py-2 text-sm font-semibold text-[#003057]"
+                                className="w-full rounded-lg border border-black/10 bg-neutral-100 px-3 py-2 text-sm font-semibold text-black"
                             />
                         </Field>
                         <Field label="Teléfono" icon={Phone}>
                             <input
                                 value={agendaInfo.telefono || "—"}
                                 disabled
-                                className="w-full rounded-lg border border-black/10 bg-neutral-100 px-3 py-2 text-sm font-semibold text-[#003057]"
+                                className="w-full rounded-lg border border-black/10 bg-neutral-100 px-3 py-2 text-sm font-semibold text-black"
                             />
                         </Field>
                         <Field label="Fecha y Hora de cita" icon={CalendarDays}>

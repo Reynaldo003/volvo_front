@@ -1,4 +1,3 @@
-//volvo
 // src/pages/Digitales/DigitalesContacto.jsx
 import { useEffect, useMemo, useRef, useState, useDeferredValue } from "react";
 import { useSearchParams, useNavigate, useLocation } from "react-router-dom";
@@ -26,7 +25,7 @@ import {
 import EmojiPicker from "emoji-picker-react";
 import { api } from "../../lib/apiPruebas";
 
-const BRAND_BLUE = "#003057";
+const BRAND_BLUE = "#000000";
 const QUICK_BUBBLES_KEY = "volvo_digitales_quick_bubbles_global";
 const CHAT_PAGE_SIZE = 24;
 const CHAT_UPDATES_LIMIT = 80;
@@ -338,7 +337,7 @@ function WhatsAppComposerInput({
                 ref={mirrorRef}
                 aria-hidden="true"
                 className={cls(
-                    "pointer-events-none absolute inset-0 z-0 max-h-32 overflow-y-auto whitespace-pre-wrap break-words px-2 py-2 text-sm font-medium leading-relaxed text-[#003057]",
+                    "pointer-events-none absolute inset-0 z-0 max-h-32 overflow-y-auto whitespace-pre-wrap break-words px-2 py-2 text-sm font-medium leading-relaxed text-black",
                     "[&_strong]:font-black [&_em]:italic [&_del]:line-through",
                     "[&_code]:rounded-md [&_code]:bg-black/10 [&_code]:px-1.5 [&_code]:py-0.5 [&_code]:font-mono [&_code]:text-[13px]"
                 )}
@@ -359,8 +358,8 @@ function WhatsAppComposerInput({
                 spellCheck
                 className={cls(
                     "relative z-10 block max-h-32 min-h-[40px] w-full resize-none overflow-y-auto bg-transparent px-2 py-2 text-sm font-medium leading-relaxed outline-none",
-                    "text-transparent caret-[#003057] placeholder:text-slate-400",
-                    "selection:bg-[#003057]/20 selection:text-transparent",
+                    "text-transparent caret-black placeholder:text-slate-400",
+                    "selection:bg-black/20 selection:text-transparent",
                     disabled ? "cursor-not-allowed opacity-60" : ""
                 )}
             />
@@ -420,7 +419,7 @@ function Avatar({ name = "?" }) {
 
     return (
         <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full border border-black/10 bg-white shadow-sm">
-            <span className="text-sm font-extrabold text-[#003057]">
+            <span className="text-sm font-extrabold text-black">
                 {initials || "?"}
             </span>
         </div>
@@ -480,7 +479,7 @@ function MessagesSkeleton({ bubbles = 10 }) {
                             className={cls(
                                 "max-w-[78%] rounded-2xl border px-4 py-3 shadow-sm",
                                 mine
-                                    ? "border-white/10 bg-[#003057]/10"
+                                    ? "border-white/10 bg-black/10"
                                     : "border-black/10 bg-white",
                             )}
                         >
@@ -950,8 +949,8 @@ function MessageBubble({
                     className={cls(
                         "rounded-2xl px-4 py-2.5 shadow-sm",
                         mine
-                            ? "rounded-br-md bg-[#003057] text-white"
-                            : "rounded-bl-md border border-black/10 bg-white text-[#003057]"
+                            ? "rounded-br-md bg-black text-white"
+                            : "rounded-bl-md border border-black/10 bg-white text-black"
                     )}
                 >
                     {attachments?.length ? (
@@ -1001,7 +1000,7 @@ function MessageBubble({
                                             rel="noreferrer"
                                             className={cls(
                                                 "flex items-center gap-2 px-3 py-3 hover:opacity-90",
-                                                mine ? "text-white" : "text-[#003057]"
+                                                mine ? "text-white" : "text-black"
                                             )}
                                         >
                                             <FileText className="h-4 w-4" />
@@ -2425,14 +2424,14 @@ export default function DigitalesContacto() {
                             <div className="hidden h-full flex-col items-center gap-3 bg-white py-3 lg:flex">
                                 <button
                                     onClick={() => setChatSidebarCollapsed(false)}
-                                    className="inline-flex h-10 w-10 items-center justify-center rounded-xl border border-black/10 bg-white text-[#003057] shadow-sm transition hover:scale-105 hover:bg-neutral-50"
+                                    className="inline-flex h-10 w-10 items-center justify-center rounded-xl border border-black/10 bg-white text-black shadow-sm transition hover:scale-105 hover:bg-neutral-50"
                                     title="Expandir chats"
                                     type="button"
                                 >
                                     <ChevronRight className="h-4 w-4" />
                                 </button>
                                 <div className="h-px w-8 bg-black/10" />
-                                <div className="rotate-90 whitespace-nowrap text-[11px] font-extrabold uppercase tracking-wider text-[#003057]/60">
+                                <div className="rotate-90 whitespace-nowrap text-[11px] font-extrabold uppercase tracking-wider text-black/60">
                                     Chats
                                 </div>
                             </div>
@@ -2440,10 +2439,10 @@ export default function DigitalesContacto() {
                             <>
                                 <div className="border-b border-black/10 bg-white p-3">
                                     <div className="mb-2 flex items-center justify-between gap-2">
-                                        <div className="text-xs font-extrabold uppercase tracking-wide text-[#003057]/60">Chats</div>
+                                        <div className="text-xs font-extrabold uppercase tracking-wide text-black/60">Chats</div>
                                         <button
                                             onClick={() => setChatSidebarCollapsed(true)}
-                                            className="hidden h-8 w-8 items-center justify-center rounded-lg border border-black/10 bg-white text-[#003057] transition hover:bg-neutral-50 lg:inline-flex"
+                                            className="hidden h-8 w-8 items-center justify-center rounded-lg border border-black/10 bg-white text-black transition hover:bg-neutral-50 lg:inline-flex"
                                             title="Contraer chats"
                                             type="button"
                                         >
@@ -2451,13 +2450,13 @@ export default function DigitalesContacto() {
                                         </button>
                                     </div>
                                     <div className="flex items-center gap-2 rounded-xl border border-black/10 bg-neutral-100 px-3 py-2">
-                                        <Search className="h-4 w-4 text-[#003057]" />
+                                        <Search className="h-4 w-4 text-black" />
 
                                         <input
                                             value={q}
                                             onChange={(event) => setQ(event.target.value)}
                                             placeholder="Buscar prospecto, número, agencia…"
-                                            className="w-full bg-transparent text-sm font-semibold text-[#003057] outline-none placeholder:text-slate-400"
+                                            className="w-full bg-transparent text-sm font-semibold text-black outline-none placeholder:text-slate-400"
                                         />
                                     </div>
 
@@ -2467,8 +2466,8 @@ export default function DigitalesContacto() {
                                             className={cls(
                                                 "flex-1 rounded-lg border py-1.5 text-xs font-extrabold transition",
                                                 chatFilter === "todos"
-                                                    ? "border-[#003057] bg-[#003057] text-white"
-                                                    : "border-black/10 bg-white text-[#003057] hover:bg-neutral-100"
+                                                    ? "border-black bg-black text-white"
+                                                    : "border-black/10 bg-white text-black hover:bg-neutral-100"
                                             )}
                                             type="button"
                                         >
@@ -2479,8 +2478,8 @@ export default function DigitalesContacto() {
                                             className={cls(
                                                 "flex-1 rounded-lg border py-1.5 text-xs font-extrabold transition",
                                                 chatFilter === "no_leidos"
-                                                    ? "border-[#003057] bg-[#003057] text-white"
-                                                    : "border-black/10 bg-white text-[#003057] hover:bg-neutral-100"
+                                                    ? "border-black bg-black text-white"
+                                                    : "border-black/10 bg-white text-black hover:bg-neutral-100"
                                             )}
                                             type="button"
                                         >
@@ -2523,7 +2522,7 @@ export default function DigitalesContacto() {
 
                                                         <div className="min-w-0 flex-1">
                                                             <div className="flex items-center justify-between gap-2">
-                                                                <div className="truncate text-sm font-extrabold text-[#003057]">
+                                                                <div className="truncate text-sm font-extrabold text-black">
                                                                     {chat.nombre}
                                                                 </div>
 
@@ -2568,7 +2567,7 @@ export default function DigitalesContacto() {
                                         })
                                     ) : (
                                         <div className="p-8 text-center">
-                                            <div className="text-sm font-extrabold text-[#003057]">
+                                            <div className="text-sm font-extrabold text-black">
                                                 Sin historial aún
                                             </div>
                                         </div>
@@ -2598,7 +2597,7 @@ export default function DigitalesContacto() {
                                                         setQuickEditDraft((p) => ({ ...p, nombre: e.target.value }))
                                                     }
                                                     placeholder="Nombre"
-                                                    className="h-8 min-w-0 max-w-40 rounded-lg border border-black/10 bg-white px-3 text-xs font-semibold text-[#003057] outline-none focus:border-[#003057]/40"
+                                                    className="h-8 min-w-0 max-w-40 rounded-lg border border-black/10 bg-white px-3 text-xs font-semibold text-black outline-none focus:border-black/40"
                                                 />
 
                                                 <select
@@ -2606,7 +2605,7 @@ export default function DigitalesContacto() {
                                                     onChange={(e) =>
                                                         setQuickEditDraft((p) => ({ ...p, auto_interes: e.target.value }))
                                                     }
-                                                    className="h-8 min-w-0 max-w-35 rounded-lg border border-black/10 bg-white px-2 text-xs font-semibold text-[#003057] outline-none focus:border-[#003057]/40"
+                                                    className="h-8 min-w-0 max-w-35 rounded-lg border border-black/10 bg-white px-2 text-xs font-semibold text-black outline-none focus:border-black/40"
                                                 >
                                                     {renderOptionsConValorActual(VEHICULOS, quickEditDraft.auto_interes)}
                                                 </select>
@@ -2616,7 +2615,7 @@ export default function DigitalesContacto() {
                                                     onChange={(e) =>
                                                         setQuickEditDraft((p) => ({ ...p, estado: e.target.value }))
                                                     }
-                                                    className="h-8 min-w-0 max-w-40 rounded-lg border border-black/10 bg-white px-2 text-xs font-semibold text-[#003057] outline-none focus:border-[#003057]/40"
+                                                    className="h-8 min-w-0 max-w-40 rounded-lg border border-black/10 bg-white px-2 text-xs font-semibold text-black outline-none focus:border-black/40"
                                                 >
                                                     {renderOptionsConValorActual(ESTADOS_PROSPECTO, quickEditDraft.estado)}
                                                 </select>
@@ -2626,7 +2625,7 @@ export default function DigitalesContacto() {
                                                     onChange={(e) =>
                                                         setQuickEditDraft((p) => ({ ...p, canal_contacto: e.target.value }))
                                                     }
-                                                    className="h-8 min-w-0 max-w-30 rounded-lg border border-black/10 bg-white px-1 text-xs font-semibold text-[#003057] outline-none focus:border-[#003057]/40"
+                                                    className="h-8 min-w-0 max-w-30 rounded-lg border border-black/10 bg-white px-1 text-xs font-semibold text-black outline-none focus:border-black/40"
                                                 >
                                                     {renderOptionsConValorActual(CANALES, quickEditDraft.canal_contacto)}
                                                 </select>
@@ -2636,7 +2635,7 @@ export default function DigitalesContacto() {
                                                     onChange={(e) =>
                                                         setQuickEditDraft((p) => ({ ...p, business: e.target.value }))
                                                     }
-                                                    className="h-8 min-w-0 max-w-25 rounded-lg border border-black/10 bg-white px-2 text-xs font-semibold text-[#003057] outline-none focus:border-[#003057]/40"
+                                                    className="h-8 min-w-0 max-w-25 rounded-lg border border-black/10 bg-white px-2 text-xs font-semibold text-black outline-none focus:border-black/40"
                                                 >
                                                     {renderOptionsConValorActual(BUSINESS_OPTIONS, quickEditDraft.business)}
                                                 </select>
@@ -2646,7 +2645,7 @@ export default function DigitalesContacto() {
                                                     onChange={(e) =>
                                                         setQuickEditDraft((p) => ({ ...p, pauta: e.target.value }))
                                                     }
-                                                    className="h-8 min-w-0 rounded-lg border border-black/10 bg-white px-3 text-xs font-semibold text-[#003057] outline-none focus:border-[#003057]/40"
+                                                    className="h-8 min-w-0 rounded-lg border border-black/10 bg-white px-3 text-xs font-semibold text-black outline-none focus:border-black/40"
                                                 >
                                                     {renderOptionsConValorActual(pautasOptions, quickEditDraft.pauta, "Sin campaña detectada")}                                                </select>
 
@@ -2665,7 +2664,7 @@ export default function DigitalesContacto() {
                                                         onClick={abrirPlantillas}
                                                         disabled={!activeTel}
                                                         className={cls(
-                                                            "inline-flex h-8 items-center justify-center rounded-lg border border-black/10 bg-white px-3 text-xs font-extrabold text-[#003057] hover:bg-neutral-50 disabled:cursor-not-allowed disabled:opacity-60",
+                                                            "inline-flex h-8 items-center justify-center rounded-lg border border-black/10 bg-white px-3 text-xs font-extrabold text-black hover:bg-neutral-50 disabled:cursor-not-allowed disabled:opacity-60",
                                                         )}
                                                         type="button"
                                                         title="Enviar plantilla"
@@ -2722,7 +2721,7 @@ export default function DigitalesContacto() {
                                 {activeTel ? (
                                     <details className="group rounded-2xl border border-black/10 bg-neutral-50 p-2 sm:p-3 lg:hidden">
                                         <summary className="flex cursor-pointer list-none items-center justify-between gap-3 px-1 py-1">
-                                            <span className="text-xs font-extrabold uppercase tracking-wide text-[#003057]/70">
+                                            <span className="text-xs font-extrabold uppercase tracking-wide text-black/70">
                                                 Datos del prospecto
                                             </span>
 
@@ -2732,7 +2731,7 @@ export default function DigitalesContacto() {
                                                     setQuickEditDraft((p) => ({ ...p, nombre: e.target.value }))
                                                 }
                                                 placeholder="Nombre"
-                                                className="h-8 min-w-0 rounded-lg border border-black/10 bg-white px-3 text-xs font-semibold text-[#003057] outline-none focus:border-[#003057]/40"
+                                                className="h-8 min-w-0 rounded-lg border border-black/10 bg-white px-3 text-xs font-semibold text-black outline-none focus:border-black/40"
                                             />
 
                                             <select
@@ -2740,7 +2739,7 @@ export default function DigitalesContacto() {
                                                 onChange={(e) =>
                                                     setQuickEditDraft((p) => ({ ...p, auto_interes: e.target.value }))
                                                 }
-                                                className="h-8 min-w-0 max-w-35 rounded-lg border border-black/10 bg-white px-2 text-xs font-semibold text-[#003057] outline-none focus:border-[#003057]/40"
+                                                className="h-8 min-w-0 max-w-35 rounded-lg border border-black/10 bg-white px-2 text-xs font-semibold text-black outline-none focus:border-black/40"
                                             >
                                                 {renderOptionsConValorActual(VEHICULOS, quickEditDraft.auto_interes)}
                                             </select>
@@ -2750,7 +2749,7 @@ export default function DigitalesContacto() {
                                                 onChange={(e) =>
                                                     setQuickEditDraft((p) => ({ ...p, estado: e.target.value }))
                                                 }
-                                                className="h-8 min-w-0 max-w-40 rounded-lg border border-black/10 bg-white px-2 text-xs font-semibold text-[#003057] outline-none focus:border-[#003057]/40"
+                                                className="h-8 min-w-0 max-w-40 rounded-lg border border-black/10 bg-white px-2 text-xs font-semibold text-black outline-none focus:border-black/40"
                                             >
                                                 {renderOptionsConValorActual(ESTADOS_PROSPECTO, quickEditDraft.estado)}
                                             </select>
@@ -2760,7 +2759,7 @@ export default function DigitalesContacto() {
                                                 onChange={(e) =>
                                                     setQuickEditDraft((p) => ({ ...p, canal_contacto: e.target.value }))
                                                 }
-                                                className="h-8 min-w-0 max-w-30 rounded-lg border border-black/10 bg-white px-1 text-xs font-semibold text-[#003057] outline-none focus:border-[#003057]/40"
+                                                className="h-8 min-w-0 max-w-30 rounded-lg border border-black/10 bg-white px-1 text-xs font-semibold text-black outline-none focus:border-black/40"
                                             >
                                                 {renderOptionsConValorActual(CANALES, quickEditDraft.canal_contacto)}
                                             </select>
@@ -2770,7 +2769,7 @@ export default function DigitalesContacto() {
                                                 onChange={(e) =>
                                                     setQuickEditDraft((p) => ({ ...p, business: e.target.value }))
                                                 }
-                                                className="h-8 min-w-0 max-w-25 rounded-lg border border-black/10 bg-white px-2 text-xs font-semibold text-[#003057] outline-none focus:border-[#003057]/40"
+                                                className="h-8 min-w-0 max-w-25 rounded-lg border border-black/10 bg-white px-2 text-xs font-semibold text-black outline-none focus:border-black/40"
                                             >
                                                 {renderOptionsConValorActual(BUSINESS_OPTIONS, quickEditDraft.business)}
                                             </select>
@@ -2780,7 +2779,7 @@ export default function DigitalesContacto() {
                                                 onChange={(e) =>
                                                     setQuickEditDraft((p) => ({ ...p, pauta: e.target.value }))
                                                 }
-                                                className="h-8 min-w-0 rounded-lg border border-black/10 bg-white px-3 text-xs font-semibold text-[#003057] outline-none focus:border-[#003057]/40"
+                                                className="h-8 min-w-0 rounded-lg border border-black/10 bg-white px-3 text-xs font-semibold text-black outline-none focus:border-black/40"
                                             >
                                                 {renderOptionsConValorActual(pautasOptions, quickEditDraft.pauta)}
                                             </select>
@@ -2800,7 +2799,7 @@ export default function DigitalesContacto() {
                                                     onClick={abrirPlantillas}
                                                     disabled={!activeTel}
                                                     className={cls(
-                                                        "inline-flex h-8 items-center justify-center rounded-lg border border-black/10 bg-white px-3 text-xs font-extrabold text-[#003057] hover:bg-neutral-50 disabled:cursor-not-allowed disabled:opacity-60",
+                                                        "inline-flex h-8 items-center justify-center rounded-lg border border-black/10 bg-white px-3 text-xs font-extrabold text-black hover:bg-neutral-50 disabled:cursor-not-allowed disabled:opacity-60",
                                                     )}
                                                     type="button"
                                                     title="Enviar plantilla"
@@ -2808,7 +2807,7 @@ export default function DigitalesContacto() {
                                                     <LayoutTemplate className="h-3.5 w-3.5" />
                                                 </button>
                                             </div>
-                                            <ChevronDown className="h-4 w-4 text-[#003057]/60 transition group-open:rotate-180" />
+                                            <ChevronDown className="h-4 w-4 text-black/60 transition group-open:rotate-180" />
                                         </summary>
                                     </details>
                                 ) : null}
@@ -2829,7 +2828,7 @@ export default function DigitalesContacto() {
                                         ) : chatHasMore ? (
                                             <button
                                                 onClick={cargarMensajesAnteriores}
-                                                className="rounded-full border border-black/10 bg-white px-4 py-2 text-xs font-extrabold text-[#003057] shadow-sm hover:bg-neutral-50"
+                                                className="rounded-full border border-black/10 bg-white px-4 py-2 text-xs font-extrabold text-black shadow-sm hover:bg-neutral-50"
                                                 type="button"
                                             >
                                                 Cargar mensajes anteriores
@@ -2884,11 +2883,11 @@ export default function DigitalesContacto() {
                             <div className="mx-auto w-full max-w-5xl">
                                 {dragOver && activeTel ? (
                                     <div className="pointer-events-none absolute inset-0 z-20 flex items-center justify-center bg-white/70 backdrop-blur-[1px]">
-                                        <div className="rounded-2xl border border-dashed border-[#003057]/40 bg-white px-6 py-4 shadow-lg">
+                                        <div className="rounded-2xl border border-dashed border-black/40 bg-white px-6 py-4 shadow-lg">
                                             <div className="flex items-center gap-3">
-                                                <Paperclip className="h-5 w-5 text-[#003057]" />
+                                                <Paperclip className="h-5 w-5 text-black" />
 
-                                                <div className="text-sm font-extrabold text-[#003057]">
+                                                <div className="text-sm font-extrabold text-black">
                                                     Suelta para adjuntar archivos
                                                 </div>
                                             </div>
@@ -2903,13 +2902,13 @@ export default function DigitalesContacto() {
                                 {activeTel ? (
                                     <div className="mb-3">
                                         <div className="mb-2 flex items-center justify-between">
-                                            <span className="text-xs font-extrabold uppercase tracking-wide text-[#003057]/60">
+                                            <span className="text-xs font-extrabold uppercase tracking-wide text-black/60">
                                                 Mensajes rápidos
                                             </span>
 
                                             <button
                                                 onClick={() => setShowAddBubble((prev) => !prev)}
-                                                className="inline-flex h-6 w-6 items-center justify-center rounded-full bg-[#003057]/10 text-[#003057] transition hover:bg-[#003057] hover:text-white"
+                                                className="inline-flex h-6 w-6 items-center justify-center rounded-full bg-black/10 text-black transition hover:bg-black hover:text-white"
                                                 title="Agregar mensaje rápido"
                                                 type="button"
                                             >
@@ -2918,12 +2917,12 @@ export default function DigitalesContacto() {
                                         </div>
 
                                         {showAddBubble ? (
-                                            <div className="mb-3 rounded-xl border border-[#003057]/20 bg-neutral-50 p-3">
+                                            <div className="mb-3 rounded-xl border border-black/20 bg-neutral-50 p-3">
                                                 <input
                                                     value={newBubbleTitle}
                                                     onChange={(event) => setNewBubbleTitle(event.target.value)}
                                                     placeholder="Título (opcional)"
-                                                    className="mb-2 w-full rounded-lg border border-black/10 bg-white px-3 py-2 text-sm font-semibold text-[#003057] outline-none placeholder:text-slate-400"
+                                                    className="mb-2 w-full rounded-lg border border-black/10 bg-white px-3 py-2 text-sm font-semibold text-black outline-none placeholder:text-slate-400"
                                                 />
 
                                                 <textarea
@@ -2931,7 +2930,7 @@ export default function DigitalesContacto() {
                                                     onChange={(event) => setNewBubbleText(event.target.value)}
                                                     placeholder="Escribe el mensaje que quieres guardar..."
                                                     rows={2}
-                                                    className="mb-2 w-full resize-none rounded-lg border border-black/10 bg-white px-3 py-2 text-sm font-semibold text-[#003057] outline-none placeholder:text-slate-400"
+                                                    className="mb-2 w-full resize-none rounded-lg border border-black/10 bg-white px-3 py-2 text-sm font-semibold text-black outline-none placeholder:text-slate-400"
                                                 />
 
                                                 <div className="flex justify-end gap-2">
@@ -2970,11 +2969,11 @@ export default function DigitalesContacto() {
                                                 {quickBubbles.map((bubble) => (
                                                     <div
                                                         key={bubble.id}
-                                                        className="group relative inline-flex max-w-[200px] items-center gap-1 rounded-full border border-[#003057]/20 bg-white shadow-sm transition-all hover:shadow-md"
+                                                        className="group relative inline-flex max-w-[200px] items-center gap-1 rounded-full border border-black/20 bg-white shadow-sm transition-all hover:shadow-md"
                                                     >
                                                         <button
                                                             onClick={() => sendQuickBubble(bubble.text)}
-                                                            className="flex-1 truncate px-3 py-1.5 text-left text-xs font-semibold text-[#003057] hover:text-[#003057]/80"
+                                                            className="flex-1 truncate px-3 py-1.5 text-left text-xs font-semibold text-black hover:text-black/80"
                                                             title={bubble.text}
                                                             type="button"
                                                         >
@@ -3014,7 +3013,7 @@ export default function DigitalesContacto() {
                                                         </div>
 
                                                         <div className="min-w-0">
-                                                            <div className="max-w-[180px] truncate text-xs font-extrabold text-[#003057]">
+                                                            <div className="max-w-[180px] truncate text-xs font-extrabold text-black">
                                                                 {attachment.name ? shortName(attachment.name) : "Imagen"}
                                                             </div>
 
@@ -3025,10 +3024,10 @@ export default function DigitalesContacto() {
                                                     </div>
                                                 ) : (
                                                     <div className="flex items-center gap-2">
-                                                        <FileText className="h-4 w-4 text-[#003057]" />
+                                                        <FileText className="h-4 w-4 text-black" />
 
                                                         <div className="min-w-0">
-                                                            <div className="max-w-[180px] truncate text-xs font-extrabold text-[#003057]">
+                                                            <div className="max-w-[180px] truncate text-xs font-extrabold text-black">
                                                                 {attachment.name ? shortName(attachment.name) : "Archivo"}
                                                             </div>
 
@@ -3045,7 +3044,7 @@ export default function DigitalesContacto() {
                                                     className="ml-1 inline-flex h-8 w-8 items-center justify-center rounded-lg border border-black/10 bg-white hover:bg-neutral-100"
                                                     title="Quitar"
                                                 >
-                                                    <X className="h-4 w-4 text-[#003057]" />
+                                                    <X className="h-4 w-4 text-black" />
                                                 </button>
                                             </div>
                                         ))}
@@ -3057,7 +3056,7 @@ export default function DigitalesContacto() {
                                     <div className="relative" ref={emojiRef}>
                                         <button
                                             className={cls(
-                                                "inline-flex h-10 w-10 items-center justify-center rounded-full text-[#003057] hover:bg-neutral-100",
+                                                "inline-flex h-10 w-10 items-center justify-center rounded-full text-black hover:bg-neutral-100",
                                                 !activeTel ? "cursor-not-allowed opacity-60" : ""
                                             )}
                                             title="Emojis"
@@ -3095,7 +3094,7 @@ export default function DigitalesContacto() {
 
                                     <button
                                         className={cls(
-                                            "inline-flex h-10 w-10 items-center justify-center rounded-full text-[#003057] hover:bg-neutral-100",
+                                            "inline-flex h-10 w-10 items-center justify-center rounded-full text-black hover:bg-neutral-100",
                                             !activeTel ? "cursor-not-allowed opacity-60" : ""
                                         )}
                                         title="Adjuntar"
@@ -3146,7 +3145,7 @@ export default function DigitalesContacto() {
                                                 setEditingMsgId(null);
                                                 setDraftMsg("");
                                             }}
-                                            className="inline-flex items-center gap-2 rounded-lg border border-black/10 bg-white px-3 py-1.5 text-[11px] font-extrabold text-[#003057] hover:bg-neutral-50"
+                                            className="inline-flex items-center gap-2 rounded-lg border border-black/10 bg-white px-3 py-1.5 text-[11px] font-extrabold text-black hover:bg-neutral-50"
                                         >
                                             Cancelar edición
                                         </button>
@@ -3171,7 +3170,7 @@ export default function DigitalesContacto() {
                         type="button"
                         onClick={() => marcarChatComoNoLeido(chatMenu.tel)}
                         disabled={markingUnreadTel === chatMenu.tel}
-                        className="flex w-full items-center gap-2 px-3 py-2 text-left text-xs font-extrabold text-[#003057] hover:bg-neutral-50 disabled:cursor-not-allowed disabled:opacity-60"
+                        className="flex w-full items-center gap-2 px-3 py-2 text-left text-xs font-extrabold text-black hover:bg-neutral-50 disabled:cursor-not-allowed disabled:opacity-60"
                     >
                         <MailOpen className="h-4 w-4" />
                         {markingUnreadTel === chatMenu.tel ? "Marcando..." : "Marcar como no leído"}
@@ -3188,7 +3187,7 @@ export default function DigitalesContacto() {
                         <>
                             <button
                                 onClick={() => setTplSelected(null)}
-                                className="inline-flex items-center justify-center gap-2 rounded-xl border border-black/10 bg-white px-4 py-2 text-sm font-extrabold text-[#003057] hover:bg-neutral-50"
+                                className="inline-flex items-center justify-center gap-2 rounded-xl border border-black/10 bg-white px-4 py-2 text-sm font-extrabold text-black hover:bg-neutral-50"
                                 type="button"
                             >
                                 Volver
@@ -3218,7 +3217,7 @@ export default function DigitalesContacto() {
                 {!tplSelected ? (
                     <div className="grid gap-3">
                         {loadingTemplates ? (
-                            <div className="rounded-xl border border-black/10 bg-neutral-50 p-4 text-sm font-bold text-[#003057]">
+                            <div className="rounded-xl border border-black/10 bg-neutral-50 p-4 text-sm font-bold text-black">
                                 Cargando plantillas...
                             </div>
                         ) : templatesError ? (
@@ -3226,7 +3225,7 @@ export default function DigitalesContacto() {
                                 {templatesError}
                             </div>
                         ) : templatesDisponibles.length === 0 ? (
-                            <div className="rounded-xl border border-black/10 bg-neutral-50 p-4 text-sm font-bold text-[#003057]">
+                            <div className="rounded-xl border border-black/10 bg-neutral-50 p-4 text-sm font-bold text-black">
                                 No hay plantillas disponibles para esta línea.
                             </div>
                         ) : (
@@ -3237,7 +3236,7 @@ export default function DigitalesContacto() {
                                     onClick={() => pickTemplate(template)}
                                     className="w-full rounded-xl border border-black/10 bg-white p-4 text-left shadow-sm transition hover:bg-neutral-50"
                                 >
-                                    <div className="text-sm font-extrabold text-[#003057]">
+                                    <div className="text-sm font-extrabold text-black">
                                         {template.title || template.key}
                                     </div>
 
@@ -3257,7 +3256,7 @@ export default function DigitalesContacto() {
                 ) : (
                     <div className="grid gap-3">
                         <div>
-                            <div className="text-base font-extrabold text-[#003057]">
+                            <div className="text-base font-extrabold text-black">
                                 Texto de plantilla
                             </div>
 
@@ -3265,7 +3264,7 @@ export default function DigitalesContacto() {
                                 {tplSelected.key} · idioma: {tplSelected.idioma || tplSelected.language || "es_MX"}
                             </div>
 
-                            <div className="mt-3 whitespace-pre-wrap rounded-xl border border-black/10 bg-neutral-50 p-4 text-sm font-semibold text-[#003057]">
+                            <div className="mt-3 whitespace-pre-wrap rounded-xl border border-black/10 bg-neutral-50 p-4 text-sm font-semibold text-black">
                                 {templatePreview || tplSelected.help || "Esta plantilla no tiene texto visible."}
                             </div>
                         </div>
@@ -3276,7 +3275,7 @@ export default function DigitalesContacto() {
 
                                 return (
                                     <div key={field.key}>
-                                        <div className="mb-1 text-xs font-extrabold text-[#003057]">
+                                        <div className="mb-1 text-xs font-extrabold text-black">
                                             {field.label || field.key}
                                         </div>
 
@@ -3290,7 +3289,7 @@ export default function DigitalesContacto() {
                                                             [field.key]: event.target.value,
                                                         }))
                                                     }
-                                                    className="w-full appearance-none rounded-xl border border-black/10 bg-white px-4 py-3 pr-10 text-sm font-semibold text-[#003057] outline-none"
+                                                    className="w-full appearance-none rounded-xl border border-black/10 bg-white px-4 py-3 pr-10 text-sm font-semibold text-black outline-none"
                                                 >
                                                     <option value="" disabled>
                                                         Selecciona una opción…
@@ -3304,7 +3303,7 @@ export default function DigitalesContacto() {
                                                 </select>
 
                                                 <span className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2">
-                                                    <ChevronDown className="h-4 w-4 text-[#003057]/60" />
+                                                    <ChevronDown className="h-4 w-4 text-black/60" />
                                                 </span>
                                             </div>
                                         ) : (
@@ -3316,7 +3315,7 @@ export default function DigitalesContacto() {
                                                         [field.key]: event.target.value,
                                                     }))
                                                 }
-                                                className="w-full rounded-xl border border-black/10 bg-white px-4 py-3 text-sm font-semibold text-[#003057] outline-none"
+                                                className="w-full rounded-xl border border-black/10 bg-white px-4 py-3 text-sm font-semibold text-black outline-none"
                                             />
                                         )}
                                     </div>

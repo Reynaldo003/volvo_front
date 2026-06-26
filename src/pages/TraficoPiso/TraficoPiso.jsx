@@ -4,6 +4,7 @@ import { createPortal } from "react-dom";
 import {
     ArrowUpDown, BadgeDollarSign, BriefcaseBusiness, CalendarDays,
     CarFront, ChevronDown, ChevronUp, ChevronLeft, ChevronRight,
+    CheckCircle2, XCircle, PieChart as PieChartIcon, Pencil, MoreVertical,
     CircleDollarSign, ClipboardList, Clock, HeartHandshake, Loader2,
     Mail, MessageSquareText, Phone, Plus, Save, Search, ShieldCheck,
     Trash2, User, UserRoundSearch, Users, X, Building2,
@@ -29,8 +30,8 @@ const PERFILES_PROFESIONALES = ["Comerciales","Asalariado Sector Público","Asal
 const ESTADOS_CIVILES = ["Soltero", "Casado", "Divorciado"];
 const ASESORES = ["Enrique Vazquez Islas","Ricardo Platas","Verónica Del Rayo Galindo León","Julio Camacho Barragán","Fernanda Romero Aguilar"];
 const PASATIEMPOS = ["Ciclismo","Natación","Futbol","Pesca","Senderismo","Tenis-frontón","Golf","Mixología","Cocinar","Coleccionar objetos","Viajar dentro del país","Viajar fuera del país","Automovilismo","Fotografía","Pintura","Arquitectura","Conciertos","Ajedrez","Lectura","Desarrollo personal","Pilates","Yoga","Neurociencias","Aprendizaje de idioma"];
-const HOURS = Array.from({ length: 13 }, (_, i) => `${String(i + 8).padStart(2, "0")}:00`);
 const PIE_COLORS = ["#000000", "#2a2a2a", "#555555", "#808080", "#aaaaaa"];
+const PAGE_SIZE = 10;
 
 const INITIAL_FORM = {
     agencia: "", nombre_prospecto: "", codigo_postal: "", telefono: "", email: "",
@@ -63,9 +64,16 @@ function ymdToInt(ymd) { if (!ymd || !/^\d{4}-\d{2}-\d{2}$/.test(ymd)) return nu
 function addDays(date, days) { const d = new Date(date); d.setDate(d.getDate() + days); return d; }
 function startOfWeekMonday(date) { const d = new Date(date); const delta = (d.getDay() + 6) % 7; d.setHours(0,0,0,0); d.setDate(d.getDate() - delta); return d; }
 function weekdayShortEs(d) { return ["Dom","Lun","Mar","Mie","Jue","Vie","Sab"][d.getDay()] || ""; }
-function getHourKey(v) { if (!v) return ""; const d = new Date(v); if (isNaN(d)) return ""; return `${String(d.getHours()).padStart(2,"0")}:00`; }
+function timeShort(v) { if (!v) return ""; const d = new Date(v); if (isNaN(d)) return ""; return d.toLocaleTimeString("es-MX", { hour: "2-digit", minute: "2-digit" }); }
 function formatWeekTitle(s, e) {
     return `${s.toLocaleDateString("es-MX",{day:"numeric",month:"long"})} — ${e.toLocaleDateString("es-MX",{day:"numeric",month:"long",year:"numeric"})}`;
+}
+function getInitials(nombre) {
+    const parts = normalizeStr(nombre).split(/\s+/).filter(Boolean);
+    if (!parts.length) return "—";
+    const first = parts[0]?.[0] || "";
+    const second = parts[1]?.[0] || "";
+    return (first + second).toUpperCase();
 }
 
 function normalizarPayload(form) {
@@ -80,7 +88,7 @@ function validarFormulario(_form) {
 }
 
 // ─── micro-components ────────────────────────────────────────────────────────
-function Skeleton({ className = "" }) { return <div className={["animate-pulse rounded-md bg-black/10", className].join(" ")} />; }
+function Skeleton({ className = "" }) { return <div className={["animate-pulse rounded-md bg-slate-200", className].join(" ")} />; }
 
 function SkeletonRow() {
     return (
@@ -153,15 +161,6 @@ function Field({ label, icon: Icon, required, hint, invalid, children }) {
                 </div>
                 {hint ? <span className="text-xs font-semibold text-slate-500">{hint}</span> : null}
             </div>
-            {children}
-        </div>
-    );
-}
-
-function FilterBlock({ label, children }) {
-    return (
-        <div>
-            <div className="mb-2 text-xs font-extrabold tracking-wide text-black">{label}</div>
             {children}
         </div>
     );
@@ -255,9 +254,9 @@ function AsesorAutocomplete({ value, onChange, invalid }) {
 function SortButton({ label, sortKey, sort, onClick }) {
     const active = sort.key === sortKey;
     return (
-        <button type="button" onClick={() => onClick(sortKey)} className="inline-flex items-center gap-1 text-xs font-bold">
+        <button type="button" onClick={() => onClick(sortKey)} className="inline-flex items-center gap-1 text-xs font-semibold text-slate-500 hover:text-slate-900">
             {label}
-            <span className="opacity-70">{active ? sort.dir === "asc" ? <ChevronUp className="h-4" /> : <ChevronDown className="h-4" /> : <ArrowUpDown className="h-4" />}</span>
+            <span className="opacity-70">{active ? sort.dir === "asc" ? <ChevronUp className="h-3.5 w-3.5" /> : <ChevronDown className="h-3.5 w-3.5" /> : <ArrowUpDown className="h-3.5 w-3.5" />}</span>
         </button>
     );
 }
@@ -266,39 +265,34 @@ function ContextMenu({ ctxMenu, onDelete, onClose }) {
     if (!ctxMenu.open || !ctxMenu.row) return null;
     return createPortal(
         <div className="fixed z-[9999]" style={{ left: ctxMenu.x, top: ctxMenu.y }} onClick={e => e.stopPropagation()}>
-            <div className="w-48 overflow-hidden rounded-xl border border-black/10 bg-white shadow-2xl">
+            <div className="w-48 overflow-hidden rounded-xl border border-slate-200 bg-white shadow-2xl">
                 <button type="button" className="flex w-full items-center gap-2 px-4 py-3 text-left text-sm font-semibold text-red-600 hover:bg-red-50" onClick={() => onDelete(ctxMenu.row)}>
                     <Trash2 className="h-4 w-4" /> Eliminar
                 </button>
-                <button type="button" className="w-full px-4 py-2 text-left text-xs text-slate-500 hover:bg-slate-50" onClick={onClose}>Cerrar</button>
+                <button type="button" className="w-full px-4 py-2 text-left text-xs text-slate-400 hover:bg-slate-50" onClick={onClose}>Cerrar</button>
             </div>
         </div>,
         document.body
     );
 }
 
-// ─── vista agenda ────────────────────────────────────────────────────────────
+// ─── vista agenda ─────────────────────────────────────────────────────────────
 function AgendaCard({ item, onEdit, onContext }) {
     return (
         <button
             type="button"
             onClick={() => onEdit(item)}
             onContextMenu={e => onContext(e, item)}
-            className="w-full rounded-lg border border-black/10 bg-white p-2.5 text-left shadow-sm transition hover:-translate-y-[1px] hover:shadow-md hover:border-black/20"
+            className="w-full rounded-lg border border-black/10 bg-white p-3 text-left shadow-sm transition hover:-translate-y-[1px] hover:shadow-md hover:border-black/20"
             title="Click para editar. Click derecho para eliminar."
         >
-            <div className="text-[10px] font-extrabold text-black truncate">{item.nombre_prospecto || "—"}</div>
-            <div className="mt-1 flex items-center gap-1 text-[10px] text-slate-500">
-                <CarFront className="h-3 w-3 shrink-0 text-slate-400" />
-                <span className="truncate">{item.auto_suenos || "—"}</span>
-            </div>
-            <div className="mt-1 flex items-center gap-1 text-[10px] text-slate-500">
-                <Phone className="h-3 w-3 shrink-0 text-slate-400" />
-                <span className="truncate">{item.telefono || "—"}</span>
-            </div>
-            <div className="mt-2">
+            <div className="mb-2 flex items-center justify-between gap-2">
+                <span className="inline-flex items-center gap-1 rounded-full bg-black px-2 py-0.5 text-[9px] font-extrabold text-white">
+                    <Clock className="h-2.5 w-2.5" />
+                    {timeShort(item.creado_en) || "—"}
+                </span>
                 <span className={[
-                    "inline-flex rounded-full border px-2 py-0.5 text-[9px] font-extrabold",
+                    "inline-flex shrink-0 rounded-full border px-2 py-0.5 text-[9px] font-extrabold",
                     item.tiempo_compra === "Este mes"
                         ? "border-emerald-200 bg-emerald-50 text-emerald-700"
                         : item.tiempo_compra === "De 1 a 3 meses"
@@ -307,6 +301,15 @@ function AgendaCard({ item, onEdit, onContext }) {
                 ].join(" ")}>
                     {item.tiempo_compra || "—"}
                 </span>
+            </div>
+            <div className="text-[11px] font-extrabold leading-snug text-black line-clamp-2">{item.nombre_prospecto || "—"}</div>
+            <div className="mt-1.5 flex items-center gap-1.5 text-[10px] text-slate-500">
+                <CarFront className="h-3 w-3 shrink-0 text-slate-400" />
+                <span className="line-clamp-1">{item.auto_suenos || "—"}</span>
+            </div>
+            <div className="mt-1 flex items-center gap-1.5 text-[10px] text-slate-500">
+                <Phone className="h-3 w-3 shrink-0 text-slate-400" />
+                <span>{item.telefono || "—"}</span>
             </div>
         </button>
     );
@@ -317,37 +320,31 @@ function AgendaWeekView({ rows, loading, currentWeekDate, setCurrentWeekDate, on
     const weekDays = useMemo(() => Array.from({ length: 6 }, (_, i) => addDays(weekStart, i)), [weekStart]);
     const weekEnd = weekDays[weekDays.length - 1];
     const todayIso = toYMDLocal(new Date());
-    const gridStyle = useMemo(() => ({ gridTemplateColumns: "72px repeat(6, minmax(160px, 1fr))" }), []);
 
+    // agrupado por día, ordenado por hora real ascendente (no inventamos turnos)
     const rowsByDay = useMemo(() => {
         const map = new Map();
         for (const row of rows) {
-            const key = row.creado_en ? toYMDLocal(row.creado_en) : "sin-fecha";
+            if (!row.creado_en) continue;
+            const key = toYMDLocal(row.creado_en);
+            if (!key) continue;
             if (!map.has(key)) map.set(key, []);
             map.get(key).push(row);
         }
+        for (const arr of map.values()) arr.sort((a, b) => new Date(a.creado_en) - new Date(b.creado_en));
         return map;
     }, [rows]);
-
-    const TURNOS = [
-        { label: "Mañana", range: "08:00 – 13:00" },
-        { label: "Tarde",  range: "13:00 – 18:00" },
-        { label: "Noche",  range: "18:00 – 21:00" },
-    ];
-
-    function rowsForTurno(dayKey, turnoIdx) {
-        const all = rowsByDay.get(dayKey) || [];
-        return all.filter((_, i) => i % 3 === turnoIdx);
-    }
 
     const outOfWeek = useMemo(() => {
         const minInt = ymdToInt(toYMDLocal(weekStart));
         const maxInt = ymdToInt(toYMDLocal(weekEnd));
-        return rows.filter(r => {
-            if (!r.creado_en) return true;
-            const v = ymdToInt(toYMDLocal(r.creado_en));
-            return !v || v < minInt || v > maxInt;
-        });
+        return rows
+            .filter(r => {
+                if (!r.creado_en) return true;
+                const v = ymdToInt(toYMDLocal(r.creado_en));
+                return !v || v < minInt || v > maxInt;
+            })
+            .sort((a, b) => new Date(a.creado_en || 0) - new Date(b.creado_en || 0));
     }, [rows, weekStart, weekEnd]);
 
     return (
@@ -385,80 +382,68 @@ function AgendaWeekView({ rows, loading, currentWeekDate, setCurrentWeekDate, on
                 </div>
             </div>
 
+            {/* agenda por columnas de día — cada columna crece libremente, sin recortes */}
             <div className="overflow-hidden rounded-xl border border-black/15 bg-white shadow-sm">
-                <div className="overflow-auto">
-                    <div className="min-w-[1100px]">
-                        {/* header días — NEGRO */}
-                        <div className="sticky top-0 z-20 grid border-b border-black bg-black" style={gridStyle}>
-                            <div className="px-3 py-3 text-[10px] font-bold uppercase tracking-widest text-white/40">Turno</div>
-                            {weekDays.map(day => {
-                                const iso = toYMDLocal(day);
-                                const isToday = iso === todayIso;
-                                const count = (rowsByDay.get(iso) || []).length;
-                                return (
-                                    <div key={iso} className="border-l border-white/10 px-3 py-3 text-center">
-                                        <div className="text-[10px] font-bold uppercase tracking-widest text-white/40">
-                                            {weekdayShortEs(day)}
-                                        </div>
-                                        <div className={[
-                                            "mx-auto mt-1 inline-flex h-7 w-7 items-center justify-center rounded-full text-sm font-black",
-                                            isToday ? "bg-white text-black" : "text-white"
-                                        ].join(" ")}>
-                                            {day.getDate()}
-                                        </div>
-                                        {count > 0 && (
-                                            <div className="mt-1 text-[9px] font-bold text-white/30">
-                                                {count} ingreso{count !== 1 ? "s" : ""}
-                                            </div>
-                                        )}
-                                    </div>
-                                );
-                            })}
-                        </div>
-
-                        {/* filas por turno — celdas BLANCAS con texto oscuro */}
+                <div className="overflow-x-auto">
+                    <div className="grid" style={{ gridTemplateColumns: "repeat(6, minmax(200px, 1fr))", minWidth: 1200 }}>
                         {loading ? (
-                            Array.from({ length: 3 }).map((_, i) => (
-                                <div key={i} className="grid border-b border-black/8" style={gridStyle}>
-                                    <div className="bg-black/5 px-3 py-3 text-xs font-bold text-slate-400">—</div>
-                                    {weekDays.map((_, j) => (
-                                        <div key={j} className="min-h-[120px] border-l border-black/8 p-2">
-                                            <Skeleton className="h-16 w-full rounded-lg" />
-                                        </div>
-                                    ))}
+                            Array.from({ length: 6 }).map((_, i) => (
+                                <div key={i} className="flex flex-col border-r border-black/8 last:border-r-0">
+                                    <div className="border-b border-black bg-black px-3 py-3">
+                                        <Skeleton className="h-3 w-10 bg-white/20" />
+                                        <Skeleton className="mt-2 h-6 w-6 rounded-full bg-white/20" />
+                                    </div>
+                                    <div className="space-y-2 p-2">
+                                        <Skeleton className="h-20 w-full rounded-lg" />
+                                        <Skeleton className="h-20 w-full rounded-lg" />
+                                    </div>
                                 </div>
                             ))
                         ) : (
-                            TURNOS.map((turno, turnoIdx) => (
-                                <div key={turno.label} className="grid border-b border-black/8 last:border-b-0" style={gridStyle}>
-                                    {/* label del turno — fondo muy suave negro */}
-                                    <div className="bg-black px-3 py-3 border-r border-white/10">
-                                        <div className="text-[10px] font-black uppercase tracking-widest text-white/70">{turno.label}</div>
-                                        <div className="mt-1 text-[9px] text-white/30">{turno.range}</div>
-                                    </div>
-                                    {weekDays.map(day => {
-                                        const dayKey = toYMDLocal(day);
-                                        const items = rowsForTurno(dayKey, turnoIdx);
-                                        return (
-                                            <div key={dayKey} className="group relative min-h-[120px] border-l border-black/8 bg-white p-1.5 hover:bg-slate-50/80 transition-colors">
-                                                <button
-                                                    type="button"
-                                                    onClick={() => onOpenCreate()}
-                                                    className="absolute right-2 top-2 z-[4] inline-flex h-6 w-6 items-center justify-center rounded-md border border-black/15 bg-white text-slate-400 opacity-0 shadow-sm hover:bg-slate-100 group-hover:opacity-100 transition"
-                                                    title="Nuevo ingreso"
-                                                >
-                                                    <Plus className="h-3.5 w-3.5" />
-                                                </button>
-                                                <div className="grid gap-1.5 pr-1">
-                                                    {items.map(item => (
-                                                        <AgendaCard key={item.id_trafico} item={item} onEdit={onEdit} onContext={onContext} />
-                                                    ))}
+                            weekDays.map(day => {
+                                const dayKey = toYMDLocal(day);
+                                const isToday = dayKey === todayIso;
+                                const items = rowsByDay.get(dayKey) || [];
+                                return (
+                                    <div key={dayKey} className="flex flex-col border-r border-black/8 last:border-r-0">
+                                        <div className="sticky top-0 z-10 flex items-center justify-between gap-2 border-b border-black bg-black px-3 py-3">
+                                            <div>
+                                                <div className="text-[10px] font-bold uppercase tracking-widest text-white/40">{weekdayShortEs(day)}</div>
+                                                <div className="mt-1 flex items-center gap-2">
+                                                    <span className={[
+                                                        "inline-flex h-7 w-7 items-center justify-center rounded-full text-sm font-black",
+                                                        isToday ? "bg-white text-black" : "text-white"
+                                                    ].join(" ")}>
+                                                        {day.getDate()}
+                                                    </span>
+                                                    {items.length > 0 && (
+                                                        <span className="text-[9px] font-bold text-white/30">
+                                                            {items.length} ingreso{items.length !== 1 ? "s" : ""}
+                                                        </span>
+                                                    )}
                                                 </div>
                                             </div>
-                                        );
-                                    })}
-                                </div>
-                            ))
+                                            <button
+                                                type="button"
+                                                onClick={onOpenCreate}
+                                                className="inline-flex h-7 w-7 shrink-0 items-center justify-center rounded-md border border-white/20 bg-white/10 text-white hover:bg-white/20 transition"
+                                                title="Nuevo ingreso"
+                                            >
+                                                <Plus className="h-3.5 w-3.5" />
+                                            </button>
+                                        </div>
+                                        <div className="flex-1 space-y-2 bg-white p-2">
+                                            {items.length === 0 ? (
+                                                <div className="rounded-lg border border-dashed border-black/10 px-2 py-8 text-center text-[10px] font-semibold text-slate-300">
+                                                    Sin ingresos
+                                                </div>
+                                            ) : items.map(item => (
+                                                <AgendaCard key={item.id_trafico} item={item} onEdit={onEdit} onContext={onContext} />
+                                            ))}
+                                        </div>
+                                    </div>
+                                );
+                            })
                         )}
                     </div>
                 </div>
@@ -493,6 +478,9 @@ function AgendaMobileList({ rows, loading, onEdit, onContext }) {
             const key = r.creado_en ? toYMDLocal(r.creado_en) : "sin-fecha";
             if (!map.has(key)) map.set(key, []);
             map.get(key).push(r);
+        }
+        for (const arr of map.values()) {
+            arr.sort((a, b) => new Date(a.creado_en || 0) - new Date(b.creado_en || 0));
         }
         return Array.from(map.entries()).sort(([a], [b]) => b.localeCompare(a));
     }, [rows]);
@@ -536,7 +524,7 @@ function AgendaMobileList({ rows, loading, onEdit, onContext }) {
     );
 }
 
-// ─── vista gráficas ───────────────────────────────────────────────────────────
+// ─── vista gráficas (sin cambios de estilo) ──────────────────────────────────
 function CustomTooltip({ active, payload, label }) {
     if (!active || !payload?.length) return null;
     return (
@@ -693,6 +681,7 @@ export default function TraficoPiso() {
 
     const [filters, setFilters] = useState({ q: "", tipoPersona: "Todos", tiempoCompra: "Todos", rangoDesde: "", rangoHasta: "" });
     const [sort, setSort] = useState({ key: "creado_en", dir: "desc" });
+    const [page, setPage] = useState(1);
     const [ctxMenu, setCtxMenu] = useState({ open: false, x: 0, y: 0, row: null });
 
     const [openModal, setOpenModal] = useState(false);
@@ -738,6 +727,9 @@ export default function TraficoPiso() {
         window.addEventListener("resize", fn);
         return () => { window.removeEventListener("click", fn); window.removeEventListener("scroll", fn, true); window.removeEventListener("resize", fn); };
     }, []);
+
+    // resetear a la página 1 cuando cambian filtros u orden
+    useEffect(() => { setPage(1); }, [filters.q, filters.tipoPersona, filters.tiempoCompra, filters.rangoDesde, filters.rangoHasta, sort.key, sort.dir]);
 
     function openCreate() { setError(""); setOk(""); setMode("create"); setDraft({ ...INITIAL_FORM }); setOpenModal(true); }
 
@@ -787,6 +779,11 @@ export default function TraficoPiso() {
     }
 
     function onRowContextMenu(e, row) { e.preventDefault(); e.stopPropagation(); setCtxMenu({ open: true, x: e.clientX, y: e.clientY, row }); }
+    function onMenuClick(e, row) {
+        e.preventDefault(); e.stopPropagation();
+        const rect = e.currentTarget.getBoundingClientRect();
+        setCtxMenu({ open: true, x: rect.right - 192, y: rect.bottom + 6, row });
+    }
     function resetFilters() { setFilters({ q: "", tipoPersona: "Todos", tiempoCompra: "Todos", rangoDesde: "", rangoHasta: "" }); }
     function setHoy() { const hoy = toYMDLocal(new Date()); setFilters(p => ({ ...p, rangoDesde: hoy, rangoHasta: hoy })); }
 
@@ -822,315 +819,214 @@ export default function TraficoPiso() {
         });
     }, [filtered, sort]);
 
+    // ── paginación ──
+    const totalPages = Math.max(1, Math.ceil(sorted.length / PAGE_SIZE));
+    const currentPage = Math.min(page, totalPages);
+    const pageStart = (currentPage - 1) * PAGE_SIZE;
+    const paginated = useMemo(() => sorted.slice(pageStart, pageStart + PAGE_SIZE), [sorted, pageStart]);
+
+    const pageItems = useMemo(() => {
+        const arr = Array.from({ length: totalPages }, (_, i) => i + 1)
+            .filter(p => p === 1 || p === totalPages || Math.abs(p - currentPage) <= 1);
+        const out = [];
+        arr.forEach((p, idx) => {
+            if (idx > 0 && p - arr[idx - 1] > 1) out.push("...");
+            out.push(p);
+        });
+        return out;
+    }, [totalPages, currentPage]);
+
+    // ── stats (estilo Citas) ──
+    const stats = useMemo(() => {
+        const total = registros.length;
+        const hoyYmd = toYMDLocal(new Date());
+        const ingresosHoy = registros.filter(r => r.creado_en && toYMDLocal(r.creado_en) === hoyYmd).length;
+        const esteMes = registros.filter(r => r.tiempo_compra === "Este mes").length;
+        const conAutoCuenta = registros.filter(r => r.deja_auto_cuenta).length;
+        const sinAutoCuenta = total - conAutoCuenta;
+        const tasaAutoCuenta = total ? Math.round((conAutoCuenta / total) * 100) : 0;
+        return [
+            { key: "hoy", label: "Ingresos de hoy", value: ingresosHoy, icon: CalendarDays, bg: "bg-blue-50", color: "text-blue-600" },
+            { key: "mes", label: "Compran este mes", value: esteMes, icon: Clock, bg: "bg-slate-100", color: "text-slate-600" },
+            { key: "si", label: "Dejan auto a cuenta", value: conAutoCuenta, icon: CheckCircle2, bg: "bg-emerald-50", color: "text-emerald-600" },
+            { key: "no", label: "Sin auto a cuenta", value: sinAutoCuenta, icon: XCircle, bg: "bg-rose-50", color: "text-rose-600" },
+            { key: "tasa", label: "Tasa de auto a cuenta", value: `${tasaAutoCuenta}%`, sub: `${conAutoCuenta} de ${total}`, icon: PieChartIcon, bg: "bg-violet-50", color: "text-violet-600" },
+        ];
+    }, [registros]);
+
     return (
         <div className="w-full space-y-4">
-            {/* ── Header premium Tráfico de Piso ── */}
-<div
-    className="relative overflow-hidden rounded-2xl"
-    style={{
-        background: "linear-gradient(135deg, #0d0d0d 0%, #181818 40%, #111111 70%, #0a0a0a 100%)",
-        border: "0.5px solid rgba(255,255,255,0.06)",
-    }}
->
-    {/* Línea de acento superior */}
-    <div
-        className="absolute top-0 left-0 right-0"
-        style={{
-            height: "1px",
-            background:
-                "linear-gradient(90deg, transparent 0%, rgba(255,255,255,0) 10%, rgba(255,255,255,0.55) 40%, rgba(255,255,255,0.55) 60%, rgba(255,255,255,0) 90%, transparent 100%)",
-        }}
-    />
-
-    {/* Glows */}
-    <div
-        className="pointer-events-none absolute"
-        style={{
-            top: "-60px", left: "-60px",
-            width: "260px", height: "200px",
-            background: "radial-gradient(ellipse, rgba(255,255,255,0.03) 0%, transparent 70%)",
-        }}
-    />
-    <div
-        className="pointer-events-none absolute"
-        style={{
-            bottom: "-40px", right: "-20px",
-            width: "220px", height: "160px",
-            background: "radial-gradient(ellipse, rgba(255,255,255,0.02) 0%, transparent 70%)",
-        }}
-    />
-
-    <div className="relative px-6 pt-5 pb-0" style={{ zIndex: 1 }}>
-
-        {/* Fila 1 — breadcrumb + vista tabs */}
-        <div className="flex items-center justify-between mb-5">
-
-            {/* Breadcrumb */}
-            <div className="flex items-center gap-2.5">
-                <div
-                    className="rounded-full"
-                    style={{ width: 6, height: 6, background: "rgba(255,255,255,0.9)" }}
-                />
-                <span
-                    style={{
-                        fontSize: 11,
-                        color: "rgba(255,255,255,0.35)",
-                        letterSpacing: "0.08em",
-                        textTransform: "uppercase",
-                    }}
-                >
-                    Comercial &nbsp;/&nbsp; Tráfico de piso
-                </span>
-            </div>
-
-            {/* Selector de vista pill-group */}
-            <div
-                className="flex gap-1 p-[3px] rounded-[10px]"
-                style={{
-                    background: "rgba(255,255,255,0.05)",
-                    border: "0.5px solid rgba(255,255,255,0.08)",
-                }}
-            >
-                {[
-                    { key: "tabla",    label: "Tabla",    icon: TableProperties },
-                    { key: "agenda",   label: "Agenda",   icon: CalendarRange   },
-                    { key: "graficas", label: "Gráficas", icon: BarChart2       },
-                ].map(({ key, label, icon: Icon }) => {
-                    const active = viewMode === key;
-                    return (
-                        <button
-                            key={key}
-                            type="button"
-                            onClick={() => setViewMode(key)}
-                            className="inline-flex items-center gap-1.5 whitespace-nowrap transition-all"
-                            style={{
-                                padding: "6px 14px",
-                                borderRadius: 7,
-                                fontSize: 12,
-                                fontWeight: 500,
-                                border: active
-                                    ? "0.5px solid rgba(255,255,255,0.18)"
-                                    : "0.5px solid transparent",
-                                background: active ? "rgba(255,255,255,0.12)" : "transparent",
-                                color: active ? "#ffffff" : "rgba(255,255,255,0.38)",
-                            }}
-                        >
-                            <Icon size={13} />
-                            {label}
-                        </button>
-                    );
-                })}
-            </div>
-        </div>
-
-        {/* Divisor */}
-        <div
-            style={{
-                height: "0.5px",
-                background:
-                    "linear-gradient(90deg, transparent, rgba(255,255,255,0.08) 15%, rgba(255,255,255,0.08) 85%, transparent)",
-                marginBottom: 18,
-            }}
-        />
-
-        {/* Fila 2 — título + stats + botón */}
-        <div className="flex items-end justify-between gap-4 pb-5">
-
-            <div>
-                <h2
-                    style={{
-                        fontSize: 26,
-                        fontWeight: 500,
-                        color: "#ffffff",
-                        margin: "0 0 5px",
-                        letterSpacing: "-0.02em",
-                        lineHeight: 1.1,
-                    }}
-                >
-                    Tráfico de Piso
-                </h2>
-                <p style={{ fontSize: 13, color: "rgba(255,255,255,0.35)", margin: 0 }}>
-                    {viewMode === "tabla"
-                        ? "Control de prospectos que ingresan a la agencia. Doble clic para editar."
-                        : viewMode === "agenda"
-                        ? "Vista semanal de ingresos a piso."
-                        : "Estadísticas de tráfico de piso."}
-                </p>
-            </div>
-
-            <div className="flex items-center gap-3">
-                {/* Mini-stats dinámicos */}
-                <div
-                    className="flex items-stretch overflow-hidden rounded-[10px]"
-                    style={{ border: "0.5px solid rgba(255,255,255,0.1)" }}
-                >
-                    {[
-                        {
-                            n: registros.length,
-                            l: "Total",
-                        },
-                        {
-                            n: registros.filter(r => r.tiempo_compra === "Este mes").length,
-                            l: "Este mes",
-                        },
-                        {
-                            n: registros.filter(r => r.deja_auto_cuenta).length,
-                            l: "Auto cuenta",
-                        },
-                    ].map((s, i) => (
-                        <div
-                            key={i}
-                            className="text-center px-[16px] py-[9px]"
-                            style={{
-                                background: "rgba(255,255,255,0.04)",
-                                borderLeft: i > 0 ? "0.5px solid rgba(255,255,255,0.08)" : "none",
-                            }}
-                        >
-                            <div style={{ fontSize: 18, fontWeight: 500, color: "#fff", lineHeight: 1 }}>
-                                {s.n}
-                            </div>
-                            <div
-                                style={{
-                                    fontSize: 10,
-                                    color: "rgba(255,255,255,0.3)",
-                                    marginTop: 3,
-                                    textTransform: "uppercase",
-                                    letterSpacing: "0.06em",
-                                }}
-                            >
-                                {s.l}
-                            </div>
-                        </div>
-                    ))}
+            {/* ── Header claro ── */}
+            <div className="flex flex-col gap-4 lg:flex-row lg:items-end lg:justify-between">
+                <div>
+                    <h1 className="text-3xl font-semibold tracking-tight text-slate-900">Tráfico de piso</h1>
+                    <p className="mt-1 text-sm text-slate-500">
+                        {viewMode === "tabla"
+                            ? "Control de prospectos que ingresan a la agencia."
+                            : viewMode === "agenda"
+                            ? "Vista semanal de ingresos a piso."
+                            : "Estadísticas de tráfico de piso."}
+                    </p>
                 </div>
 
-                {/* Botón nuevo ingreso */}
-                <button
-                    type="button"
-                    onClick={openCreate}
-                    className="inline-flex items-center gap-2 whitespace-nowrap transition-all"
-                    style={{
-                        padding: "8px 16px",
-                        borderRadius: 9,
-                        fontSize: 13,
-                        fontWeight: 500,
-                        background: "rgba(255,255,255,0.1)",
-                        border: "0.5px solid rgba(255,255,255,0.18)",
-                        color: "#ffffff",
-                    }}
-                >
-                    <Plus size={14} />
-                    Nuevo ingreso
-                </button>
-            </div>
-        </div>
-    </div>
+                <div className="flex items-center gap-3">
+                    {/* selector de vista */}
+                    <div className="flex items-center gap-1 rounded-xl border border-slate-200 bg-slate-50 p-1">
+                        {[
+                            { key: "tabla", label: "Tabla", icon: TableProperties },
+                            { key: "agenda", label: "Agenda", icon: CalendarRange },
+                            { key: "graficas", label: "Gráficas", icon: BarChart2 },
+                        ].map(({ key, label, icon: Icon }) => {
+                            const active = viewMode === key;
+                            return (
+                                <button
+                                    key={key}
+                                    type="button"
+                                    onClick={() => setViewMode(key)}
+                                    className={[
+                                        "inline-flex items-center gap-1.5 rounded-lg px-3 py-1.5 text-sm font-medium transition",
+                                        active ? "bg-white text-slate-900 shadow-sm ring-1 ring-slate-200" : "text-slate-500 hover:text-slate-700",
+                                    ].join(" ")}
+                                >
+                                    <Icon className="h-3.5 w-3.5" />
+                                    {label}
+                                </button>
+                            );
+                        })}
+                    </div>
 
-    {/* Franja inferior decorativa */}
-    <div
-        style={{
-            height: 3,
-            background: "linear-gradient(90deg, #1a1a1a 0%, #2a2a2a 30%, #1f1f1f 60%, #111 100%)",
-        }}
-    />
-</div>
+                    <button
+                        type="button"
+                        onClick={openCreate}
+                        className="inline-flex items-center gap-2 rounded-xl bg-slate-900 px-4 py-2.5 text-sm font-semibold text-white shadow-sm hover:bg-slate-800 transition"
+                    >
+                        <Plus className="h-4 w-4" />
+                        Nuevo ingreso
+                    </button>
+                </div>
+            </div>
 
             {/* alertas */}
-            {error ? <div className="rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm font-bold text-red-700">{error}</div> : null}
-            {ok    ? <div className="rounded-lg border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm font-bold text-emerald-700">{ok}</div> : null}
+            {error ? <div className="rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm font-medium text-red-700">{error}</div> : null}
+            {ok    ? <div className="rounded-lg border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm font-medium text-emerald-700">{ok}</div> : null}
 
             {/* filtros */}
             {viewMode !== "graficas" && (
-                <div className="rounded-xl border border-black/10 bg-white p-4 shadow-sm">
-                    <div className="grid gap-3 md:grid-cols-12">
-                        <div className="md:col-span-5">
-                            <FilterBlock label="Búsqueda">
-                                <div className="flex items-center gap-2 rounded-lg border border-black bg-white px-3 py-2">
-                                    <Search className="h-4 w-4 text-black" />
-                                    <input value={filters.q} onChange={e => setFilters(p => ({ ...p, q: e.target.value }))} placeholder="Prospecto, teléfono, asesor…" className="w-full text-sm text-black outline-none placeholder:text-black/40" />
-                                    {filters.q ? <button type="button" onClick={() => setFilters(p => ({ ...p, q: "" }))} className="p-1 text-black hover:text-red-500"><X className="h-4 w-4" /></button> : null}
-                                </div>
-                            </FilterBlock>
+                <div className="rounded-xl border border-slate-200 bg-white p-4 shadow-sm">
+                    <div className="grid gap-4 md:grid-cols-12">
+                        <div className="md:col-span-4">
+                            <label className="mb-1.5 block text-xs font-medium text-slate-500">Búsqueda</label>
+                            <div className="flex items-center gap-2 rounded-lg border border-slate-200 bg-white px-3 py-2.5 focus-within:border-slate-400">
+                                <Search className="h-4 w-4 text-slate-400" />
+                                <input value={filters.q} onChange={e => setFilters(p => ({ ...p, q: e.target.value }))} placeholder="Prospecto, teléfono, asesor..." className="w-full text-sm text-slate-900 outline-none placeholder:text-slate-400" />
+                                {filters.q ? <button type="button" onClick={() => setFilters(p => ({ ...p, q: "" }))} className="text-slate-400 hover:text-slate-600"><X className="h-4 w-4" /></button> : null}
+                            </div>
                         </div>
                         <div className="md:col-span-2">
-                            <FilterBlock label="Tipo persona">
-                                <select value={filters.tipoPersona} onChange={e => setFilters(p => ({ ...p, tipoPersona: e.target.value }))} className="w-full rounded-lg border border-black bg-white px-3 py-2 text-sm text-black outline-none">
-                                    <option value="Todos">Todos</option>
-                                    {TIPOS_PERSONA.map(x => <option key={x} value={x}>{x}</option>)}
-                                </select>
-                            </FilterBlock>
+                            <label className="mb-1.5 block text-xs font-medium text-slate-500">Tipo persona</label>
+                            <select value={filters.tipoPersona} onChange={e => setFilters(p => ({ ...p, tipoPersona: e.target.value }))} className="w-full rounded-lg border border-slate-200 bg-white px-3 py-2.5 text-sm text-slate-900 outline-none focus:border-slate-400">
+                                <option value="Todos">Todos</option>
+                                {TIPOS_PERSONA.map(x => <option key={x} value={x}>{x}</option>)}
+                            </select>
                         </div>
                         <div className="md:col-span-2">
-                            <FilterBlock label="Tiempo compra">
-                                <select value={filters.tiempoCompra} onChange={e => setFilters(p => ({ ...p, tiempoCompra: e.target.value }))} className="w-full rounded-lg border border-black bg-white px-3 py-2 text-sm text-black outline-none">
-                                    <option value="Todos">Todos</option>
-                                    {TIEMPOS_COMPRA.map(x => <option key={x} value={x}>{x}</option>)}
-                                </select>
-                            </FilterBlock>
+                            <label className="mb-1.5 block text-xs font-medium text-slate-500">Tiempo compra</label>
+                            <select value={filters.tiempoCompra} onChange={e => setFilters(p => ({ ...p, tiempoCompra: e.target.value }))} className="w-full rounded-lg border border-slate-200 bg-white px-3 py-2.5 text-sm text-slate-900 outline-none focus:border-slate-400">
+                                <option value="Todos">Todos</option>
+                                {TIEMPOS_COMPRA.map(x => <option key={x} value={x}>{x}</option>)}
+                            </select>
                         </div>
-                        <div className="md:col-span-3">
-                            <FilterBlock label="Acciones">
-                                <div className="grid grid-cols-2 gap-2">
-                                    <button type="button" onClick={setHoy} className="inline-flex items-center justify-center gap-2 rounded-lg bg-emerald-600 px-3 py-2 text-sm font-semibold text-white hover:bg-emerald-700"><CalendarDays className="h-4 w-4" />Hoy</button>
-                                    <button type="button" onClick={resetFilters} className="inline-flex items-center justify-center gap-2 rounded-lg border border-black bg-white px-3 py-2 text-sm font-semibold text-black hover:bg-black hover:text-white transition"><X className="h-4 w-4" />Limpiar</button>
-                                </div>
-                            </FilterBlock>
+                        <div className="md:col-span-2">
+                            <label className="mb-1.5 block text-xs font-medium text-slate-500">Desde</label>
+                            <input type="date" value={filters.rangoDesde} onChange={e => setFilters(p => ({ ...p, rangoDesde: e.target.value }))} className="w-full rounded-lg border border-slate-200 bg-white px-3 py-2.5 text-sm text-slate-900 outline-none focus:border-slate-400" />
                         </div>
-                        <div className="md:col-span-6">
-                            <FilterBlock label="Desde">
-                                <input type="date" value={filters.rangoDesde} onChange={e => setFilters(p => ({ ...p, rangoDesde: e.target.value }))} className="w-full rounded-lg border border-black bg-white px-3 py-2 text-sm text-black outline-none" />
-                            </FilterBlock>
-                        </div>
-                        <div className="md:col-span-6">
-                            <FilterBlock label="Hasta">
-                                <input type="date" value={filters.rangoHasta} onChange={e => setFilters(p => ({ ...p, rangoHasta: e.target.value }))} className="w-full rounded-lg border border-black bg-white px-3 py-2 text-sm text-black outline-none" />
-                            </FilterBlock>
+                        <div className="md:col-span-2">
+                            <label className="mb-1.5 block text-xs font-medium text-slate-500">Hasta</label>
+                            <input type="date" value={filters.rangoHasta} onChange={e => setFilters(p => ({ ...p, rangoHasta: e.target.value }))} className="w-full rounded-lg border border-slate-200 bg-white px-3 py-2.5 text-sm text-slate-900 outline-none focus:border-slate-400" />
                         </div>
                     </div>
+                    <div className="mt-3 flex items-center justify-end gap-2">
+                        <button type="button" onClick={setHoy} className="inline-flex items-center gap-2 rounded-lg bg-slate-900 px-4 py-2 text-sm font-medium text-white hover:bg-slate-800 transition">
+                            <CalendarDays className="h-4 w-4" />Hoy
+                        </button>
+                        <button type="button" onClick={resetFilters} className="inline-flex items-center gap-2 rounded-lg border border-slate-200 bg-white px-4 py-2 text-sm font-medium text-slate-600 hover:bg-slate-50 transition">
+                            <X className="h-4 w-4" />Limpiar
+                        </button>
+                    </div>
+                </div>
+            )}
+
+            {/* stats — estilo Citas */}
+            {viewMode !== "graficas" && (
+                <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 lg:grid-cols-5">
+                    {stats.map((s) => (
+                        <div key={s.key} className="rounded-xl border border-slate-200 bg-white p-4 shadow-sm">
+                            <div className={["mb-3 inline-flex h-10 w-10 items-center justify-center rounded-full", s.bg, s.color].join(" ")}>
+                                <s.icon className="h-5 w-5" />
+                            </div>
+                            <div className="text-2xl font-semibold text-slate-900">{s.value}</div>
+                            <div className="mt-0.5 text-xs font-medium text-slate-500">{s.label}</div>
+                            {s.sub ? <div className="mt-0.5 text-[11px] text-slate-400">{s.sub}</div> : null}
+                        </div>
+                    ))}
                 </div>
             )}
 
             {/* ── VISTA TABLA ── */}
             {viewMode === "tabla" && (
                 <>
-                    <div className="hidden overflow-hidden rounded-xl shadow-sm lg:block">
-                        <div className="overflow-auto">
+                    <div className="overflow-hidden rounded-xl border border-slate-200 bg-white shadow-sm">
+                        <div className="hidden overflow-auto lg:block">
                             <table className="min-w-[1200px] w-full text-left text-sm">
-                                <thead className="border border-black bg-black text-xs text-white">
+                                <thead className="border-b border-slate-200 bg-slate-50">
                                     <tr>
                                         <th className="px-4 py-3"><SortButton label="Fecha" sortKey="creado_en" sort={sort} onClick={toggleSort} /></th>
                                         <th className="px-4 py-3"><SortButton label="Dealer" sortKey="agencia" sort={sort} onClick={toggleSort} /></th>
                                         <th className="px-4 py-3"><SortButton label="Prospecto" sortKey="nombre_prospecto" sort={sort} onClick={toggleSort} /></th>
-                                        <th className="px-4 py-3">Teléfono</th>
+                                        <th className="px-4 py-3 text-xs font-semibold text-slate-500">Teléfono</th>
                                         <th className="px-4 py-3"><SortButton label="Asesor" sortKey="asesor_ventas" sort={sort} onClick={toggleSort} /></th>
-                                        <th className="px-4 py-3">Ingreso</th>
-                                        <th className="px-4 py-3">Compra</th>
+                                        <th className="px-4 py-3 text-xs font-semibold text-slate-500">Ingreso</th>
+                                        <th className="px-4 py-3 text-xs font-semibold text-slate-500">Compra</th>
                                         <th className="px-4 py-3"><SortButton label="Presupuesto" sortKey="presupuesto_estimado" sort={sort} onClick={toggleSort} /></th>
-                                        <th className="px-4 py-3">Auto cuenta</th>
-                                        <th className="px-4 py-3 text-right">Acciones</th>
+                                        <th className="px-4 py-3 text-xs font-semibold text-slate-500">Auto cuenta</th>
+                                        <th className="px-4 py-3 text-right text-xs font-semibold text-slate-500">Acciones</th>
                                     </tr>
                                 </thead>
-                                <tbody className="divide-y divide-black/10 bg-white">
+                                <tbody className="divide-y divide-slate-100">
                                     {loadingList ? Array.from({ length: 8 }).map((_, i) => <SkeletonRow key={i} />) : sorted.length === 0 ? (
-                                        <tr><td colSpan={10} className="px-4 py-10 text-center text-black">No hay registros con esos filtros.</td></tr>
-                                    ) : sorted.map(item => (
+                                        <tr><td colSpan={10} className="px-4 py-10 text-center text-slate-500">No hay registros con esos filtros.</td></tr>
+                                    ) : paginated.map(item => (
                                         <tr key={item.id_trafico} onDoubleClick={() => openEdit(item)} onContextMenu={e => onRowContextMenu(e, item)} className="cursor-pointer transition hover:bg-slate-50">
-                                            <td className="px-4 py-3 text-black">{dateTime(item.creado_en)}</td>
-                                            <td className="px-4 py-3 text-black"><div className="max-w-[160px] truncate font-extrabold">{item.agencia || "—"}</div></td>
-                                            <td className="px-4 py-3 text-black"><div className="max-w-[240px] truncate font-extrabold">{item.nombre_prospecto || "—"}</div>{item.email ? <div className="mt-1 max-w-[240px] truncate text-xs text-slate-500">{item.email}</div> : null}</td>
-                                            <td className="px-4 py-3 font-semibold text-black">{item.telefono || "—"}</td>
-                                            <td className="px-4 py-3 text-black"><div className="max-w-[230px] truncate font-semibold">{item.asesor_ventas || "—"}</div></td>
-                                            <td className="px-4 py-3 text-black"><div className="max-w-[210px] font-semibold">{item.motivo_ingreso || "—"}</div><div className="mt-1 text-xs font-bold text-slate-500">{item.tipo_persona || "—"}</div></td>
-                                            <td className="px-4 py-3 text-black"><div className="font-semibold">{item.tiempo_compra || "—"}</div><div className="mt-1 max-w-[220px] truncate text-xs text-slate-500">Auto: {item.auto_suenos || "—"}</div><div className="mt-1 max-w-[220px] truncate text-xs text-slate-500">{item.forma_capitalizacion || "—"}</div></td>
-                                            <td className="px-4 py-3 text-black"><div className="font-extrabold">{money(item.presupuesto_estimado)}</div><div className="mt-1 text-xs text-slate-500">Eng. {money(item.enganche_presupuestado)}</div></td>
+                                            <td className="px-4 py-3 text-slate-500">{dateTime(item.creado_en)}</td>
+                                            <td className="px-4 py-3 text-slate-700"><div className="max-w-[120px] truncate font-medium">{item.agencia || "—"}</div></td>
                                             <td className="px-4 py-3">
-                                                <span className={["inline-flex items-center rounded-full border px-3 py-1 text-xs font-extrabold", item.deja_auto_cuenta ? "border-emerald-300 bg-emerald-100 text-emerald-800" : "border-red-300 bg-red-100 text-red-800"].join(" ")}>{item.deja_auto_cuenta ? "Sí" : "No"}</span>
-                                                {item.deja_auto_cuenta && item.modelo_auto_cuenta ? <div className="mt-1 max-w-[160px] truncate text-xs text-slate-500">{item.modelo_auto_cuenta}</div> : null}
+                                                <div className="flex items-center gap-3">
+                                                    <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-slate-100 text-xs font-semibold text-slate-600">
+                                                        {getInitials(item.nombre_prospecto)}
+                                                    </div>
+                                                    <div className="min-w-0">
+                                                        <div className="max-w-[200px] truncate font-semibold text-slate-900">{item.nombre_prospecto || "—"}</div>
+                                                        {item.email ? <div className="max-w-[200px] truncate text-xs text-slate-400">{item.email}</div> : null}
+                                                    </div>
+                                                </div>
+                                            </td>
+                                            <td className="px-4 py-3 font-medium text-slate-700">{item.telefono || "—"}</td>
+                                            <td className="px-4 py-3 text-slate-700"><div className="max-w-[200px] truncate font-medium">{item.asesor_ventas || "—"}</div></td>
+                                            <td className="px-4 py-3 text-slate-700"><div className="max-w-[200px] font-medium">{item.motivo_ingreso || "—"}</div><div className="mt-1 text-xs text-slate-400">{item.tipo_persona || "—"}</div></td>
+                                            <td className="px-4 py-3 text-slate-700"><div className="font-medium">{item.tiempo_compra || "—"}</div><div className="mt-1 max-w-[200px] truncate text-xs text-slate-400">Auto: {item.auto_suenos || "—"}</div><div className="mt-1 max-w-[200px] truncate text-xs text-slate-400">{item.forma_capitalizacion || "—"}</div></td>
+                                            <td className="px-4 py-3 text-slate-900"><div className="font-semibold">{money(item.presupuesto_estimado)}</div><div className="mt-1 text-xs text-slate-400">Eng. {money(item.enganche_presupuestado)}</div></td>
+                                            <td className="px-4 py-3">
+                                                <span className={["inline-flex items-center rounded-full border px-2.5 py-1 text-xs font-semibold", item.deja_auto_cuenta ? "border-emerald-100 bg-emerald-50 text-emerald-700" : "border-rose-100 bg-rose-50 text-rose-700"].join(" ")}>{item.deja_auto_cuenta ? "Sí" : "No"}</span>
+                                                {item.deja_auto_cuenta && item.modelo_auto_cuenta ? <div className="mt-1 max-w-[140px] truncate text-xs text-slate-400">{item.modelo_auto_cuenta}</div> : null}
                                             </td>
                                             <td className="px-4 py-3 text-right" onClick={e => e.stopPropagation()}>
-                                                <div className="flex justify-end gap-2">
-                                                    <button type="button" onClick={() => openEdit(item)} className="rounded-lg border border-black bg-white px-3 py-2 text-xs font-extrabold text-black hover:bg-black hover:text-white transition">Editar</button>
-                                                    <button type="button" onClick={() => eliminar(item)} className="rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-xs font-extrabold text-red-600 hover:bg-red-100">Eliminar</button>
+                                                <div className="flex justify-end gap-1.5">
+                                                    <button type="button" onClick={() => openEdit(item)} title="Editar" className="inline-flex h-8 w-8 items-center justify-center rounded-lg border border-slate-200 text-slate-500 hover:bg-slate-50 hover:text-slate-900 transition">
+                                                        <Pencil className="h-4 w-4" />
+                                                    </button>
+                                                    <button type="button" onClick={(e) => onMenuClick(e, item)} title="Más acciones" className="inline-flex h-8 w-8 items-center justify-center rounded-lg border border-slate-200 text-slate-500 hover:bg-slate-50 hover:text-slate-900 transition">
+                                                        <MoreVertical className="h-4 w-4" />
+                                                    </button>
                                                 </div>
                                             </td>
                                         </tr>
@@ -1138,27 +1034,70 @@ export default function TraficoPiso() {
                                 </tbody>
                             </table>
                         </div>
+
+                        {/* paginación */}
+                        {!loadingList && sorted.length > 0 ? (
+                            <div className="hidden flex-col gap-3 border-t border-slate-100 px-4 py-3 sm:flex-row sm:items-center sm:justify-between lg:flex">
+                                <span className="text-xs font-medium text-slate-500">
+                                    Mostrando {pageStart + 1}–{Math.min(pageStart + PAGE_SIZE, sorted.length)} de {sorted.length} registros
+                                </span>
+                                <div className="flex items-center gap-1">
+                                    <button type="button" disabled={currentPage <= 1} onClick={() => setPage(p => Math.max(1, p - 1))} className="inline-flex h-8 w-8 items-center justify-center rounded-lg border border-slate-200 text-slate-500 hover:bg-slate-50 disabled:opacity-40 disabled:hover:bg-transparent">
+                                        <ChevronLeft className="h-4 w-4" />
+                                    </button>
+                                    {pageItems.map((p, idx) => p === "..." ? (
+                                        <span key={`e${idx}`} className="px-1.5 text-xs text-slate-400">…</span>
+                                    ) : (
+                                        <button key={p} type="button" onClick={() => setPage(p)} className={["inline-flex h-8 w-8 items-center justify-center rounded-lg text-xs font-semibold transition", p === currentPage ? "bg-slate-900 text-white" : "text-slate-600 hover:bg-slate-50"].join(" ")}>
+                                            {p}
+                                        </button>
+                                    ))}
+                                    <button type="button" disabled={currentPage >= totalPages} onClick={() => setPage(p => Math.min(totalPages, p + 1))} className="inline-flex h-8 w-8 items-center justify-center rounded-lg border border-slate-200 text-slate-500 hover:bg-slate-50 disabled:opacity-40 disabled:hover:bg-transparent">
+                                        <ChevronRight className="h-4 w-4" />
+                                    </button>
+                                </div>
+                            </div>
+                        ) : null}
                     </div>
 
                     <div className="grid gap-3 lg:hidden">
                         {loadingList ? (
-                            <div className="rounded-xl border border-black/10 bg-white p-6 shadow-sm"><div className="flex items-center gap-2 font-bold text-black"><Loader2 className="h-5 w-5 animate-spin" />Cargando...</div></div>
+                            <div className="rounded-xl border border-slate-200 bg-white p-6 shadow-sm"><div className="flex items-center gap-2 font-medium text-slate-600"><Loader2 className="h-5 w-5 animate-spin" />Cargando...</div></div>
                         ) : sorted.length === 0 ? (
-                            <div className="rounded-xl border border-black/10 bg-white p-10 text-center text-slate-600">No hay registros con esos filtros.</div>
-                        ) : sorted.map(item => (
-                            <button key={item.id_trafico} type="button" onClick={() => openEdit(item)} className="rounded-xl border border-black/10 bg-white p-4 text-left shadow-sm hover:bg-slate-50 transition">
-                                <div className="flex items-start justify-between gap-3">
-                                    <div className="min-w-0">
-                                        <div className="truncate text-sm font-extrabold text-black">{item.nombre_prospecto || "—"}</div>
-                                        <div className="mt-1 text-xs text-slate-500">{item.agencia || "—"} • {item.telefono || "—"} • {item.tipo_persona || "—"}</div>
-                                        <div className="mt-1 text-xs text-slate-500">{dateTime(item.creado_en)}</div>
-                                        <div className="mt-1 text-xs text-slate-500">Asesor: {item.asesor_ventas || "—"}</div>
+                            <div className="rounded-xl border border-slate-200 bg-white p-10 text-center text-slate-500">No hay registros con esos filtros.</div>
+                        ) : (
+                            <>
+                                {paginated.map(item => (
+                                    <button key={item.id_trafico} type="button" onClick={() => openEdit(item)} className="rounded-xl border border-slate-200 bg-white p-4 text-left shadow-sm hover:bg-slate-50 transition">
+                                        <div className="flex items-start justify-between gap-3">
+                                            <div className="flex min-w-0 items-center gap-3">
+                                                <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-slate-100 text-xs font-semibold text-slate-600">
+                                                    {getInitials(item.nombre_prospecto)}
+                                                </div>
+                                                <div className="min-w-0">
+                                                    <div className="truncate text-sm font-semibold text-slate-900">{item.nombre_prospecto || "—"}</div>
+                                                    <div className="mt-0.5 text-xs text-slate-400">{item.agencia || "—"} • {item.telefono || "—"}</div>
+                                                </div>
+                                            </div>
+                                            <span className={["inline-flex shrink-0 items-center rounded-full border px-2.5 py-1 text-xs font-semibold", item.deja_auto_cuenta ? "border-emerald-100 bg-emerald-50 text-emerald-700" : "border-rose-100 bg-rose-50 text-rose-700"].join(" ")}>{item.deja_auto_cuenta ? "Sí" : "No"}</span>
+                                        </div>
+                                        <div className="mt-2 text-xs text-slate-400">{dateTime(item.creado_en)} • Asesor: {item.asesor_ventas || "—"}</div>
+                                        <div className="mt-1 text-sm text-slate-600 line-clamp-2">{item.motivo_ingreso || "—"} • {item.tiempo_compra || "—"} • {item.auto_suenos || "—"} • {money(item.presupuesto_estimado)}</div>
+                                    </button>
+                                ))}
+                                <div className="flex items-center justify-between rounded-xl border border-slate-200 bg-white px-4 py-3 shadow-sm">
+                                    <span className="text-xs font-medium text-slate-500">{currentPage} / {totalPages}</span>
+                                    <div className="flex items-center gap-1">
+                                        <button type="button" disabled={currentPage <= 1} onClick={() => setPage(p => Math.max(1, p - 1))} className="inline-flex h-8 w-8 items-center justify-center rounded-lg border border-slate-200 text-slate-500 disabled:opacity-40">
+                                            <ChevronLeft className="h-4 w-4" />
+                                        </button>
+                                        <button type="button" disabled={currentPage >= totalPages} onClick={() => setPage(p => Math.min(totalPages, p + 1))} className="inline-flex h-8 w-8 items-center justify-center rounded-lg border border-slate-200 text-slate-500 disabled:opacity-40">
+                                            <ChevronRight className="h-4 w-4" />
+                                        </button>
                                     </div>
-                                    <span className={["inline-flex items-center rounded-full border px-3 py-1 text-xs font-extrabold", item.deja_auto_cuenta ? "border-emerald-300 bg-emerald-100 text-emerald-800" : "border-red-300 bg-red-100 text-red-800"].join(" ")}>Auto: {item.deja_auto_cuenta ? "Sí" : "No"}</span>
                                 </div>
-                                <div className="mt-2 text-sm text-slate-600 line-clamp-2">{item.motivo_ingreso || "—"} • {item.tiempo_compra || "—"} • {item.auto_suenos || "—"} • {money(item.presupuesto_estimado)}</div>
-                            </button>
-                        ))}
+                            </>
+                        )}
                     </div>
                 </>
             )}
