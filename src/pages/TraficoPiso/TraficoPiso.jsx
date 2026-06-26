@@ -278,38 +278,52 @@ function ContextMenu({ ctxMenu, onDelete, onClose }) {
 
 // ─── vista agenda ─────────────────────────────────────────────────────────────
 function AgendaCard({ item, onEdit, onContext }) {
+    const tiempoColor =
+        item.tiempo_compra === "Este mes"
+            ? { bg: "bg-emerald-50", text: "text-emerald-700", border: "border-emerald-200" }
+            : item.tiempo_compra === "De 1 a 3 meses"
+            ? { bg: "bg-amber-50", text: "text-amber-700", border: "border-amber-200" }
+            : { bg: "bg-slate-50", text: "text-slate-500", border: "border-slate-200" };
+
     return (
         <button
             type="button"
             onClick={() => onEdit(item)}
             onContextMenu={e => onContext(e, item)}
-            className="w-full rounded-lg border border-black/10 bg-white p-3 text-left shadow-sm transition hover:-translate-y-[1px] hover:shadow-md hover:border-black/20"
+            className="w-full rounded-xl border border-slate-200 bg-white p-3 text-left shadow-sm transition hover:-translate-y-[1px] hover:shadow-md hover:border-slate-300"
             title="Click para editar. Click derecho para eliminar."
         >
-            <div className="mb-2 flex items-center justify-between gap-2">
-                <span className="inline-flex items-center gap-1 rounded-full bg-black px-2 py-0.5 text-[9px] font-extrabold text-white">
-                    <Clock className="h-2.5 w-2.5" />
-                    {timeShort(item.creado_en) || "—"}
-                </span>
+            {/* badge tiempo compra arriba */}
+            {item.tiempo_compra && (
                 <span className={[
-                    "inline-flex shrink-0 rounded-full border px-2 py-0.5 text-[9px] font-extrabold",
-                    item.tiempo_compra === "Este mes"
-                        ? "border-emerald-200 bg-emerald-50 text-emerald-700"
-                        : item.tiempo_compra === "De 1 a 3 meses"
-                        ? "border-amber-200 bg-amber-50 text-amber-700"
-                        : "border-slate-200 bg-slate-50 text-slate-600"
+                    "mb-2 inline-flex items-center rounded-full border px-2 py-0.5 text-[9px] font-semibold",
+                    tiempoColor.bg, tiempoColor.text, tiempoColor.border
                 ].join(" ")}>
-                    {item.tiempo_compra || "—"}
+                    {item.tiempo_compra}
                 </span>
+            )}
+
+            {/* nombre */}
+            <div className="text-[12px] font-bold leading-snug text-slate-900 line-clamp-2">
+                {item.nombre_prospecto || "—"}
             </div>
-            <div className="text-[11px] font-extrabold leading-snug text-black line-clamp-2">{item.nombre_prospecto || "—"}</div>
-            <div className="mt-1.5 flex items-center gap-1.5 text-[10px] text-slate-500">
+
+            {/* auto */}
+            <div className="mt-2 flex items-center gap-1.5 text-[10px] text-slate-500">
                 <CarFront className="h-3 w-3 shrink-0 text-slate-400" />
                 <span className="line-clamp-1">{item.auto_suenos || "—"}</span>
             </div>
+
+            {/* teléfono */}
             <div className="mt-1 flex items-center gap-1.5 text-[10px] text-slate-500">
                 <Phone className="h-3 w-3 shrink-0 text-slate-400" />
                 <span>{item.telefono || "—"}</span>
+            </div>
+
+            {/* hora — abajo */}
+            <div className="mt-2 flex items-center gap-1 text-[9px] text-slate-400">
+                <Clock className="h-2.5 w-2.5" />
+                {timeShort(item.creado_en) || "—"}
             </div>
         </button>
     );
@@ -350,38 +364,37 @@ function AgendaWeekView({ rows, loading, currentWeekDate, setCurrentWeekDate, on
     return (
         <div className="hidden lg:block">
             {/* nav semana */}
-            <div className="mb-3 flex flex-col gap-3 rounded-xl border border-black bg-black p-3 shadow-sm xl:flex-row xl:items-center xl:justify-between">
-                <div>
-                    <div className="text-[10px] font-bold uppercase tracking-widest text-white/40">Semana</div>
-                    <div className="truncate text-sm font-black text-white">{formatWeekTitle(weekStart, weekEnd)}</div>
-                </div>
-                <div className="flex items-center gap-2">
-                    <button
-                        type="button"
-                        onClick={() => setCurrentWeekDate(d => addDays(d, -7))}
-                        className="inline-flex h-9 w-9 items-center justify-center rounded-lg border border-white/20 bg-white/10 text-white hover:bg-white/20 transition"
-                        aria-label="Semana anterior"
-                    >
-                        <ChevronLeft className="h-4 w-4" />
-                    </button>
-                    <button
-                        type="button"
-                        onClick={() => setCurrentWeekDate(new Date())}
-                        className="inline-flex items-center justify-center gap-1 rounded-lg border border-white/20 bg-white/10 px-4 py-2 text-xs font-black text-white hover:bg-white hover:text-black transition"
-                    >
-                        Hoy
-                    </button>
-                    <button
-                        type="button"
-                        onClick={() => setCurrentWeekDate(d => addDays(d, 7))}
-                        className="inline-flex h-9 w-9 items-center justify-center rounded-lg border border-white/20 bg-white/10 text-white hover:bg-white/20 transition"
-                        aria-label="Semana siguiente"
-                    >
-                        <ChevronRight className="h-4 w-4" />
-                    </button>
-                </div>
-            </div>
-
+            <div className="mb-3 flex flex-col gap-3 rounded-xl border border-slate-200 bg-white p-3 shadow-sm xl:flex-row xl:items-center xl:justify-between">
+    <div>
+        <div className="text-[10px] font-bold uppercase tracking-widest text-slate-400">Semana</div>
+        <div className="truncate text-sm font-bold text-slate-900">{formatWeekTitle(weekStart, weekEnd)}</div>
+    </div>
+    <div className="flex items-center gap-2">
+        <button
+            type="button"
+            onClick={() => setCurrentWeekDate(d => addDays(d, -7))}
+            className="inline-flex h-9 w-9 items-center justify-center rounded-lg border border-slate-200 bg-white text-slate-600 hover:bg-slate-50 transition"
+            aria-label="Semana anterior"
+        >
+            <ChevronLeft className="h-4 w-4" />
+        </button>
+        <button
+            type="button"
+            onClick={() => setCurrentWeekDate(new Date())}
+            className="inline-flex items-center justify-center gap-1 rounded-lg border border-slate-200 bg-white px-4 py-2 text-xs font-semibold text-slate-700 hover:bg-slate-50 transition"
+        >
+            Hoy
+        </button>
+        <button
+            type="button"
+            onClick={() => setCurrentWeekDate(d => addDays(d, 7))}
+            className="inline-flex h-9 w-9 items-center justify-center rounded-lg border border-slate-200 bg-white text-slate-600 hover:bg-slate-50 transition"
+            aria-label="Semana siguiente"
+        >
+            <ChevronRight className="h-4 w-4" />
+        </button>
+    </div>
+</div>
             {/* agenda por columnas de día — cada columna crece libremente, sin recortes */}
             <div className="overflow-hidden rounded-xl border border-black/15 bg-white shadow-sm">
                 <div className="overflow-x-auto">
@@ -406,32 +419,32 @@ function AgendaWeekView({ rows, loading, currentWeekDate, setCurrentWeekDate, on
                                 const items = rowsByDay.get(dayKey) || [];
                                 return (
                                     <div key={dayKey} className="flex flex-col border-r border-black/8 last:border-r-0">
-                                        <div className="sticky top-0 z-10 flex items-center justify-between gap-2 border-b border-black bg-black px-3 py-3">
-                                            <div>
-                                                <div className="text-[10px] font-bold uppercase tracking-widest text-white/40">{weekdayShortEs(day)}</div>
-                                                <div className="mt-1 flex items-center gap-2">
-                                                    <span className={[
-                                                        "inline-flex h-7 w-7 items-center justify-center rounded-full text-sm font-black",
-                                                        isToday ? "bg-white text-black" : "text-white"
-                                                    ].join(" ")}>
-                                                        {day.getDate()}
-                                                    </span>
-                                                    {items.length > 0 && (
-                                                        <span className="text-[9px] font-bold text-white/30">
-                                                            {items.length} ingreso{items.length !== 1 ? "s" : ""}
-                                                        </span>
-                                                    )}
-                                                </div>
-                                            </div>
-                                            <button
-                                                type="button"
-                                                onClick={onOpenCreate}
-                                                className="inline-flex h-7 w-7 shrink-0 items-center justify-center rounded-md border border-white/20 bg-white/10 text-white hover:bg-white/20 transition"
-                                                title="Nuevo ingreso"
-                                            >
-                                                <Plus className="h-3.5 w-3.5" />
-                                            </button>
-                                        </div>
+                                        <div className="sticky top-0 z-10 flex items-center justify-between gap-2 border-b border-slate-200 bg-slate-50 px-3 py-3">
+    <div>
+        <div className="text-[10px] font-semibold uppercase tracking-widest text-slate-400">{weekdayShortEs(day)}</div>
+        <div className="mt-1 flex items-center gap-2">
+            <span className={[
+                "inline-flex h-7 w-7 items-center justify-center rounded-full text-sm font-bold",
+                isToday ? "bg-slate-900 text-white" : "text-slate-700"
+            ].join(" ")}>
+                {day.getDate()}
+            </span>
+            {items.length > 0 && (
+                <span className="text-[9px] font-semibold text-slate-400">
+                    {items.length} ingreso{items.length !== 1 ? "s" : ""}
+                </span>
+            )}
+        </div>
+    </div>
+    <button
+        type="button"
+        onClick={onOpenCreate}
+        className="inline-flex h-7 w-7 shrink-0 items-center justify-center rounded-md border border-slate-200 bg-white text-slate-500 hover:bg-slate-100 hover:text-slate-700 transition"
+        title="Nuevo ingreso"
+    >
+        <Plus className="h-3.5 w-3.5" />
+    </button>
+</div>
                                         <div className="flex-1 space-y-2 bg-white p-2">
                                             {items.length === 0 ? (
                                                 <div className="rounded-lg border border-dashed border-black/10 px-2 py-8 text-center text-[10px] font-semibold text-slate-300">
@@ -452,14 +465,14 @@ function AgendaWeekView({ rows, loading, currentWeekDate, setCurrentWeekDate, on
             {/* fuera de semana */}
             {!loading && outOfWeek.length ? (
                 <div className="mt-3 overflow-hidden rounded-xl border border-black/15 bg-white shadow-sm">
-                    <div className="border-b border-black bg-black px-4 py-2.5">
-                        <span className="text-[10px] font-black uppercase tracking-widest text-white/60">
-                            Ingresos fuera de esta semana
-                        </span>
-                        <span className="ml-2 inline-flex h-5 w-5 items-center justify-center rounded-full bg-white/10 text-[9px] font-black text-white">
-                            {outOfWeek.length}
-                        </span>
-                    </div>
+                    <div className="border-b border-slate-200 bg-slate-50 px-4 py-2.5 flex items-center gap-2">
+    <span className="text-[10px] font-semibold uppercase tracking-widest text-slate-500">
+        Ingresos fuera de esta semana
+    </span>
+    <span className="inline-flex h-5 w-5 items-center justify-center rounded-full bg-slate-200 text-[9px] font-bold text-slate-600">
+        {outOfWeek.length}
+    </span>
+</div>
                     <div className="grid gap-2 p-3 md:grid-cols-3 xl:grid-cols-4">
                         {outOfWeek.map(item => (
                             <AgendaCard key={item.id_trafico} item={item} onEdit={onEdit} onContext={onContext} />
@@ -509,9 +522,9 @@ function AgendaMobileList({ rows, loading, onEdit, onContext }) {
                 return (
                     <section key={key} className="overflow-hidden rounded-xl border border-black/15 bg-white shadow-sm">
                         {/* encabezado de fecha — NEGRO */}
-                        <div className="border-b border-black bg-black px-4 py-3">
-                            <h3 className="text-xs font-black uppercase tracking-widest text-white/80">{title}</h3>
-                        </div>
+                        <div className="border-b border-slate-200 bg-slate-50 px-4 py-3">
+    <h3 className="text-xs font-semibold uppercase tracking-widest text-slate-500">{title}</h3>
+</div>
                         <div className="grid gap-2 p-3 sm:grid-cols-2">
                             {items.map(item => (
                                 <AgendaCard key={item.id_trafico} item={item} onEdit={onEdit} onContext={onContext} />

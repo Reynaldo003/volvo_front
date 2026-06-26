@@ -159,7 +159,7 @@ function StatusButton({ row, loading, onToggle, compact = false }) {
             onClick={(e) => { e.stopPropagation(); onToggle?.(row); }}
             className={[
                 "inline-flex shrink-0 items-center justify-center gap-1.5 rounded-full font-semibold transition-all duration-150 active:scale-95",
-                compact ? "px-2.5 py-1 text-[11px]" : "px-3 py-1.5 text-xs",
+                compact ? "px-2 py-0.5 text-[10px]" : "px-3 py-1.5 text-xs",
                 entregada
                     ? "bg-emerald-50 text-emerald-700 border border-emerald-200 hover:bg-emerald-100"
                     : "bg-amber-50 text-amber-700 border border-amber-200 hover:bg-amber-100",
@@ -194,32 +194,88 @@ function ContextMenu({ ctxMenu, onDelete, onClose }) {
 function EntregaAgendaCard({ row, onEdit, onContext, onToggleEntrega, updatingInline }) {
     const entregada = entregaFisicaActiva(row?.entrega_reportada);
     const isUpdating = !!updatingInline[row.id];
+
+    const cardColor = entregada
+        ? { border: "border-emerald-300", bg: "bg-emerald-50", bar: "bg-emerald-500", badge: "bg-emerald-100 text-emerald-700 border-emerald-200" }
+        : { border: "border-amber-300",   bg: "bg-amber-50",   bar: "bg-amber-500",   badge: "bg-amber-100 text-amber-700 border-amber-200" };
+
     return (
-        <button type="button" onClick={() => onEdit(row)} onContextMenu={(e) => onContext(e, row)}
+        <button
+            type="button"
+            onClick={() => onEdit(row)}
+            onContextMenu={(e) => onContext(e, row)}
             className={[
-                "relative w-full overflow-hidden rounded-xl border text-left shadow-sm transition-all duration-150 hover:shadow-md hover:-translate-y-0.5 active:scale-[0.99] p-3",
-                entregada ? "border-emerald-200 bg-emerald-50" : "border-gray-200 bg-white",
-            ].join(" ")}>
-            {entregada && <span className="absolute left-0 top-0 bottom-0 w-1 rounded-l-xl bg-emerald-500" />}
-            <div className={entregada ? "pl-2" : ""}>
-                <div className="flex items-start justify-between gap-2 mb-2">
-                    <div className="min-w-0">
-                        <div className="text-[10px] font-medium text-gray-400 flex items-center gap-1">
-                            <CalendarDays className="h-3 w-3" />
+                "relative w-full overflow-hidden rounded-xl border-2 text-left shadow-sm transition-all duration-150 hover:shadow-md hover:-translate-y-0.5 active:scale-[0.99] p-0",
+                cardColor.border, cardColor.bg,
+            ].join(" ")}
+        >
+            {/* Barra lateral de color */}
+            <span className={["absolute left-0 top-0 bottom-0 w-1.5 rounded-l-xl", cardColor.bar].join(" ")} />
+
+            <div className="pl-4 pr-3 pt-3 pb-3">
+                {/* Fila top: hora + badge estado */}
+                <div className="flex items-center justify-between gap-2 mb-2">
+                    <div className="flex items-center gap-1.5">
+                        <span className="text-[13px] font-bold text-gray-900 tabular-nums">
                             {formatCardTime(row.fecha_hora_entrega)}
-                            <span className="mx-0.5">·</span>
-                            <span className="truncate">{row.agencia || "Sin dealer"}</span>
-                        </div>
-                        <div className="mt-0.5 truncate text-xs font-semibold text-gray-900">
-                            {row?.cliente?.nombre || "Sin nombre"}
-                        </div>
+                        </span>
+                        <span className="text-[10px] text-gray-400 font-medium">
+                            {row.fecha_hora_entrega
+                                ? new Date(row.fecha_hora_entrega).toLocaleDateString("es-MX", { day:"2-digit", month:"2-digit" })
+                                : "—"}
+                        </span>
                     </div>
                     <StatusButton row={row} loading={isUpdating} onToggle={onToggleEntrega} compact />
                 </div>
-                <div className="grid gap-0.5 text-[10px] text-gray-500">
-                    <div className="flex items-center gap-1"><CarFront className="h-3 w-3 shrink-0" /><span className="truncate">{row.modelo_version || "—"}</span></div>
-                    <div className="flex items-center gap-1"><Hash className="h-3 w-3 shrink-0" /><span className="truncate font-mono">{row.vin || "—"}</span></div>
-                    <div className="flex items-center gap-1"><UserStar className="h-3 w-3 shrink-0" /><span className="truncate">{row.asesor_ventas || "—"}</span></div>
+
+                {/* Nombre cliente */}
+                <div className="text-sm font-bold text-gray-900 leading-tight truncate mb-2 uppercase tracking-wide">
+                    {row?.cliente?.nombre || "Sin nombre"}
+                </div>
+
+                {/* Datos secundarios */}
+                <div className="grid gap-1 text-[11px] text-gray-600">
+                    {row?.cliente?.telefono && (
+                        <div className="flex items-center gap-1.5">
+                            <Phone className="h-3 w-3 shrink-0 text-gray-400" />
+                            <span className="font-mono tracking-wide">{row.cliente.telefono}</span>
+                        </div>
+                    )}
+                    {row.modelo_version && (
+                        <div className="flex items-center gap-1.5">
+                            <CarFront className="h-3 w-3 shrink-0 text-gray-400" />
+                            <span className="truncate font-semibold">{row.modelo_version}</span>
+                        </div>
+                    )}
+                    {row.vin && (
+                        <div className="flex items-center gap-1.5">
+                            <Hash className="h-3 w-3 shrink-0 text-gray-400" />
+                            <span className="font-mono text-[10px] tracking-widest truncate">{row.vin}</span>
+                        </div>
+                    )}
+                    {row.asesor_ventas && (
+                        <div className="flex items-center gap-1.5">
+                            <UserStar className="h-3 w-3 shrink-0 text-gray-400" />
+                            <span className="truncate">{row.asesor_ventas}</span>
+                        </div>
+                    )}
+                    {row.agencia && (
+                        <div className="flex items-center gap-1.5">
+                            <Building2 className="h-3 w-3 shrink-0 text-gray-400" />
+                            <span className="truncate">{row.agencia}</span>
+                        </div>
+                    )}
+                    {row.preparada_por && (
+                        <div className="flex items-center gap-1.5">
+                            <ClipboardList className="h-3 w-3 shrink-0 text-gray-400" />
+                            <span className="truncate text-gray-500">Prep: {row.preparada_por}</span>
+                        </div>
+                    )}
+                    {row.comentarios && (
+                        <div className="mt-1 rounded-lg bg-white/70 border border-gray-200 px-2 py-1 text-[10px] text-gray-500 line-clamp-2 italic">
+                            {row.comentarios}
+                        </div>
+                    )}
                 </div>
             </div>
         </button>
@@ -260,7 +316,7 @@ function AgendaMobileList({ rows, loading, onEdit, onContext, onToggleEntrega, u
                     : parseYMDLocal(key).toLocaleDateString("es-MX", { weekday:"long", day:"2-digit", month:"long" });
                 return (
                     <section key={key} className="rounded-xl border border-gray-200 bg-white p-3">
-                        <h3 className="mb-3 border-l-[3px] border-gray-900 pl-2 text-xs font-semibold uppercase tracking-wide text-gray-700">{title}</h3>
+                        <h3 className="mb-3 border-l-[3px] border-amber-400 pl-2 text-xs font-semibold uppercase tracking-wide text-gray-700">{title}</h3>
                         <div className="grid gap-2 sm:grid-cols-2">
                             {items.map((row) => (
                                 <EntregaAgendaCard key={row.id} row={row} onEdit={onEdit} onContext={onContext}
@@ -301,7 +357,7 @@ function AgendaWeekView({ rows, loading, currentWeekDate, setCurrentWeekDate, on
     return (
         <div className="hidden lg:block">
             {/* Nav semana */}
-            <div className="mb-3 flex items-center justify-between rounded-xl border border-gray-200 bg-white px-4 py-3">
+            <div className="mb-3 flex items-center justify-between rounded-xl border border-gray-200 bg-white px-4 py-3 shadow-none">
                 <div>
                     <div className="text-[11px] font-medium text-gray-400 uppercase tracking-wide">Semana</div>
                     <div className="text-sm font-semibold text-gray-800">{formatWeekTitle(weekStart, weekEnd)}</div>
@@ -312,7 +368,7 @@ function AgendaWeekView({ rows, loading, currentWeekDate, setCurrentWeekDate, on
                         <ChevronLeft className="h-4 w-4" />
                     </button>
                     <button type="button" onClick={() => setCurrentWeekDate(new Date())}
-                        className="inline-flex items-center gap-1.5 rounded-lg border border-gray-200 bg-white px-3 py-2 text-xs font-semibold text-gray-700 hover:bg-gray-50 transition-all duration-150 active:scale-95">
+                        className="inline-flex items-center gap-1.5 rounded-lg border border-gray-200 bg-white px-3 py-2 text-xs font-semibold text-gray-700 hover:bg-gray-50 transition-all duration-150 active:scale-95 focus:outline-none focus:ring-0">
                         <CalendarDays className="h-3.5 w-3.5" /> Hoy
                     </button>
                     <button type="button" onClick={() => setCurrentWeekDate((p) => addDays(p, 7))}
@@ -322,19 +378,22 @@ function AgendaWeekView({ rows, loading, currentWeekDate, setCurrentWeekDate, on
                 </div>
             </div>
 
-            <div className="overflow-hidden rounded-xl border border-gray-200 bg-white shadow-sm">
+           <div className="overflow-hidden rounded-xl border border-gray-200 bg-white shadow-none">
                 <div className="overflow-auto">
                     <div className="min-w-[1280px]">
-                        {/* Header días */}
-                        <div className="sticky top-0 z-20 grid border-b border-gray-200" style={{ ...gridStyle, background:"#111827" }}>
-                            <div className="px-4 py-3 text-[11px] font-medium text-gray-400">Hora</div>
+                        {/* Header días */}  
+                           <div className="sticky top-0 z-20 grid border-b border-gray-200 bg-gray-50" style={gridStyle}>
+                            <div className="px-4 py-3 text-[11px] font-semibold uppercase tracking-wide text-gray-400">Hora</div>
                             {weekDays.map((day) => {
                                 const iso = toYMDLocal(day);
                                 const isToday = iso === todayIso;
                                 return (
                                     <div key={iso} className="border-l border-gray-700 px-3 py-3 text-center">
-                                        <div className={["mx-auto inline-flex items-center gap-1.5 rounded-full px-3 py-1 text-xs font-semibold",
-                                            isToday ? "bg-white text-gray-900" : "text-gray-400"].join(" ")}>
+                                        <div className={["mx-auto inline-flex items-center gap-1.5 rounded-full px-3 py-1 text-xs font-semibold ring-0 outline-none",
+                                            isToday
+                                                ? "bg-white text-gray-900 shadow-none"
+                                                : "text-gray-500 hover:text-gray-300"].join(" ")}>
+
                                             <span>{weekdayShortEs(day)}</span>
                                             <span>{day.toLocaleDateString("es-MX", { day:"2-digit", month:"2-digit" })}</span>
                                         </div>
@@ -355,7 +414,7 @@ function AgendaWeekView({ rows, loading, currentWeekDate, setCurrentWeekDate, on
                         ) : (
                             HOURS.map((hour) => (
                                 <div key={hour} className="grid border-b border-gray-100" style={gridStyle}>
-                                    <div className="bg-gray-50/60 px-3 py-3 text-[11px] font-medium text-gray-400">{hour}</div>
+                                    <div className="bg-gray-50 px-3 py-3 text-[11px] font-medium text-gray-400 border-r border-gray-100">{hour}</div>
                                     {weekDays.map((day) => {
                                         const dayKey = toYMDLocal(day);
                                         const slotKey = `${dayKey}|${hour}`;
@@ -364,7 +423,7 @@ function AgendaWeekView({ rows, loading, currentWeekDate, setCurrentWeekDate, on
                                         return (
                                             <div key={slotKey}
                                                 className={["group relative min-h-[110px] border-l border-gray-100 p-1.5 transition-colors duration-150",
-                                                    isToday ? "bg-blue-50/30" : "hover:bg-gray-50/60"].join(" ")}>
+    isToday ? "bg-orange-50/60" : "bg-white hover:bg-gray-50/60"].join(" ")}>
                                                 <button type="button" onClick={() => onCreateAt(`${dayKey}T${hour}`)}
                                                     className="absolute right-2 top-2 z-[4] h-7 w-7 inline-flex items-center justify-center rounded-lg border border-gray-200 bg-white text-gray-400 opacity-0 shadow-sm hover:bg-gray-100 group-hover:opacity-100 transition-all duration-150 active:scale-95">
                                                     <Plus className="h-3.5 w-3.5" />

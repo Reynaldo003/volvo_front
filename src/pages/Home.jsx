@@ -64,7 +64,7 @@ function KpiCard({ titulo, valor, delta, positivo, sub, icono: Icono }) {
                 boxShadow: hovered
                     ? "0 20px 40px rgba(0,0,0,0.18)"
                     : "0 1px 4px rgba(0,0,0,0.05)",
-                transition: "all 0.25s cubic-bezier(.4,0,.2,1)",
+                transition:"all .65s cubic-bezier(.22,1,.36,1)",
                 color: hovered ? "#ffffff" : "#111111",
             }}
         >
@@ -116,124 +116,228 @@ function KpiCard({ titulo, valor, delta, positivo, sub, icono: Icono }) {
     );
 }
 
-// ── Gráfica: Citas por día ────────────────────────────────────────────────────
 function ChartCitasDia() {
     const ref = useRef(null);
     useEffect(() => {
-        const chart = echarts.init(ref.current, null, { renderer: "canvas" });
+        const isDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+        const gridC  = isDark ? '#2c2c2a' : '#e1e0d9';
+        const mutedC = '#898781';
+        const surfC  = isDark ? '#1a1a19' : '#ffffff';
+
+        const chart = echarts.init(ref.current, null, { renderer: 'canvas' });
         chart.setOption({
             animation: true,
             animationDuration: 1200,
-            animationEasing: "cubicOut",
-            tooltip: { trigger: "axis", ...ttStyle,
-                axisPointer: { type: "cross", crossStyle: { color: "#444" } },
+            animationEasing: 'cubicInOut',
+            tooltip: {
+                trigger: 'axis',
+                backgroundColor: isDark ? '#1a1a19' : '#0b0b0b',
+                borderColor: 'transparent',
+                textStyle: { color: '#fff', fontSize: 12 },
+                axisPointer: {
+                    type: 'line',
+                    lineStyle: { color: gridC, width: 1, type: 'dashed' },
+                },
             },
-            legend: {
-                bottom: 0, icon: "roundRect",
-                itemWidth: 10, itemHeight: 10,
-                textStyle: { color: "#9ca3af", fontSize: 11 },
-            },
-            grid: { left: 8, right: 8, top: 8, bottom: 36, containLabel: true },
+            legend: { show: false },
+            grid: { left: 8, right: 12, top: 8, bottom: 28, containLabel: true },
             xAxis: {
-                type: "category", data: citasPorDia.dias,
-                axisLine: { lineStyle: { color: "#e5e7eb" } },
+                type: 'category',
+                data: citasPorDia.dias,
+                boundaryGap: false,
+                axisLine: { lineStyle: { color: gridC, width: 0.5 } },
                 axisTick: { show: false },
-                axisLabel: { color: "#9ca3af", fontSize: 11 },
+                axisLabel: { color: mutedC, fontSize: 11 },
             },
             yAxis: {
-                type: "value",
-                splitLine: { lineStyle: { color: "#f3f4f6", type: "dashed" } },
-                axisLabel: { color: "#9ca3af", fontSize: 11 },
+                type: 'value',
+                min: 0, max: 26,
+                splitLine: { lineStyle: { color: gridC, width: 0.5 } },
+                axisLabel: { color: mutedC, fontSize: 11 },
+                axisLine: { show: false },
+                axisTick: { show: false },
             },
             series: [
                 {
-                    name: "Semana actual",
-                    type: "line", data: citasPorDia.actual,
-                    smooth: true, symbol: "circle", symbolSize: 7,
-                    lineStyle: { width: 3, color: "#111111" },
-                    itemStyle: { color: "#111111", borderWidth: 2, borderColor: "#fff" },
-                    areaStyle: {
-                        color: new echarts.graphic.LinearGradient(0, 0, 0, 1, [
-                            { offset: 0, color: "rgba(17,17,17,0.18)" },
-                            { offset: 1, color: "rgba(17,17,17,0.00)" },
-                        ]),
-                    },
+                    name: 'Anterior',
+                    type: 'line',
+                    data: citasPorDia.anterior,
+                    smooth: 0.45,
+                    symbol: 'none',
+                    lineStyle: { width: 1.5, color: mutedC, type: 'dashed' },
+                    z: 1,
                 },
                 {
-                    name: "Semana anterior",
-                    type: "line", data: citasPorDia.anterior,
-                    smooth: true, symbol: "circle", symbolSize: 5,
-                    lineStyle: { width: 1.5, color: "#d1d5db", type: "dashed" },
-                    itemStyle: { color: "#9ca3af", borderWidth: 2, borderColor: "#fff" },
+                    name: 'Esta semana',
+                    type: 'line',
+                    data: citasPorDia.actual,
+                    smooth: 0.45,
+                    symbol: 'circle',
+                    symbolSize: (val) =>
+                        val === Math.max(...citasPorDia.actual) ? 10 : 7,
+                    lineStyle: { width: 2.5, color: '#050505' },
+                    itemStyle: {
+                        color: (p) =>
+                            p.value === Math.max(...citasPorDia.actual)
+                                ? '#242425'
+                                : surfC,
+                        borderColor: '#141414',
+                        borderWidth: 2,
+                    },
+                    areaStyle: {
+                        color: isDark
+                            ? 'rgba(42,120,214,0.08)'
+                            : 'rgba(42,120,214,0.06)',
+                    },
+                    z: 2,
                 },
             ],
         });
+
         const ro = new ResizeObserver(() => chart.resize());
         ro.observe(ref.current);
         return () => { chart.dispose(); ro.disconnect(); };
     }, []);
-    return <div ref={ref} style={{ width: "100%", height: 260 }} />;
+
+    return (
+        <>
+            <div style={{ display: 'flex', gap: 16, marginBottom: 14, fontSize: 11, color: '#898781' }}>
+                <span style={{ display: 'flex', alignItems: 'center', gap: 5 }}>
+                    <span style={{ width: 8, height: 8, borderRadius: '50%', background: '#070707', display: 'inline-block' }} />
+                    Esta semana
+                </span>
+                <span style={{ display: 'flex', alignItems: 'center', gap: 5 }}>
+                    <span style={{ width: 16, height: 0, borderTop: '1.5px dashed #252525', display: 'inline-block', marginBottom: 1 }} />
+                    Anterior
+                </span>
+            </div>
+            <div ref={ref} style={{ width: '100%', height: 220 }} />
+        </>
+    );
 }
 
-// ── Gráfica: Prospectos por sucursal ─────────────────────────────────────────
+// ── Gráfica: Prospectos por sucursal — Barras + delta ────────────────────────
 function ChartProspectosSucursal() {
     const ref = useRef(null);
     useEffect(() => {
         const chart = echarts.init(ref.current, null, { renderer: "canvas" });
+
+        const sucursales = [...prospectosPorSucursal.sucursales].reverse();
+        const nuevos     = [...prospectosPorSucursal.nuevos].reverse();
+        const activos    = [...prospectosPorSucursal.activos].reverse();
+        const maxVal     = Math.max(...activos) + 14;
+
         chart.setOption({
             animation: true,
-            animationDuration: 1000,
-            animationEasing: "elasticOut",
-            tooltip: { trigger: "axis", ...ttStyle, axisPointer: { type: "shadow" } },
+            animationDuration: 1600,
+            animationEasing: "cubicOut",
+            animationDelay: (idx) => idx * 80,
+            tooltip: {
+                trigger: "axis",
+                axisPointer: { type: "none" },
+                ...ttStyle,
+                formatter: (params) => {
+                    const nombre = params[0].name;
+                    const nv = params.find(p => p.seriesName === "Nuevos")?.value ?? 0;
+                    const ac = params.find(p => p.seriesName === "Activos")?.value ?? 0;
+                    const delta = ac - nv;
+                    return `
+                        <div style="font-weight:700;margin-bottom:6px;color:#f5f5f5">${nombre}</div>
+                        <div style="display:flex;align-items:center;gap:8px;margin-top:3px">
+                            <span style="display:inline-block;width:8px;height:8px;border-radius:2px;background:#111111"></span>
+                            <span style="color:#d1d5db">Nuevos:</span>
+                            <span style="font-weight:700;color:#fff">${nv}</span>
+                        </div>
+                        <div style="display:flex;align-items:center;gap:8px;margin-top:3px">
+                            <span style="display:inline-block;width:8px;height:8px;border-radius:2px;background:#9ca3af"></span>
+                            <span style="color:#d1d5db">Activos:</span>
+                            <span style="font-weight:700;color:#fff">${ac}</span>
+                        </div>
+                        <div style="margin-top:6px;padding-top:6px;border-top:1px solid #333;color:#86efac;font-weight:700">
+                            +${delta} conversión
+                        </div>`;
+                },
+            },
             legend: {
-                bottom: 0, icon: "roundRect",
-                itemWidth: 10, itemHeight: 10,
+                bottom: 0,
+                icon: "roundRect",
+                itemWidth: 10, itemHeight: 6,
+                itemGap: 20,
                 textStyle: { color: "#9ca3af", fontSize: 11 },
             },
-            grid: { left: 8, right: 8, top: 8, bottom: 36, containLabel: true },
+            grid: { left: 12, right: 56, top: 8, bottom: 36, containLabel: true },
             xAxis: {
-                type: "category", data: prospectosPorSucursal.sucursales,
-                axisLine: { lineStyle: { color: "#e5e7eb" } },
+                type: "value",
+                max: maxVal,
+                axisLine: { show: false },
                 axisTick: { show: false },
-                axisLabel: { color: "#9ca3af", fontSize: 11, interval: 0 },
+                axisLabel: { color: "#9ca3af", fontSize: 11 },
+                splitLine: { lineStyle: { color: "#f3f4f6", type: "dashed" } },
             },
             yAxis: {
-                type: "value",
-                splitLine: { lineStyle: { color: "#f3f4f6", type: "dashed" } },
-                axisLabel: { color: "#9ca3af", fontSize: 11 },
+                type: "category",
+                data: sucursales,
+                axisLine: { show: false },
+                axisTick: { show: false },
+                axisLabel: {
+                    color: "#374151",
+                    fontSize: 12,
+                    fontWeight: 700,
+                },
             },
             series: [
                 {
-                    name: "Nuevos", type: "bar",
-                    data: prospectosPorSucursal.nuevos, barWidth: "28%",
+                    name: "Activos",
+                    type: "bar",
+                    data: activos,
+                    barWidth: 10,
+                    barGap: "60%",
                     itemStyle: {
-                        borderRadius: [6, 6, 0, 0],
-                        color: new echarts.graphic.LinearGradient(0, 0, 0, 1, [
-                            { offset: 0, color: "#374151" },
-                            { offset: 1, color: "#111111" },
+                        borderRadius: [0, 6, 6, 0],
+                        color: new echarts.graphic.LinearGradient(1, 0, 0, 0, [
+                            { offset: 0, color: "#9ca3af" },
+                            { offset: 1, color: "#e5e7eb" },
                         ]),
                     },
+                    label: {
+                        show: true,
+                        position: "right",
+                        color: "#9ca3af",
+                        fontSize: 11,
+                        fontWeight: 700,
+                    },
+                    z: 1,
                 },
                 {
-                    name: "Activos", type: "bar",
-                    data: prospectosPorSucursal.activos, barWidth: "28%",
+                    name: "Nuevos",
+                    type: "bar",
+                    data: nuevos,
+                    barWidth: 10,
                     itemStyle: {
-                        borderRadius: [6, 6, 0, 0],
-                        color: new echarts.graphic.LinearGradient(0, 0, 0, 1, [
-                            { offset: 0, color: "#9ca3af" },
-                            { offset: 1, color: "#6b7280" },
+                        borderRadius: [0, 6, 6, 0],
+                        color: new echarts.graphic.LinearGradient(1, 0, 0, 0, [
+                            { offset: 0, color: "#111111" },
+                            { offset: 1, color: "#374151" },
                         ]),
                     },
+                    label: {
+                        show: true,
+                        position: "right",
+                        color: "#374151",
+                        fontSize: 11,
+                        fontWeight: 700,
+                    },
+                    z: 2,
                 },
             ],
         });
+
         const ro = new ResizeObserver(() => chart.resize());
         ro.observe(ref.current);
         return () => { chart.dispose(); ro.disconnect(); };
     }, []);
     return <div ref={ref} style={{ width: "100%", height: 260 }} />;
 }
-
 // ── Gráfica: Conversión dona ──────────────────────────────────────────────────
 function ChartConversion() {
     const ref = useRef(null);
@@ -241,47 +345,130 @@ function ChartConversion() {
         const chart = echarts.init(ref.current, null, { renderer: "canvas" });
         chart.setOption({
             animation: true,
-            animationDuration: 1400,
+            animationDuration: 2000,
             animationEasing: "cubicOut",
-            tooltip: { trigger: "item", ...ttStyle, formatter: "{b}: {c}% ({d}%)" },
-            legend: {
-                orient: "vertical", right: "2%", top: "center",
-                icon: "circle", itemWidth: 8, itemHeight: 8,
-                textStyle: { color: "#6b7280", fontSize: 11 },
-                formatter: (name) => {
-                    const item = conversionData.find(d => d.name === name);
-                    return item ? `${name}  ${item.value}%` : name;
-                },
+            tooltip: {
+                trigger: "item",
+                ...ttStyle,
+                formatter: "{b}: {c}%",
             },
-            series: [{
-                type: "pie",
-                radius: ["52%", "80%"],
-                center: ["36%", "50%"],
-                avoidLabelOverlap: false,
-                label: {
-                    show: true, position: "center",
-                    formatter: () => "24%\nConversión",
-                    color: "#111111", fontSize: 14,
-                    fontWeight: "bold", lineHeight: 22,
+            series: [
+                // Arco de fondo
+                {
+                    type: "gauge",
+                    startAngle: 200,
+                    endAngle: -20,
+                    min: 0,
+                    max: 100,
+                    radius: "88%",
+                    center: ["50%", "58%"],
+                    splitNumber: 0,
+                    pointer: { show: false },
+                    progress: {
+                        show: true,
+                        width: 22,
+                        itemStyle: {
+                            color: new echarts.graphic.LinearGradient(0, 0, 1, 0, [
+                                { offset: 0, color: "#374151" },
+                                { offset: 1, color: "#111111" },
+                            ]),
+                        },
+                    },
+                    axisLine: {
+                        lineStyle: {
+                            width: 22,
+                            color: [[1, "#f3f4f6"]],
+                        },
+                    },
+                    axisTick: { show: false },
+                    splitLine: { show: false },
+                    axisLabel: { show: false },
+                    detail: {
+                        valueAnimation: true,
+                        fontSize: 32,
+                        fontWeight: 900,
+                        color: "#111111",
+                        formatter: "{value}%",
+                        offsetCenter: [0, "-8%"],
+                    },
+                    title: {
+                        offsetCenter: [0, "22%"],
+                        fontSize: 11,
+                        fontWeight: 600,
+                        color: "#9ca3af",
+                        text: "Conversión",
+                    },
+                    data: [{ value: 24, name: "Conversión" }],
                 },
-                emphasis: { label: { show: true }, scale: true, scaleSize: 6 },
-                labelLine: { show: false },
-                data: conversionData.map((d, i) => ({
-                    ...d,
-                    itemStyle: { color: donaColores[i] },
-                })),
-            }],
+                // Arco decorativo interior
+                {
+                    type: "gauge",
+                    startAngle: 200,
+                    endAngle: -20,
+                    min: 0,
+                    max: 100,
+                    radius: "68%",
+                    center: ["50%", "58%"],
+                    splitNumber: 0,
+                    pointer: { show: false },
+                    progress: {
+                        show: true,
+                        width: 8,
+                        itemStyle: { color: "#e5e7eb" },
+                    },
+                    axisLine: {
+                        lineStyle: { width: 8, color: [[1, "#f9fafb"]] },
+                    },
+                    axisTick: { show: false },
+                    splitLine: { show: false },
+                    axisLabel: { show: false },
+                    detail: { show: false },
+                    title: { show: false },
+                    data: [{ value: 41 }],
+                },
+            ],
         });
         const ro = new ResizeObserver(() => chart.resize());
         ro.observe(ref.current);
         return () => { chart.dispose(); ro.disconnect(); };
     }, []);
-    return <div ref={ref} style={{ width: "100%", height: 260 }} />;
+
+    return (
+        <div style={{ position: "relative", width: "100%", height: 280 }}>
+            <div ref={ref} style={{ width: "100%", height: "100%" }} />
+            {/* Leyenda manual debajo */}
+            <div style={{
+                position: "absolute", bottom: 0, left: 0, right: 0,
+                display: "flex", justifyContent: "center", gap: 16,
+                flexWrap: "wrap",
+            }}>
+                {conversionData.map((d, i) => (
+                    <div key={d.name} style={{ display: "flex", alignItems: "center", gap: 5 }}>
+                        <span style={{
+                            width: 8, height: 8, borderRadius: "50%",
+                            background: donaColores[i],
+                            display: "inline-block",
+                        }} />
+                        <span style={{ fontSize: 10, color: "#6b7280", fontWeight: 600 }}>
+                            {d.name} <strong style={{ color: "#374151" }}>{d.value}%</strong>
+                        </span>
+                    </div>
+                ))}
+            </div>
+        </div>
+    );
 }
 
 // ── Chart Card ────────────────────────────────────────────────────────────────
 function ChartCard({ titulo, icono: Icono, children }) {
     const [hovered, setHovered] = useState(false);
+const [visible, setVisible] = useState(false);
+
+useEffect(() => {
+    const t = setTimeout(() => setVisible(true), 150);
+    return () => clearTimeout(t);
+}, []);
+
     return (
         <div
             onMouseEnter={() => setHovered(true)}
@@ -291,7 +478,11 @@ function ChartCard({ titulo, icono: Icono, children }) {
                 border: hovered ? "1.5px solid #111111" : "1.5px solid #e5e7eb",
                 borderRadius: 16,
                 overflow: "hidden",
-                transform: hovered ? "translateY(-4px)" : "translateY(0)",
+               transform: visible
+    ? (hovered
+        ? "translateY(-8px) scale(1.01)"
+        : "translateY(0) scale(1)")
+    : "translateY(35px) scale(.97)",
                 boxShadow: hovered
                     ? "0 20px 40px rgba(0,0,0,0.12)"
                     : "0 1px 4px rgba(0,0,0,0.05)",
@@ -317,12 +508,6 @@ function ChartCard({ titulo, icono: Icono, children }) {
 // ── Home ──────────────────────────────────────────────────────────────────────
 export default function Home() {
     const { user } = useAuth();
-    const [hora, setHora] = useState(new Date());
-
-    useEffect(() => {
-        const t = setInterval(() => setHora(new Date()), 1000);
-        return () => clearInterval(t);
-    }, []);
 
     const nombreUsuario =
         user?.nombreCompleto ||
@@ -330,12 +515,14 @@ export default function Home() {
         user?.usuario ||
         "usuario";
 
-    const fechaStr = hora.toLocaleDateString("es-MX", {
-        weekday: "long", year: "numeric", month: "long", day: "numeric",
-    });
-    const horaStr = hora.toLocaleTimeString("es-MX", {
-        hour: "2-digit", minute: "2-digit", second: "2-digit",
-    });
+  const fechaActual = new Date();
+
+const fechaStr = fechaActual.toLocaleDateString("es-MX", {
+    weekday: "long",
+    year: "numeric",
+    month: "long",
+    day: "numeric",
+});
 
     return (
         <div style={{ display: "flex", flexDirection: "column", gap: 20 }}>
@@ -370,11 +557,7 @@ export default function Home() {
                         }}>
                            
                         </span>
-                        <span style={{ color: "rgba(255,255,255,0.2)", fontSize: 11 }}>·</span>
-                        <span style={{ fontSize: 11, color:"#6b7280",
-                            fontVariantNumeric: "tabular-nums" }}>
-                            {horaStr}
-                        </span>
+                        
                     </div>
 
                     {/* nombre */}

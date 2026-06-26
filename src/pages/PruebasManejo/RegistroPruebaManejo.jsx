@@ -306,7 +306,7 @@ function AgendaView({ registros, onOpenEdit }) {
                                 const byHourIdx={};
                                 events.forEach(r=>{ const idx=hourIndexFor(r.fecha_hora_cita); if(idx<0)return; if(!byHourIdx[idx])byHourIdx[idx]=[]; byHourIdx[idx].push(r); });
                                 return (
-                                    <tr key={ymd} style={{height:90}}>
+                                    <tr key={ymd} style={{height:130}}>
                                         <td className={["sticky left-0 z-10 border-b border-r border-slate-200 px-2 py-2 align-top", isToday?"bg-slate-100":"bg-white"].join(" ")} style={{width:DAY_W,minWidth:DAY_W}}>
                                             <div className="flex flex-col items-center">
                                                 <span className={`text-[10px] font-bold uppercase tracking-wide ${isToday?"text-slate-800":"text-slate-400"}`}>{DIAS_CORTO[dayObj.getDay()]}</span>
@@ -316,24 +316,66 @@ function AgendaView({ registros, onOpenEdit }) {
                                         {HOURS.map((h,hi)=>{
                                             const evs=byHourIdx[hi]||[];
                                             return (
-                                                <td key={h} className={["relative border-b border-r border-slate-200 p-1 align-top last:border-r-0", isToday?"bg-slate-50/60":"bg-white"].join(" ")} style={{minWidth:130}}>
+                                                <td key={h} className={["relative border-b border-r border-slate-200 p-1 align-top last:border-r-0", isToday?"bg-slate-50/60":"bg-white"].join(" ")} style={{minWidth:160}}>
                                                     <div className="flex flex-col gap-1">
                                                         {evs.map(r=>{
                                                             const d=new Date(r.fecha_hora_cita); let hh=d.getHours(); const mm=d.getMinutes(); const ap=hh<12?"AM":"PM"; hh=hh%12||12;
                                                             const timeStr=`${hh}:${String(mm).padStart(2,"0")} ${ap}`;
-                                                            return (
-                                                                <div key={r.id} onClick={()=>onOpenEdit(r)}
-                                                                    className="cursor-pointer rounded-lg px-2 py-1.5 text-left transition-all hover:shadow-md hover:scale-[1.02] active:scale-[0.98]"
-                                                                    style={{background:"#f5f5f5", borderLeft:`3px solid ${C.dark}`}}>
-                                                                    <div className="flex items-center justify-between gap-1">
-                                                                        <span className="text-[10px] font-bold" style={{color:C.dark}}>{timeStr}</span>
-                                                                        <StatusPill asistencia={r.asistencia===true?true:null}/>
-                                                                    </div>
-                                                                    <div className="truncate text-[11px] font-extrabold text-slate-800 leading-tight">{(r?.cliente?.nombre||"—").toUpperCase()}</div>
-                                                                    {r.auto_interes&&<div className="truncate text-[10px] text-slate-500">{r.auto_interes}</div>}
-                                                                    {r.asesor_piso&&<div className="truncate text-[10px] text-slate-400">{r.asesor_piso.split(" ").slice(0,2).join(" ")}</div>}
-                                                                </div>
-                                                            );
+                                                            const colorMap = {
+    true:  { bg: "#f0fdf4", border: "#22c55e", pill: "#dcfce7", pillT: "#15803d" },
+    false: { bg: "#fff1f2", border: "#f43f5e", pill: "#ffe4e6", pillT: "#be123c" },
+    null:  { bg: "#fffbeb", border: "#f59e0b", pill: "#fef3c7", pillT: "#b45309" },
+};
+const asistKey = r.asistencia === true ? "true" : r.asistencia === false ? "false" : "null";
+const color = colorMap[asistKey];
+const asistLabel = r.asistencia === true ? "Asistió" : r.asistencia === false ? "No asistió" : "Pendiente";
+
+return (
+    <div key={r.id} onClick={() => onOpenEdit(r)}
+        className="cursor-pointer rounded-xl text-left transition-all hover:shadow-md hover:scale-[1.02] active:scale-[0.98]"
+        style={{ background: color.bg, borderLeft: `3px solid ${color.border}`, padding: "8px 10px" }}>
+
+        {/* hora + pill estatus */}
+        <div className="flex items-center justify-between gap-1 mb-1.5">
+            <span className="text-[10px] font-bold text-slate-500">{timeStr}</span>
+            <span className="inline-flex items-center rounded-full px-2 py-0.5 text-[9px] font-bold"
+                style={{ background: color.pill, color: color.pillT }}>
+                {asistLabel}
+            </span>
+        </div>
+
+        {/* nombre */}
+        <div className="truncate text-[11px] font-extrabold text-slate-900 leading-tight mb-1">
+            {(r?.cliente?.nombre || "—").toUpperCase()}
+        </div>
+
+        {/* modelo */}
+        {r.auto_interes && (
+            <div className="flex items-center gap-1 mb-0.5">
+                <CarFront className="h-2.5 w-2.5 shrink-0 text-slate-400" />
+                <span className="truncate text-[10px] font-semibold text-slate-600">{r.auto_interes}</span>
+            </div>
+        )}
+
+        {/* asesor */}
+        {r.asesor_piso && (
+            <div className="flex items-center gap-1 mb-0.5">
+                <User className="h-2.5 w-2.5 shrink-0 text-slate-400" />
+                <span className="truncate text-[10px] text-slate-500">
+                    {r.asesor_piso.split(" ").slice(0, 2).join(" ")}
+                </span>
+            </div>
+        )}
+
+        {/* teléfono */}
+        {r?.cliente?.telefono && (
+            <div className="flex items-center gap-1">
+                <Phone className="h-2.5 w-2.5 shrink-0 text-slate-400" />
+                <span className="truncate text-[10px] text-slate-400">{r.cliente.telefono}</span>
+            </div>
+        )}
+    </div>
+);
                                                         })}
                                                     </div>
                                                 </td>
