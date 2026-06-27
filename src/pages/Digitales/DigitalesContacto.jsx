@@ -21,6 +21,7 @@ import {
     Check,
     Save,
     MailOpen,
+    Pencil,
 } from "lucide-react";
 import EmojiPicker from "emoji-picker-react";
 import { api } from "../../lib/apiPruebas";
@@ -57,6 +58,13 @@ const CANALES = [
 ];
 
 const ESTADOS_PROSPECTO = ["Descalificado", "Contactado", "Sin Respuesta"];
+
+// ---- Catálogos del bloque "Perfil comercial y financiero".
+// Se guardan como texto libre (CharField); el <select> solo limita la UI.
+const BURO_OPTIONS = ["Bueno", "Regular", "Iniciando", "Desconocido"];
+const FORMA_PAGO_OPTIONS = ["Contado", "Crédito", "Arrendamiento", "Desconocido"];
+const TIPO_CLIENTE_OPTIONS = ["Persona física", "Persona moral", "Desconocido"];
+const PLAZO_COMPRA_OPTIONS = ["Inmediato", "1 a 3 meses", "Más de 3 meses", "Desconocido"];
 
 
 const BUSINESS_OPTIONS = [
@@ -1040,6 +1048,248 @@ function MessageBubble({
                     </div>
                 </div>
             </div>
+        </div>
+    );
+}
+
+// =========================================================================
+// Panel "Datos del prospecto" — campos básicos + perfil comercial/financiero.
+// Inicia cerrado; el asesor lo expande dando clic en el encabezado.
+// Todos los campos ya existen en ExpedienteDigital / ProspectoSerializer
+// de Volvo, no se inventa nada nuevo en backend.
+// =========================================================================
+
+function Campo({ label, children }) {
+    return (
+        <div className="flex min-w-0 flex-col gap-1">
+            <span className="text-[11px] font-extrabold uppercase tracking-wide text-black/50">
+                {label}
+            </span>
+            {children}
+        </div>
+    );
+}
+
+const datosProspectoInputClass =
+    "h-10 w-full rounded-lg border border-black/10 bg-white px-3 text-sm font-semibold text-black outline-none focus:border-black/40";
+
+function SelectConFlecha({ value, onChange, options, placeholder }) {
+    return (
+        <div className="relative">
+            <select
+                value={value || ""}
+                onChange={onChange}
+                className={cls(datosProspectoInputClass, "appearance-none pr-9")}
+            >
+                {renderOptionsConValorActual(options, value, placeholder)}
+            </select>
+            <ChevronDown className="pointer-events-none absolute right-3 top-1/2 h-4 w-4 -translate-y-1/2 text-black/40" />
+        </div>
+    );
+}
+
+function PanelDatosProspecto({
+    draft,
+    setDraft,
+    onSave,
+    saving = false,
+}) {
+    const [open, setOpen] = useState(false);
+
+    function update(field, value) {
+        setDraft((prev) => ({ ...prev, [field]: value }));
+    }
+
+    const resumenVehiculo = draft.auto_interes || "Sin vehículo";
+    const resumenEstado = draft.estado || "Sin estado";
+
+    return (
+        <div className="rounded-xl border border-black/10 bg-white">
+            <button
+                type="button"
+                onClick={() => setOpen((prev) => !prev)}
+                className="flex w-full items-center justify-between gap-3 px-4 py-3 text-left"
+            >
+                <div className="flex min-w-0 items-center gap-2">
+                    <Pencil className="h-4 w-4 shrink-0 text-black/60" />
+                    <span className="truncate text-sm font-extrabold text-black">
+                        Datos del prospecto
+                    </span>
+                    <span className="truncate text-xs font-bold text-slate-400">
+                        — {resumenVehiculo} · {resumenEstado}
+                    </span>
+                </div>
+
+                <ChevronDown
+                    className={cls(
+                        "h-4 w-4 shrink-0 text-black/60 transition-transform",
+                        open ? "rotate-180" : ""
+                    )}
+                />
+            </button>
+
+            {open ? (
+                <div className="border-t border-black/10 px-4 py-4">
+                    {/* Fila 1: Vehículo / Estado / Canal / Comentarios */}
+                    <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-4">
+                        <Campo label="Vehículo">
+                            <SelectConFlecha
+                                value={draft.auto_interes}
+                                onChange={(e) => update("auto_interes", e.target.value)}
+                                options={VEHICULOS}
+                            />
+                        </Campo>
+
+                        <Campo label="Estado">
+                            <SelectConFlecha
+                                value={draft.estado}
+                                onChange={(e) => update("estado", e.target.value)}
+                                options={ESTADOS_PROSPECTO}
+                            />
+                        </Campo>
+
+                        <Campo label="Canal">
+                            <SelectConFlecha
+                                value={draft.canal_contacto}
+                                onChange={(e) => update("canal_contacto", e.target.value)}
+                                options={CANALES}
+                            />
+                        </Campo>
+
+                        <Campo label="Comentarios">
+                            <textarea
+                                value={draft.comentarios || ""}
+                                onChange={(e) => update("comentarios", e.target.value)}
+                                rows={1}
+                                className={cls(datosProspectoInputClass, "h-10 resize-none py-2 leading-tight")}
+                                placeholder="Comentarios…"
+                            />
+                        </Campo>
+                    </div>
+
+                    {/* Separador de sección */}
+                    <div className="mt-5 mb-3 flex items-center gap-2">
+                        <span
+                            className="inline-flex h-5 w-5 items-center justify-center rounded-full text-white"
+                            style={{ backgroundColor: "#131E5C" }}
+                        >
+                            <span className="text-[10px] font-black">⚡</span>
+                        </span>
+                        <span className="text-xs font-extrabold uppercase tracking-wide text-black/60">
+                            Perfil comercial y financiero
+                        </span>
+                    </div>
+
+                    {/* Fila 2: Enganche / Presupuesto / Buró / Forma de pago */}
+                    <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-4">
+                        <Campo label="Enganche">
+                            <input
+                                type="number"
+                                inputMode="numeric"
+                                min="0"
+                                step="1"
+                                value={draft.enganche_monto ?? ""}
+                                onChange={(e) =>
+                                    update("enganche_monto", e.target.value === "" ? "" : e.target.value)
+                                }
+                                placeholder="0"
+                                className={datosProspectoInputClass}
+                            />
+                        </Campo>
+
+                        <Campo label="Presupuesto mensual">
+                            <input
+                                type="number"
+                                inputMode="numeric"
+                                min="0"
+                                step="1"
+                                value={draft.presupuesto_mensual ?? ""}
+                                onChange={(e) =>
+                                    update(
+                                        "presupuesto_mensual",
+                                        e.target.value === "" ? "" : e.target.value
+                                    )
+                                }
+                                placeholder="0"
+                                className={datosProspectoInputClass}
+                            />
+                        </Campo>
+
+                        <Campo label="Buró">
+                            <SelectConFlecha
+                                value={draft.buro_estado}
+                                onChange={(e) => update("buro_estado", e.target.value)}
+                                options={BURO_OPTIONS}
+                                placeholder="Desconocido"
+                            />
+                        </Campo>
+
+                        <Campo label="Forma de pago">
+                            <SelectConFlecha
+                                value={draft.forma_pago}
+                                onChange={(e) => update("forma_pago", e.target.value)}
+                                options={FORMA_PAGO_OPTIONS}
+                                placeholder="Desconocido"
+                            />
+                        </Campo>
+                    </div>
+
+                    {/* Fila 3: Tipo cliente / Plazo de compra / Uso del vehículo / Comprobación ingresos */}
+                    <div className="mt-3 grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-4">
+                        <Campo label="Tipo cliente">
+                            <SelectConFlecha
+                                value={draft.tipo_cliente}
+                                onChange={(e) => update("tipo_cliente", e.target.value)}
+                                options={TIPO_CLIENTE_OPTIONS}
+                                placeholder="Desconocido"
+                            />
+                        </Campo>
+
+                        <Campo label="Plazo de compra">
+                            <SelectConFlecha
+                                value={draft.plazo_compra}
+                                onChange={(e) => update("plazo_compra", e.target.value)}
+                                options={PLAZO_COMPRA_OPTIONS}
+                                placeholder="— Selecciona —"
+                            />
+                        </Campo>
+
+                        <Campo label="Uso del vehículo">
+                            <input
+                                type="text"
+                                value={draft.uso_vehiculo || ""}
+                                onChange={(e) => update("uso_vehiculo", e.target.value)}
+                                placeholder="desconocido"
+                                className={datosProspectoInputClass}
+                            />
+                        </Campo>
+
+                        <Campo label="Comprobación ingresos">
+                            <input
+                                type="text"
+                                value={draft.comprobacion_ingresos || ""}
+                                onChange={(e) => update("comprobacion_ingresos", e.target.value)}
+                                placeholder="Nómina, estados…"
+                                className={datosProspectoInputClass}
+                            />
+                        </Campo>
+                    </div>
+
+                    {/* Botón Guardar */}
+                    <div className="mt-5 flex justify-end">
+                        <button
+                            type="button"
+                            onClick={onSave}
+                            disabled={saving}
+                            className="inline-flex items-center gap-2 rounded-xl px-5 py-2.5 text-sm font-extrabold text-white shadow-sm transition disabled:cursor-not-allowed disabled:opacity-60"
+                            style={{ backgroundColor: "#131E5C" }}
+                        >
+                            <Save className="h-4 w-4" />
+                            {saving ? "Guardando..." : "Guardar cambios"}
+                        </button>
+                    </div>
+                </div>
+            ) : null}
         </div>
     );
 }
@@ -2030,40 +2280,70 @@ export default function DigitalesContacto() {
             business: prospecto?.business || "",
             pauta: prospecto?.pauta || prospecto?.pauta_origen || "",
             comentarios: prospecto?.comentarios || prospecto?.comentario || "",
+            enganche_monto: prospecto?.enganche_monto ?? "",
+            presupuesto_mensual: prospecto?.presupuesto_mensual ?? "",
+            buro_estado: prospecto?.buro_estado || "",
+            forma_pago: prospecto?.forma_pago || "",
+            tipo_cliente: prospecto?.tipo_cliente || "",
+            plazo_compra: prospecto?.plazo_compra || "",
+            uso_vehiculo: prospecto?.uso_vehiculo || "",
+            comprobacion_ingresos: prospecto?.comprobacion_ingresos || "",
         });
         setShowQuickEdit(true);
     }
 
-    async function saveQuickEdit() {
-        if (!prospecto?.id || !activeTel) return;
-
-        setSavingQuickEdit(true);
-
-        try {
-            const payload = {
-                nombre: quickEditDraft.nombre || "",
-                auto_interes: quickEditDraft.auto_interes || "",
-                estado: quickEditDraft.estado || "",
-                canal_contacto: quickEditDraft.canal_contacto || "",
-                business: quickEditDraft.business || "",
-                comentarios: quickEditDraft.comentarios || "",
-            };
-
-            const pautaLimpia = String(quickEditDraft.pauta || "").trim();
-            if (pautaLimpia) {
-                payload.pauta = pautaLimpia;
-            }
-
-            await api.digitalesPatchProspecto(prospecto.id, payload);
-
-            await refreshActiveChat(activeTel);
-            setShowQuickEdit(false);
-        } catch (error) {
-            alert(`No se pudo guardar: ${error.message}`);
-        } finally {
-            setSavingQuickEdit(false);
-        }
+async function saveQuickEdit() {
+    console.log("prospecto:", prospecto);
+    console.log("activeTel:", activeTel);
+    console.log("quickEditDraft:", quickEditDraft);
+    
+    if (!prospecto?.id || !activeTel) {
+        console.log("RETORNO TEMPRANO — falta prospecto.id o activeTel");
+        return;
     }
+
+    setSavingQuickEdit(true);
+
+    try {
+        const payload = {};
+
+        if (quickEditDraft.nombre) payload.nombre = quickEditDraft.nombre;
+        if (quickEditDraft.auto_interes) payload.auto_interes = quickEditDraft.auto_interes;
+        if (quickEditDraft.estado) payload.estado = quickEditDraft.estado;
+        if (quickEditDraft.canal_contacto) payload.canal_contacto = quickEditDraft.canal_contacto;
+        if (quickEditDraft.business) payload.business = quickEditDraft.business;
+        if (quickEditDraft.comentarios) payload.comentarios = quickEditDraft.comentarios;
+        if (quickEditDraft.buro_estado) payload.buro_estado = quickEditDraft.buro_estado;
+        if (quickEditDraft.forma_pago) payload.forma_pago = quickEditDraft.forma_pago;
+        if (quickEditDraft.tipo_cliente) payload.tipo_cliente = quickEditDraft.tipo_cliente;
+        if (quickEditDraft.plazo_compra) payload.plazo_compra = quickEditDraft.plazo_compra;
+        if (quickEditDraft.uso_vehiculo) payload.uso_vehiculo = quickEditDraft.uso_vehiculo;
+        if (quickEditDraft.comprobacion_ingresos) payload.comprobacion_ingresos = quickEditDraft.comprobacion_ingresos;
+
+        const pautaLimpia = String(quickEditDraft.pauta || "").trim();
+        if (pautaLimpia) payload.pauta = pautaLimpia;
+
+        if (quickEditDraft.enganche_monto !== "" && quickEditDraft.enganche_monto != null)
+            payload.enganche_monto = Number(quickEditDraft.enganche_monto);
+
+        if (quickEditDraft.presupuesto_mensual !== "" && quickEditDraft.presupuesto_mensual != null)
+            payload.presupuesto_mensual = Number(quickEditDraft.presupuesto_mensual);
+
+        console.log("PAYLOAD que se manda:", payload);  // ← NUEVO
+
+        const result = await api.digitalesPatchProspecto(prospecto.id, payload);
+        
+        console.log("Respuesta del PATCH:", result);  // ← NUEVO
+
+        await refreshActiveChat(activeTel);
+        setShowQuickEdit(false);
+    } catch (error) {
+        console.error("ERROR en saveQuickEdit:", error);  // ← NUEVO
+        alert(`No se pudo guardar: ${error.message}`);
+    } finally {
+        setSavingQuickEdit(false);
+    }
+}
 
     useEffect(() => {
         let mounted = true;
@@ -2110,6 +2390,14 @@ export default function DigitalesContacto() {
             business: prospecto.business || "",
             pauta: prospecto.pauta || prospecto.pauta_origen || "",
             comentarios: prospecto.comentarios || prospecto.comentario || "",
+            enganche_monto: prospecto.enganche_monto ?? "",
+            presupuesto_mensual: prospecto.presupuesto_mensual ?? "",
+            buro_estado: prospecto.buro_estado || "",
+            forma_pago: prospecto.forma_pago || "",
+            tipo_cliente: prospecto.tipo_cliente || "",
+            plazo_compra: prospecto.plazo_compra || "",
+            uso_vehiculo: prospecto.uso_vehiculo || "",
+            comprobacion_ingresos: prospecto.comprobacion_ingresos || "",
         });
     }, [prospecto]);
 
@@ -2590,88 +2878,31 @@ export default function DigitalesContacto() {
                                         <Avatar name={activeChat?.nombre || "Prospecto"} />
 
                                         <div className="min-w-0 flex-1">
-                                            <div className="mt-2 grid grid-cols-1 gap-2 sm:grid-cols-2 lg:grid-cols-[1.4fr_1fr_1fr_1fr_.8fr_1fr_auto_auto]">
-                                                <input
-                                                    value={activeChat?.nombre || "Selecciona un chat" || quickEditDraft.nombre || ""}
-                                                    onChange={(e) =>
-                                                        setQuickEditDraft((p) => ({ ...p, nombre: e.target.value }))
-                                                    }
-                                                    placeholder="Nombre"
-                                                    className="h-8 min-w-0 max-w-40 rounded-lg border border-black/10 bg-white px-3 text-xs font-semibold text-black outline-none focus:border-black/40"
-                                                />
-
-                                                <select
-                                                    value={quickEditDraft.auto_interes || ""}
-                                                    onChange={(e) =>
-                                                        setQuickEditDraft((p) => ({ ...p, auto_interes: e.target.value }))
-                                                    }
-                                                    className="h-8 min-w-0 max-w-35 rounded-lg border border-black/10 bg-white px-2 text-xs font-semibold text-black outline-none focus:border-black/40"
-                                                >
-                                                    {renderOptionsConValorActual(VEHICULOS, quickEditDraft.auto_interes)}
-                                                </select>
-
+                                            <div className="flex flex-wrap items-center gap-x-3 gap-y-1">
+                                                <div className="truncate text-sm font-extrabold text-black">
+                                                    {activeChat?.nombre || "Selecciona un chat"}
+                                                </div>
+                                                {activeTel ? (
                                                 <select
                                                     value={quickEditDraft.estado || ""}
-                                                    onChange={(e) =>
-                                                        setQuickEditDraft((p) => ({ ...p, estado: e.target.value }))
-                                                    }
-                                                    className="h-8 min-w-0 max-w-40 rounded-lg border border-black/10 bg-white px-2 text-xs font-semibold text-black outline-none focus:border-black/40"
+                                                    onChange={(e) => setQuickEditDraft((p) => ({ ...p, estado: e.target.value }))}
+                                                    className="h-8 rounded-lg border border-black/10 bg-white px-2 text-xs font-semibold text-black outline-none focus:border-black/40"
                                                 >
-                                                    {renderOptionsConValorActual(ESTADOS_PROSPECTO, quickEditDraft.estado)}
+                                                    {renderOptionsConValorActual(ESTADOS_PROSPECTO, quickEditDraft.estado || "", "Sin estado")}
                                                 </select>
+                                            ) : null}
 
-                                                <select
-                                                    value={quickEditDraft.canal_contacto || ""}
-                                                    onChange={(e) =>
-                                                        setQuickEditDraft((p) => ({ ...p, canal_contacto: e.target.value }))
-                                                    }
-                                                    className="h-8 min-w-0 max-w-30 rounded-lg border border-black/10 bg-white px-1 text-xs font-semibold text-black outline-none focus:border-black/40"
-                                                >
-                                                    {renderOptionsConValorActual(CANALES, quickEditDraft.canal_contacto)}
-                                                </select>
-
-                                                <select
-                                                    value={quickEditDraft.business || ""}
-                                                    onChange={(e) =>
-                                                        setQuickEditDraft((p) => ({ ...p, business: e.target.value }))
-                                                    }
-                                                    className="h-8 min-w-0 max-w-25 rounded-lg border border-black/10 bg-white px-2 text-xs font-semibold text-black outline-none focus:border-black/40"
-                                                >
-                                                    {renderOptionsConValorActual(BUSINESS_OPTIONS, quickEditDraft.business)}
-                                                </select>
-
+                                            {activeTel ? (
                                                 <select
                                                     value={quickEditDraft.pauta || ""}
-                                                    onChange={(e) =>
-                                                        setQuickEditDraft((p) => ({ ...p, pauta: e.target.value }))
-                                                    }
-                                                    className="h-8 min-w-0 rounded-lg border border-black/10 bg-white px-3 text-xs font-semibold text-black outline-none focus:border-black/40"
+                                                    onChange={(e) => setQuickEditDraft((p) => ({ ...p, pauta: e.target.value }))}
+                                                    className="h-8 rounded-lg border border-black/10 bg-white px-2 text-xs font-semibold text-black outline-none focus:border-black/40"
                                                 >
-                                                    {renderOptionsConValorActual(pautasOptions, quickEditDraft.pauta, "Sin campaña detectada")}                                                </select>
+                                                    {renderOptionsConValorActual(pautasOptions, quickEditDraft.pauta || "", "Sin campaña")}
+                                                </select>
+                                            ) : null}
 
-                                                <div className="flex items-center gap-2">
-                                                    <button
-                                                        onClick={saveQuickEdit}
-                                                        disabled={savingQuickEdit}
-                                                        className="inline-flex h-8 items-center justify-center rounded-lg px-3 text-xs font-extrabold text-white disabled:cursor-not-allowed disabled:opacity-60"
-                                                        style={{ backgroundColor: BRAND_BLUE }}
-                                                        type="button"
-                                                        title="Guardar cambios"
-                                                    >
-                                                        <Save className="h-3.5 w-3.5" />
-                                                    </button>
-                                                    <button
-                                                        onClick={abrirPlantillas}
-                                                        disabled={!activeTel}
-                                                        className={cls(
-                                                            "inline-flex h-8 items-center justify-center rounded-lg border border-black/10 bg-white px-3 text-xs font-extrabold text-black hover:bg-neutral-50 disabled:cursor-not-allowed disabled:opacity-60",
-                                                        )}
-                                                        type="button"
-                                                        title="Enviar plantilla"
-                                                    >
-                                                        <LayoutTemplate className="h-3.5 w-3.5" />
-                                                    </button>
-                                                </div>
+                                                                                        
                                             </div>
 
                                             <div className="mt-1 flex flex-wrap items-center gap-x-3 gap-y-1 text-[11px] font-semibold text-slate-500 sm:text-xs">
@@ -2719,97 +2950,12 @@ export default function DigitalesContacto() {
                                 </div>
 
                                 {activeTel ? (
-                                    <details className="group rounded-2xl border border-black/10 bg-neutral-50 p-2 sm:p-3 lg:hidden">
-                                        <summary className="flex cursor-pointer list-none items-center justify-between gap-3 px-1 py-1">
-                                            <span className="text-xs font-extrabold uppercase tracking-wide text-black/70">
-                                                Datos del prospecto
-                                            </span>
-
-                                            <input
-                                                value={activeChat?.nombre || "Selecciona un chat" || quickEditDraft.nombre || ""}
-                                                onChange={(e) =>
-                                                    setQuickEditDraft((p) => ({ ...p, nombre: e.target.value }))
-                                                }
-                                                placeholder="Nombre"
-                                                className="h-8 min-w-0 rounded-lg border border-black/10 bg-white px-3 text-xs font-semibold text-black outline-none focus:border-black/40"
-                                            />
-
-                                            <select
-                                                value={quickEditDraft.auto_interes || ""}
-                                                onChange={(e) =>
-                                                    setQuickEditDraft((p) => ({ ...p, auto_interes: e.target.value }))
-                                                }
-                                                className="h-8 min-w-0 max-w-35 rounded-lg border border-black/10 bg-white px-2 text-xs font-semibold text-black outline-none focus:border-black/40"
-                                            >
-                                                {renderOptionsConValorActual(VEHICULOS, quickEditDraft.auto_interes)}
-                                            </select>
-
-                                            <select
-                                                value={quickEditDraft.estado || ""}
-                                                onChange={(e) =>
-                                                    setQuickEditDraft((p) => ({ ...p, estado: e.target.value }))
-                                                }
-                                                className="h-8 min-w-0 max-w-40 rounded-lg border border-black/10 bg-white px-2 text-xs font-semibold text-black outline-none focus:border-black/40"
-                                            >
-                                                {renderOptionsConValorActual(ESTADOS_PROSPECTO, quickEditDraft.estado)}
-                                            </select>
-
-                                            <select
-                                                value={quickEditDraft.canal_contacto || ""}
-                                                onChange={(e) =>
-                                                    setQuickEditDraft((p) => ({ ...p, canal_contacto: e.target.value }))
-                                                }
-                                                className="h-8 min-w-0 max-w-30 rounded-lg border border-black/10 bg-white px-1 text-xs font-semibold text-black outline-none focus:border-black/40"
-                                            >
-                                                {renderOptionsConValorActual(CANALES, quickEditDraft.canal_contacto)}
-                                            </select>
-
-                                            <select
-                                                value={quickEditDraft.business || ""}
-                                                onChange={(e) =>
-                                                    setQuickEditDraft((p) => ({ ...p, business: e.target.value }))
-                                                }
-                                                className="h-8 min-w-0 max-w-25 rounded-lg border border-black/10 bg-white px-2 text-xs font-semibold text-black outline-none focus:border-black/40"
-                                            >
-                                                {renderOptionsConValorActual(BUSINESS_OPTIONS, quickEditDraft.business)}
-                                            </select>
-
-                                            <select
-                                                value={quickEditDraft.pauta || ""}
-                                                onChange={(e) =>
-                                                    setQuickEditDraft((p) => ({ ...p, pauta: e.target.value }))
-                                                }
-                                                className="h-8 min-w-0 rounded-lg border border-black/10 bg-white px-3 text-xs font-semibold text-black outline-none focus:border-black/40"
-                                            >
-                                                {renderOptionsConValorActual(pautasOptions, quickEditDraft.pauta)}
-                                            </select>
-
-                                            <div className="flex items-center gap-2">
-                                                <button
-                                                    onClick={saveQuickEdit}
-                                                    disabled={savingQuickEdit}
-                                                    className="inline-flex h-8 items-center justify-center rounded-lg px-3 text-xs font-extrabold text-white disabled:cursor-not-allowed disabled:opacity-60"
-                                                    style={{ backgroundColor: BRAND_BLUE }}
-                                                    type="button"
-                                                    title="Guardar cambios"
-                                                >
-                                                    <Save className="h-3.5 w-3.5" />
-                                                </button>
-                                                <button
-                                                    onClick={abrirPlantillas}
-                                                    disabled={!activeTel}
-                                                    className={cls(
-                                                        "inline-flex h-8 items-center justify-center rounded-lg border border-black/10 bg-white px-3 text-xs font-extrabold text-black hover:bg-neutral-50 disabled:cursor-not-allowed disabled:opacity-60",
-                                                    )}
-                                                    type="button"
-                                                    title="Enviar plantilla"
-                                                >
-                                                    <LayoutTemplate className="h-3.5 w-3.5" />
-                                                </button>
-                                            </div>
-                                            <ChevronDown className="h-4 w-4 text-black/60 transition group-open:rotate-180" />
-                                        </summary>
-                                    </details>
+                                    <PanelDatosProspecto
+                                        draft={quickEditDraft}
+                                        setDraft={setQuickEditDraft}
+                                        onSave={saveQuickEdit}
+                                        saving={savingQuickEdit}
+                                    />
                                 ) : null}
                             </div>
                         </div>
@@ -3080,6 +3226,15 @@ export default function DigitalesContacto() {
                                             </div>
                                         ) : null}
                                     </div>
+                                    <button
+                                    onClick={abrirPlantillas}
+                                    disabled={!activeTel}
+                                    className="inline-flex h-10 w-10 items-center justify-center rounded-full text-black hover:bg-neutral-100 disabled:cursor-not-allowed disabled:opacity-60"
+                                    title="Plantilla"
+                                    type="button"
+                                >
+                                    <LayoutTemplate className="h-5 w-5" />
+                                </button>
 
                                     <input
                                         ref={fileInputRef}
