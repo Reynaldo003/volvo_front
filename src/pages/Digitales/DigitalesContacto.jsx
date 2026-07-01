@@ -686,12 +686,28 @@ function normalizeMessageAttachments(message = {}) {
 }
 
 function normalizeMessage(message = {}) {
+    const raw = message.raw || {};
+
+    const templatePreview =
+        message.template_preview ||
+        message.preview_text ||
+        raw.template_preview ||
+        raw.preview_text ||
+        "";
+
+    const text =
+        templatePreview ||
+        message.text ||
+        message.body ||
+        message.caption ||
+        "";
+
     return {
         ...message,
         id: message.id || message.wa_message_id || crypto.randomUUID(),
-        text: message.text || message.body || message.caption || "",
+        text,
         attachments: normalizeMessageAttachments(message),
-        is_ai: Boolean(message.is_ai || message?.raw?.openai_model),
+        is_ai: Boolean(message.is_ai || raw.openai_model),
     };
 }
 
@@ -746,7 +762,7 @@ function buildTemplatePreviewText(template, draft) {
 
 function parseTemplateMarkerText(text) {
     const value = String(text || "");
-    const match = value.match(/^\[TEMPLATE:([^\]]+)\]\s*(.*)$/s);
+    const match = value.match(/^\[TEMPLATE:\s*([^\]]+)\]\s*(.*)$/s);
 
     if (!match) {
         return {
@@ -757,7 +773,8 @@ function parseTemplateMarkerText(text) {
         };
     }
 
-    const templateName = match[1] || "";
+    const templateName = String(match[1] || "").trim();
+
     const params = String(match[2] || "")
         .split("|")
         .map((item) => item.trim())
@@ -2189,6 +2206,7 @@ export default function DigitalesContacto() {
                 idioma,
                 components: components.length ? components : undefined,
                 params: components.length ? undefined : [],
+                preview_text: textoPreview || "",
             });
 
             setOpenTpl(false);
@@ -2292,58 +2310,58 @@ export default function DigitalesContacto() {
         setShowQuickEdit(true);
     }
 
-async function saveQuickEdit() {
-    console.log("prospecto:", prospecto);
-    console.log("activeTel:", activeTel);
-    console.log("quickEditDraft:", quickEditDraft);
-    
-    if (!prospecto?.id || !activeTel) {
-        console.log("RETORNO TEMPRANO — falta prospecto.id o activeTel");
-        return;
+    async function saveQuickEdit() {
+        console.log("prospecto:", prospecto);
+        console.log("activeTel:", activeTel);
+        console.log("quickEditDraft:", quickEditDraft);
+
+        if (!prospecto?.id || !activeTel) {
+            console.log("RETORNO TEMPRANO — falta prospecto.id o activeTel");
+            return;
+        }
+
+        setSavingQuickEdit(true);
+
+        try {
+            const payload = {};
+
+            if (quickEditDraft.nombre) payload.nombre = quickEditDraft.nombre;
+            if (quickEditDraft.auto_interes) payload.auto_interes = quickEditDraft.auto_interes;
+            if (quickEditDraft.estado) payload.estado = quickEditDraft.estado;
+            if (quickEditDraft.canal_contacto) payload.canal_contacto = quickEditDraft.canal_contacto;
+            if (quickEditDraft.business) payload.business = quickEditDraft.business;
+            if (quickEditDraft.comentarios) payload.comentarios = quickEditDraft.comentarios;
+            if (quickEditDraft.buro_estado) payload.buro_estado = quickEditDraft.buro_estado;
+            if (quickEditDraft.forma_pago) payload.forma_pago = quickEditDraft.forma_pago;
+            if (quickEditDraft.tipo_cliente) payload.tipo_cliente = quickEditDraft.tipo_cliente;
+            if (quickEditDraft.plazo_compra) payload.plazo_compra = quickEditDraft.plazo_compra;
+            if (quickEditDraft.uso_vehiculo) payload.uso_vehiculo = quickEditDraft.uso_vehiculo;
+            if (quickEditDraft.comprobacion_ingresos) payload.comprobacion_ingresos = quickEditDraft.comprobacion_ingresos;
+
+            const pautaLimpia = String(quickEditDraft.pauta || "").trim();
+            if (pautaLimpia) payload.pauta = pautaLimpia;
+
+            if (quickEditDraft.enganche_monto !== "" && quickEditDraft.enganche_monto != null)
+                payload.enganche_monto = Number(quickEditDraft.enganche_monto);
+
+            if (quickEditDraft.presupuesto_mensual !== "" && quickEditDraft.presupuesto_mensual != null)
+                payload.presupuesto_mensual = Number(quickEditDraft.presupuesto_mensual);
+
+            console.log("PAYLOAD que se manda:", payload);  // ← NUEVO
+
+            const result = await api.digitalesPatchProspecto(prospecto.id, payload);
+
+            console.log("Respuesta del PATCH:", result);  // ← NUEVO
+
+            await refreshActiveChat(activeTel);
+            setShowQuickEdit(false);
+        } catch (error) {
+            console.error("ERROR en saveQuickEdit:", error);  // ← NUEVO
+            alert(`No se pudo guardar: ${error.message}`);
+        } finally {
+            setSavingQuickEdit(false);
+        }
     }
-
-    setSavingQuickEdit(true);
-
-    try {
-        const payload = {};
-
-        if (quickEditDraft.nombre) payload.nombre = quickEditDraft.nombre;
-        if (quickEditDraft.auto_interes) payload.auto_interes = quickEditDraft.auto_interes;
-        if (quickEditDraft.estado) payload.estado = quickEditDraft.estado;
-        if (quickEditDraft.canal_contacto) payload.canal_contacto = quickEditDraft.canal_contacto;
-        if (quickEditDraft.business) payload.business = quickEditDraft.business;
-        if (quickEditDraft.comentarios) payload.comentarios = quickEditDraft.comentarios;
-        if (quickEditDraft.buro_estado) payload.buro_estado = quickEditDraft.buro_estado;
-        if (quickEditDraft.forma_pago) payload.forma_pago = quickEditDraft.forma_pago;
-        if (quickEditDraft.tipo_cliente) payload.tipo_cliente = quickEditDraft.tipo_cliente;
-        if (quickEditDraft.plazo_compra) payload.plazo_compra = quickEditDraft.plazo_compra;
-        if (quickEditDraft.uso_vehiculo) payload.uso_vehiculo = quickEditDraft.uso_vehiculo;
-        if (quickEditDraft.comprobacion_ingresos) payload.comprobacion_ingresos = quickEditDraft.comprobacion_ingresos;
-
-        const pautaLimpia = String(quickEditDraft.pauta || "").trim();
-        if (pautaLimpia) payload.pauta = pautaLimpia;
-
-        if (quickEditDraft.enganche_monto !== "" && quickEditDraft.enganche_monto != null)
-            payload.enganche_monto = Number(quickEditDraft.enganche_monto);
-
-        if (quickEditDraft.presupuesto_mensual !== "" && quickEditDraft.presupuesto_mensual != null)
-            payload.presupuesto_mensual = Number(quickEditDraft.presupuesto_mensual);
-
-        console.log("PAYLOAD que se manda:", payload);  // ← NUEVO
-
-        const result = await api.digitalesPatchProspecto(prospecto.id, payload);
-        
-        console.log("Respuesta del PATCH:", result);  // ← NUEVO
-
-        await refreshActiveChat(activeTel);
-        setShowQuickEdit(false);
-    } catch (error) {
-        console.error("ERROR en saveQuickEdit:", error);  // ← NUEVO
-        alert(`No se pudo guardar: ${error.message}`);
-    } finally {
-        setSavingQuickEdit(false);
-    }
-}
 
     useEffect(() => {
         let mounted = true;
@@ -2883,26 +2901,26 @@ async function saveQuickEdit() {
                                                     {activeChat?.nombre || "Selecciona un chat"}
                                                 </div>
                                                 {activeTel ? (
-                                                <select
-                                                    value={quickEditDraft.estado || ""}
-                                                    onChange={(e) => setQuickEditDraft((p) => ({ ...p, estado: e.target.value }))}
-                                                    className="h-8 rounded-lg border border-black/10 bg-white px-2 text-xs font-semibold text-black outline-none focus:border-black/40"
-                                                >
-                                                    {renderOptionsConValorActual(ESTADOS_PROSPECTO, quickEditDraft.estado || "", "Sin estado")}
-                                                </select>
-                                            ) : null}
+                                                    <select
+                                                        value={quickEditDraft.estado || ""}
+                                                        onChange={(e) => setQuickEditDraft((p) => ({ ...p, estado: e.target.value }))}
+                                                        className="h-8 rounded-lg border border-black/10 bg-white px-2 text-xs font-semibold text-black outline-none focus:border-black/40"
+                                                    >
+                                                        {renderOptionsConValorActual(ESTADOS_PROSPECTO, quickEditDraft.estado || "", "Sin estado")}
+                                                    </select>
+                                                ) : null}
 
-                                            {activeTel ? (
-                                                <select
-                                                    value={quickEditDraft.pauta || ""}
-                                                    onChange={(e) => setQuickEditDraft((p) => ({ ...p, pauta: e.target.value }))}
-                                                    className="h-8 rounded-lg border border-black/10 bg-white px-2 text-xs font-semibold text-black outline-none focus:border-black/40"
-                                                >
-                                                    {renderOptionsConValorActual(pautasOptions, quickEditDraft.pauta || "", "Sin campaña")}
-                                                </select>
-                                            ) : null}
+                                                {activeTel ? (
+                                                    <select
+                                                        value={quickEditDraft.pauta || ""}
+                                                        onChange={(e) => setQuickEditDraft((p) => ({ ...p, pauta: e.target.value }))}
+                                                        className="h-8 rounded-lg border border-black/10 bg-white px-2 text-xs font-semibold text-black outline-none focus:border-black/40"
+                                                    >
+                                                        {renderOptionsConValorActual(pautasOptions, quickEditDraft.pauta || "", "Sin campaña")}
+                                                    </select>
+                                                ) : null}
 
-                                                                                        
+
                                             </div>
 
                                             <div className="mt-1 flex flex-wrap items-center gap-x-3 gap-y-1 text-[11px] font-semibold text-slate-500 sm:text-xs">
@@ -3227,14 +3245,14 @@ async function saveQuickEdit() {
                                         ) : null}
                                     </div>
                                     <button
-                                    onClick={abrirPlantillas}
-                                    disabled={!activeTel}
-                                    className="inline-flex h-10 w-10 items-center justify-center rounded-full text-black hover:bg-neutral-100 disabled:cursor-not-allowed disabled:opacity-60"
-                                    title="Plantilla"
-                                    type="button"
-                                >
-                                    <LayoutTemplate className="h-5 w-5" />
-                                </button>
+                                        onClick={abrirPlantillas}
+                                        disabled={!activeTel}
+                                        className="inline-flex h-10 w-10 items-center justify-center rounded-full text-black hover:bg-neutral-100 disabled:cursor-not-allowed disabled:opacity-60"
+                                        title="Plantilla"
+                                        type="button"
+                                    >
+                                        <LayoutTemplate className="h-5 w-5" />
+                                    </button>
 
                                     <input
                                         ref={fileInputRef}

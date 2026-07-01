@@ -5,6 +5,7 @@ import volvoLogo from "../assets/volvo_sin_fondo.png";
 import {
     CalendarDays, Car, ClipboardList, Gauge,
     Handshake, Menu, UserRoundSearch, ChevronDown, LogOut,
+    ChartNoAxesColumn,
 } from "lucide-react";
 import { useAuth } from "../auth/AuthContext";
 
@@ -12,18 +13,19 @@ const BASE_PATH = "/crm_volvo";
 
 const gestionCalidadTabs = [
     { label: "Check Recepción", to: `${BASE_PATH}/calidad/checklist_recepcion`, icon: UserRoundSearch },
-    { label: "Check Entrega",   to: `${BASE_PATH}/calidad/checklist_entrega`,   icon: CalendarDays },
-    { label: "Check General",   to: `${BASE_PATH}/calidad/checklist_general`,   icon: ClipboardList },
+    { label: "Check Entrega", to: `${BASE_PATH}/calidad/checklist_entrega`, icon: CalendarDays },
+    { label: "Check General", to: `${BASE_PATH}/calidad/checklist_general`, icon: ClipboardList },
 ];
 
 const gestionComercialTabs = [
-    { label: "Prospectos",     to: `${BASE_PATH}/comercial/prospectos`,          icon: UserRoundSearch },
-    { label: "Contacto",       to: `${BASE_PATH}/comercial/prospectos/contacto`, icon: UserRoundSearch },
-    { label: "Citas",          to: `${BASE_PATH}/comercial/citas`,               icon: CalendarDays },
-    { label: "Control piso",   to: `${BASE_PATH}/comercial/control_piso`,        icon: ClipboardList },
-    { label: "Tráfico piso",   to: `${BASE_PATH}/comercial/trafico_piso`,        icon: Gauge },
-    { label: "Pruebas manejo", to: `${BASE_PATH}/comercial/pruebas_manejo`,      icon: Car },
-    { label: "Entregas",       to: `${BASE_PATH}/comercial/entregas`,            icon: Handshake },
+    { label: "Prospectos", to: `${BASE_PATH}/comercial/prospectos`, icon: UserRoundSearch },
+    { label: "Contacto", to: `${BASE_PATH}/comercial/prospectos/contacto`, icon: UserRoundSearch },
+    { label: "Citas", to: `${BASE_PATH}/comercial/citas`, icon: CalendarDays },
+    { label: "Control piso", to: `${BASE_PATH}/comercial/control_piso`, icon: ClipboardList },
+    { label: "Tráfico piso", to: `${BASE_PATH}/comercial/trafico_piso`, icon: Gauge },
+    { label: "Pruebas manejo", to: `${BASE_PATH}/comercial/pruebas_manejo`, icon: Car },
+    { label: "Entregas", to: `${BASE_PATH}/comercial/entregas`, icon: Handshake },
+    { label: "Campañas Meta", to: `${BASE_PATH}/comercial/campanas_meta`, icon: ChartNoAxesColumn },
 ];
 
 function getTabClass({ isActive }) {
@@ -52,7 +54,7 @@ export default function Topbar({ onOpenSidebar }) {
 
     const inicial = useMemo(() =>
         nombreUsuario.trim().slice(0, 1).toUpperCase() || "U"
-    , [nombreUsuario]);
+        , [nombreUsuario]);
 
     const mostrarTopnavGestion = location.pathname.startsWith(`${BASE_PATH}/comercial`);
     const mostrarTopnavCalidad = location.pathname.startsWith(`${BASE_PATH}/calidad`);
@@ -75,21 +77,21 @@ export default function Topbar({ onOpenSidebar }) {
                     <Menu size={18} />
                 </button>
 
-               {/* Logo */}
-<button
-    onClick={() => navigate(`${BASE_PATH}/`)}
-    className="flex flex-col items-start leading-none select-none shrink-0 gap-1"
->
-    <img
-        src={volvoLogo}
-        alt="Volvo"
-        className="h-4 w-auto object-contain"
-        style={{ filter: "brightness(0)" }}
-    />
-    <span className="text-[9px] font-semibold tracking-widest text-slate-400 uppercase">
-    
-    </span>
-</button>
+                {/* Logo */}
+                <button
+                    onClick={() => navigate(`${BASE_PATH}/`)}
+                    className="flex flex-col items-start leading-none select-none shrink-0 gap-1"
+                >
+                    <img
+                        src={volvoLogo}
+                        alt="Volvo"
+                        className="h-4 w-auto object-contain"
+                        style={{ filter: "brightness(0)" }}
+                    />
+                    <span className="text-[9px] font-semibold tracking-widest text-slate-400 uppercase">
+
+                    </span>
+                </button>
 
                 <div className="flex-1" />
 
@@ -151,46 +153,46 @@ w-[240px]
                     <nav className="flex min-w-max gap-2 px-5 py-2">
                         {tabs.map(({ label, to, icon: Icon }) => (
                             <NavLink
-    key={to}
-    to={to}
-    end={to.endsWith("prospectos")}
->
-    {({ isActive }) => (
-        <div
-            className={[
-                "group relative flex items-center gap-2.5 px-5 py-3 rounded-xl",
-                "text-[14px] font-medium tracking-wide whitespace-nowrap",
-                "transition-all duration-300 ease-out cursor-pointer",
-                "hover:-translate-y-[2px] hover:shadow-md",
-                isActive
-                    ? "bg-slate-100 text-slate-900 shadow-sm"
-                    : "text-slate-600 hover:text-slate-900 hover:bg-slate-50",
-            ].join(" ")}
-        >
-            <Icon
-                size={18}
-                className="
+                                key={to}
+                                to={to}
+                                end={to.endsWith("prospectos")}
+                            >
+                                {({ isActive }) => (
+                                    <div
+                                        className={[
+                                            "group relative flex items-center gap-2.5 px-5 py-3 rounded-xl",
+                                            "text-[14px] font-medium tracking-wide whitespace-nowrap",
+                                            "transition-all duration-300 ease-out cursor-pointer",
+                                            "hover:-translate-y-[2px] hover:shadow-md",
+                                            isActive
+                                                ? "bg-slate-100 text-slate-900 shadow-sm"
+                                                : "text-slate-600 hover:text-slate-900 hover:bg-slate-50",
+                                        ].join(" ")}
+                                    >
+                                        <Icon
+                                            size={18}
+                                            className="
                     transition-all
                     duration-300
                     group-hover:scale-110
                     group-hover:-translate-y-[1px]
                 "
-            />
+                                        />
 
-            <span>{label}</span>
+                                        <span>{label}</span>
 
-            <span
-                className={[
-                    "absolute left-4 right-4 bottom-0 h-[2px] rounded-full",
-                    "transition-all duration-300",
-                    isActive
-                        ? "bg-slate-900 opacity-100"
-                        : "opacity-0 group-hover:opacity-20 bg-slate-900",
-                ].join(" ")}
-            />
-        </div>
-    )}
-</NavLink>
+                                        <span
+                                            className={[
+                                                "absolute left-4 right-4 bottom-0 h-[2px] rounded-full",
+                                                "transition-all duration-300",
+                                                isActive
+                                                    ? "bg-slate-900 opacity-100"
+                                                    : "opacity-0 group-hover:opacity-20 bg-slate-900",
+                                            ].join(" ")}
+                                        />
+                                    </div>
+                                )}
+                            </NavLink>
                         ))}
                     </nav>
                 </div>

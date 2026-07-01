@@ -39,7 +39,7 @@ import CheckListRecepcion from "./pages/CheckListRecepcion/RegistroCheckRecepcio
 import PruebaManejoLayout from "./pages/PruebasManejo/PruebaManejoLayout";
 import RegistroPruebaManejo from "./pages/PruebasManejo/RegistroPruebaManejo";
 
-
+import CampanasMeta from "./pages/CampanasMeta/CampanasMeta";
 import RegistroEntregas from "./pages/Entregas/RegistroEntregas";
 
 
@@ -107,7 +107,6 @@ export const router = createBrowserRouter([
                                 ],
                             },
 
-                            // ★ control_piso — se agregó la ruta "agenda"
                             {
                                 path: "control_piso",
                                 element: <CitasPisoLayout />,
@@ -117,7 +116,7 @@ export const router = createBrowserRouter([
                                         element: <RegistroCitasPiso />,
                                     },
                                     {
-                                        path: "agenda",           // ★ NUEVO
+                                        path: "agenda",
                                         element: <AgendaCitasPiso />,
                                     },
                                     {
@@ -143,6 +142,11 @@ export const router = createBrowserRouter([
                             {
                                 path: "entregas",
                                 element: <RegistroEntregas />,
+                            },
+
+                            {
+                                path: "campanas_meta",
+                                element: <CampanasMeta />,
                             },
                         ],
                     },

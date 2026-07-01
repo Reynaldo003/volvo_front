@@ -1,9 +1,7 @@
-//volvo
 // src/lib/apiPruebas.js
 import { http, toQuery } from "./apiClient";
 
-const NUMERO_ASESOR_VOLVO =
-  import.meta.env.VITE_VOLVO_WHATSAPP_NUMERO || "522211092815";
+const NUMERO_ASESOR_VOLVO = "522211092815";
 
 function cleanParams(params = {}) {
   const out = {};
@@ -16,10 +14,88 @@ function cleanParams(params = {}) {
   return out;
 }
 
+function normalizaTelefonoMx(value) {
+  const digits = String(value || "").replace(/\D/g, "");
+
+  if (!digits) return "";
+
+  if (digits.startsWith("521") && digits.length === 13) {
+    return `52${digits.slice(3)}`;
+  }
+
+  if (digits.length === 10) {
+    return `52${digits}`;
+  }
+
+  if (digits.length === 12 && digits.startsWith("52")) {
+    return digits;
+  }
+
+  return digits;
+}
+
+function getStoredUser() {
+  try {
+    const candidates = [
+      localStorage.getItem("crm_volvo_usuario"),
+      localStorage.getItem("auth"),
+    ];
+
+    for (const raw of candidates) {
+      if (!raw) continue;
+      const parsed = JSON.parse(raw);
+
+      if (parsed?.user && typeof parsed.user === "object") return parsed.user;
+      if (parsed && typeof parsed === "object") return parsed;
+    }
+  } catch {
+    // Sin acción.
+  }
+
+  return null;
+}
+
+function getCrmUsername() {
+  const user = getStoredUser();
+
+  return String(
+    user?.usuario ||
+      user?.username ||
+      user?.user ||
+      user?.correo ||
+      user?.email ||
+      "",
+  ).trim();
+}
+
+function getWhatsAppNumberFromUser() {
+  const user = getStoredUser();
+
+  const numero = normalizaTelefonoMx(
+    user?.telefono ||
+      user?.numero_asesor ||
+      user?.whatsapp_number ||
+      user?.phone ||
+      "",
+  );
+
+  return numero || "";
+}
+
+function getNumeroAsesor(numeroAsesor = "") {
+  return normalizaTelefonoMx(
+    numeroAsesor || getWhatsAppNumberFromUser() || NUMERO_ASESOR_VOLVO,
+  );
+}
+
 function withNumeroAsesor(params = {}) {
+  const numero = getNumeroAsesor(params.numero_asesor);
+  const usuario = params.usuario || getCrmUsername();
+
   return cleanParams({
     ...params,
-    numero_asesor: params.numero_asesor || NUMERO_ASESOR_VOLVO,
+    numero_asesor: numero,
+    usuario,
   });
 }
 
@@ -28,8 +104,16 @@ function jsonBody(payload = {}) {
     headers: {
       "Content-Type": "application/json",
     },
-    body: JSON.stringify(payload),
+    body: JSON.stringify(payload || {}),
   };
+}
+
+function readTelArg(value = {}) {
+  if (typeof value === "string" || typeof value === "number") {
+    return { tel: String(value) };
+  }
+
+  return value || {};
 }
 
 export const api = {
@@ -71,7 +155,7 @@ export const api = {
       error: "La generación de resumen está desactivada en CRM Volvo.",
     }),
 
-  // ------------------ WHATSAPP ACTIVO ------------------
+  // ------------------ WHATSAPP ------------------
   digitalesChats: (params = {}) =>
     http(`/digitales/chats/${toQuery(withNumeroAsesor(params))}`),
 
@@ -80,10 +164,11 @@ export const api = {
       `/digitales/contacto/${toQuery(
         withNumeroAsesor({
           tel,
-          limit: options.limit ?? 80,
+          limit: options.limit ?? 50,
           before_id: options.before_id || "",
           mark_read: options.mark_read ?? 1,
-          ...(options.days ? { days: options.days } : {}),
+          numero_asesor: options.numero_asesor,
+          usuario: options.usuario,
         }),
       )}`,
     ),
@@ -95,14 +180,18 @@ export const api = {
           tel,
           after,
           after_id: options.after_id || "",
-          limit: options.limit ?? 80,
+          limit: options.limit ?? 50,
           mark_read: options.mark_read ?? 0,
+          numero_asesor: options.numero_asesor,
+          usuario: options.usuario,
         }),
       )}`,
     ),
 
-  digitalesMarkRead: ({ tel, telefono, numero_asesor } = {}) =>
-    http("/digitales/chats/mark-read/", {
+  digitalesMarkRead: (input = {}) => {
+    const { tel, telefono, numero_asesor } = readTelArg(input);
+
+    return http("/digitales/chats/mark-read/", {
       method: "POST",
       ...jsonBody(
         withNumeroAsesor({
@@ -110,9 +199,13 @@ export const api = {
           numero_asesor,
         }),
       ),
-    }),
-  digitalesMarkUnread: ({ tel, telefono, numero_asesor } = {}) =>
-    http("/digitales/chats/mark-unread/", {
+    });
+  },
+
+  digitalesMarkUnread: (input = {}) => {
+    const { tel, telefono, numero_asesor } = readTelArg(input);
+
+    return http("/digitales/chats/mark-unread/", {
       method: "POST",
       ...jsonBody(
         withNumeroAsesor({
@@ -120,18 +213,25 @@ export const api = {
           numero_asesor,
         }),
       ),
-    }),
+    });
+  },
 
   digitalesPlantillas: (params = {}) =>
     http(`/digitales/mensajes/plantillas/${toQuery(withNumeroAsesor(params))}`),
 
-  digitalesEnviarMensaje: ({ to, text, numero_asesor } = {}) =>
+  digitalesEnviarMensaje: ({
+    to,
+    text,
+    reply_to_message_id = "",
+    numero_asesor,
+  } = {}) =>
     http("/digitales/mensajes/enviar/", {
       method: "POST",
       ...jsonBody(
         withNumeroAsesor({
           to,
           text,
+          reply_to_message_id,
           numero_asesor,
         }),
       ),
@@ -159,14 +259,31 @@ export const api = {
       ),
     }),
 
-  digitalesEnviarMedia: ({ to, text = "", files = [], numero_asesor } = {}) => {
+  digitalesEnviarMedia: ({
+    to,
+    text = "",
+    files = [],
+    reply_to_message_id = "",
+    numero_asesor,
+  } = {}) => {
     const fd = new FormData();
 
-    fd.append("to", to || "");
-    fd.append("text", text || "");
-    fd.append("numero_asesor", numero_asesor || NUMERO_ASESOR_VOLVO);
+    fd.append("to", String(to || "").trim());
+    fd.append("text", String(text || ""));
+    fd.append("numero_asesor", getNumeroAsesor(numero_asesor));
 
-    const arr = Array.isArray(files) ? files : files ? [files] : [];
+    const usuario = getCrmUsername();
+    if (usuario) fd.append("usuario", usuario);
+
+    if (reply_to_message_id) {
+      fd.append("reply_to_message_id", String(reply_to_message_id));
+    }
+
+    const arr = Array.isArray(files)
+      ? files
+      : typeof File !== "undefined" && files instanceof File
+        ? [files]
+        : Array.from(files || []);
 
     for (const file of arr) {
       fd.append("files", file);
