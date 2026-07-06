@@ -6,7 +6,20 @@ import Topbar from "../components/Topbar";
 
 export default function AppShell() {
     const location = useLocation();
+
     const [sidebarMovilAbierto, setSidebarMovilAbierto] = useState(false);
+
+    const [sidebarContraido, setSidebarContraido] = useState(() => {
+        return localStorage.getItem("crm_volvo_sidebar_contraido") === "1";
+    });
+
+    const toggleSidebarContraido = () => {
+        setSidebarContraido((prev) => {
+            const nuevoValor = !prev;
+            localStorage.setItem("crm_volvo_sidebar_contraido", nuevoValor ? "1" : "0");
+            return nuevoValor;
+        });
+    };
 
     useEffect(() => {
         setSidebarMovilAbierto(false);
@@ -14,9 +27,16 @@ export default function AppShell() {
 
     useEffect(() => {
         if (!sidebarMovilAbierto) return;
-        const handleKeyDown = (e) => { if (e.key === "Escape") setSidebarMovilAbierto(false); };
+
+        const handleKeyDown = (e) => {
+            if (e.key === "Escape") {
+                setSidebarMovilAbierto(false);
+            }
+        };
+
         document.addEventListener("keydown", handleKeyDown);
         document.body.style.overflow = "hidden";
+
         return () => {
             document.removeEventListener("keydown", handleKeyDown);
             document.body.style.overflow = "";
@@ -24,15 +44,14 @@ export default function AppShell() {
     }, [sidebarMovilAbierto]);
 
     return (
-        // h-screen + overflow-hidden en el wrapper => el scroll queda solo en <main>
         <div className="flex h-screen overflow-hidden bg-[#ffffff]">
-
-            {/* Sidebar desktop (fijo, altura completa) */}
-            <div className="hidden h-full lg:block">
-                <Sidebar />
+            <div className="hidden h-full flex-none lg:block">
+                <Sidebar
+                    contraido={sidebarContraido}
+                    onToggleContraido={toggleSidebarContraido}
+                />
             </div>
 
-            {/* Sidebar móvil (overlay) */}
             {sidebarMovilAbierto && (
                 <div className="fixed inset-0 z-50 lg:hidden">
                     <button
@@ -41,20 +60,24 @@ export default function AppShell() {
                         onClick={() => setSidebarMovilAbierto(false)}
                         className="absolute inset-0 bg-slate-950/60 backdrop-blur-sm"
                     />
+
                     <div className="relative h-full w-[280px] max-w-[85vw]">
-                        <Sidebar isMobile onClose={() => setSidebarMovilAbierto(false)} />
+                        <Sidebar
+                            isMobile
+                            onClose={() => setSidebarMovilAbierto(false)}
+                            contraido={false}
+                        />
                     </div>
                 </div>
             )}
 
-            {/* Contenido principal — aquí SÍ hay scroll */}
             <main className="flex min-w-0 flex-1 flex-col overflow-y-auto">
                 <Topbar onOpenSidebar={() => setSidebarMovilAbierto(true)} />
+
                 <div className="flex-1 p-4 sm:p-6 lg:p-8">
                     <Outlet />
                 </div>
             </main>
-
         </div>
     );
 }

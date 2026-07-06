@@ -3,15 +3,15 @@ import { useMemo } from "react";
 import { Link, useLocation } from "react-router-dom";
 import { ChartNoAxesCombined, CalendarCheck2, CalendarDays } from "lucide-react";
 
-const BASE = "/crm_volvo/comercial/citas";
+const BASE = "/comercial/citas";
 
 export default function CitasTopNav() {
     const location = useLocation();
 
     const tabs = useMemo(
         () => [
-            { label: "Citas",    href: BASE,              icon: CalendarCheck2      },
-            { label: "Agenda",   href: `${BASE}/agenda`,  icon: CalendarDays        },
+            { label: "Citas", href: BASE, icon: CalendarCheck2 },
+            { label: "Agenda", href: `${BASE}/agenda`, icon: CalendarDays },
             { label: "Gráficas", href: `${BASE}/resumen`, icon: ChartNoAxesCombined },
         ],
         []
@@ -34,7 +34,7 @@ export default function CitasTopNav() {
 
                 <nav className="flex items-center gap-1 self-start rounded-lg border border-black/10 bg-neutral-50 p-1">
                     {tabs.map((t) => {
-                        const Icon   = t.icon;
+                        const Icon = t.icon;
                         const active = isActive(t.href);
                         return (
                             <Link

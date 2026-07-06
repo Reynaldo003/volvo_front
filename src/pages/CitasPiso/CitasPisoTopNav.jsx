@@ -3,16 +3,16 @@ import { useMemo } from "react";
 import { Link, useLocation } from "react-router-dom";
 import { ChartNoAxesCombined, CalendarCheck2, CalendarRange } from "lucide-react";
 
-const BASE = "/crm_volvo/comercial/control_piso";
+const BASE = "/comercial/control_piso";
 
 export default function CitasPisoTopNav() {
     const location = useLocation();
 
     const tabs = useMemo(
         () => [
-            { label: "Control piso", href: BASE,              icon: CalendarCheck2      },
-            { label: "Agenda",       href: `${BASE}/agenda`,  icon: CalendarRange       },
-            { label: "Resumen",      href: `${BASE}/resumen`, icon: ChartNoAxesCombined },
+            { label: "Control piso", href: BASE, icon: CalendarCheck2 },
+            { label: "Agenda", href: `${BASE}/agenda`, icon: CalendarRange },
+            { label: "Resumen", href: `${BASE}/resumen`, icon: ChartNoAxesCombined },
         ],
         []
     );
@@ -89,7 +89,7 @@ export default function CitasPisoTopNav() {
                             }}
                         >
                             {tabs.map((t) => {
-                                const Icon   = t.icon;
+                                const Icon = t.icon;
                                 const active = isActive(t.href);
                                 return (
                                     <Link
@@ -154,9 +154,9 @@ export default function CitasPisoTopNav() {
                             style={{ border: "0.5px solid rgba(255,255,255,0.1)" }}
                         >
                             {[
-                                { n: "47",  l: "Este mes",   d: "↑ +9%" },
+                                { n: "47", l: "Este mes", d: "↑ +9%" },
                                 { n: "68%", l: "Conversión", d: "↑ +4%" },
-                                { n: "12",  l: "Hoy",        d: "↑ +3"  },
+                                { n: "12", l: "Hoy", d: "↑ +3" },
                             ].map((s, i) => (
                                 <div
                                     key={i}

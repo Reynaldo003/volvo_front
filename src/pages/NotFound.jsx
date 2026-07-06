@@ -17,7 +17,7 @@ export default function NotFound() {
                 </p>
 
                 <Link
-                    to="/crm_volvo/"
+                    to="/"
                     className="mt-6 inline-flex rounded-2xl bg-slate-900 px-5 py-3 text-sm font-bold text-white transition hover:bg-slate-800"
                 >
                     Volver al inicio

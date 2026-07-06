@@ -15,22 +15,21 @@ import vwWhite from "../../assets/vw_white.png";
 import ryr from "../../assets/ryr.png";
 
 const BRAND_BLUE = "#131E5C";
-const BASE_PATH = "/crm_volvo";
 
 const tabs = [
     {
         label: "Check Recepcion",
-        to: `${BASE_PATH}/calidad/checklist_recepcion`,
+        to: "/calidad/checklist_recepcion",
         icon: UserRoundSearch,
     },
     {
         label: "Check Entrega",
-        to: `${BASE_PATH}/calidad/checklist_entrega`,
+        to: "/calidad/checklist_entrega",
         icon: CalendarDays,
     },
     {
         label: "Check General",
-        to: `${BASE_PATH}/calidad/checklist_general`,
+        to: "/calidad/checklist_general",
         icon: ClipboardList,
     },
 ];

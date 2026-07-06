@@ -122,7 +122,7 @@ export function AuthProvider({ children }) {
         clearAuthSession();
         setToken(null);
         setUsuario(null);
-        window.location.href = "/crm_volvo/login";
+        window.location.href = "/login";
     }
 
     function hasPermission(permiso) {

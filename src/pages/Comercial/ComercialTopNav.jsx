@@ -10,37 +10,35 @@ import {
     UserRoundSearch,
 } from "lucide-react";
 
-const BASE_PATH = "/crm_volvo";
-
 const tabs = [
     {
         label: "Prospectos",
-        to: `${BASE_PATH}/comercial/prospectos`,
+        to: "/comercial/prospectos",
         icon: UserRoundSearch,
     },
     {
         label: "Citas",
-        to: `${BASE_PATH}/comercial/citas`,
+        to: "/comercial/citas",
         icon: CalendarDays,
     },
     {
         label: "Control piso",
-        to: `${BASE_PATH}/comercial/control_piso`,
+        to: "/comercial/control_piso",
         icon: ClipboardList,
     },
     {
         label: "Tráfico piso",
-        to: `${BASE_PATH}/comercial/trafico_piso`,
+        to: "/comercial/trafico_piso",
         icon: Gauge,
     },
     {
         label: "Pruebas manejo",
-        to: `${BASE_PATH}/comercial/pruebas_manejo`,
+        to: "/comercial/pruebas_manejo",
         icon: Car,
     },
     {
         label: "Entregas",
-        to: `${BASE_PATH}/comercial/entregas`,
+        to: "/comercial/entregas",
         icon: Handshake,
     },
 ];

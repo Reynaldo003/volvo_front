@@ -23,7 +23,7 @@ export default function ProtectedLayout() {
     if (!isAuthenticated) {
         return (
             <Navigate
-                to="/crm_volvo/login"
+                to="/login"
                 replace
                 state={{ from: location }}
             />
