@@ -140,6 +140,71 @@ function normalizeText(value) {
         .toLowerCase();
 }
 
+function normalizarPautasOptions(responseOrItems) {
+    const rawItems = Array.isArray(responseOrItems)
+        ? responseOrItems
+        : Array.isArray(responseOrItems?.items)
+            ? responseOrItems.items
+            : Array.isArray(responseOrItems?.results)
+                ? responseOrItems.results
+                : Array.isArray(responseOrItems?.data)
+                    ? responseOrItems.data
+                    : [];
+
+    const opciones = [];
+    const vistos = new Set();
+
+    function addOption(value, label = value) {
+        const valueLimpio = String(value || "").trim();
+        const labelLimpio = String(label || value || "").trim();
+
+        if (!valueLimpio) return;
+
+        const key = normalizeText(valueLimpio);
+
+        if (vistos.has(key)) return;
+
+        vistos.add(key);
+
+        opciones.push({
+            value: valueLimpio,
+            label: labelLimpio,
+        });
+    }
+
+    for (const item of rawItems) {
+        if (typeof item === "string") {
+            addOption(item);
+            continue;
+        }
+
+        const label =
+            item?.value ||
+            item?.label ||
+            item?.pauta ||
+            item?.pauta_origen ||
+            item?.nombre ||
+            item?.name ||
+            item?.nombre_campana ||
+            item?.campaign_name ||
+            item?.campaign ||
+            "";
+
+        const sucursal = String(item?.sucursal || "").trim();
+        const nombreCampana = String(item?.nombre_campana || "").trim();
+
+        if (sucursal && nombreCampana) {
+            addOption(`${sucursal} - ${nombreCampana}`);
+            continue;
+        }
+
+        addOption(label);
+    }
+    return opciones.sort((a, b) =>
+        a.label.localeCompare(b.label, "es", { sensitivity: "base" })
+    );
+}
+
 function tryParseJson(text) {
     try {
         return JSON.parse(text);
@@ -1436,23 +1501,46 @@ export default function DigitalesProspectos() {
     const [saving, setSaving] = useState(false);
 
     const pautasOptions = useMemo(() => {
-        const items = Array.isArray(pautasMeta) ? pautasMeta : [];
+        const rawItems = Array.isArray(pautasMeta)
+            ? pautasMeta
+            : Array.isArray(pautasMeta?.items)
+                ? pautasMeta.items
+                : Array.isArray(pautasMeta?.results)
+                    ? pautasMeta.results
+                    : Array.isArray(pautasMeta?.data)
+                        ? pautasMeta.data
+                        : [];
+
         const vistos = new Set();
         const opciones = [];
 
-        for (const item of items) {
-            const value = String(item?.value || "").trim();
+        for (const item of rawItems) {
+            const value = String(
+                item?.value ||
+                item?.label ||
+                item?.pauta ||
+                item?.nombre_campana ||
+                item?.nombre ||
+                item?.name ||
+                ""
+            ).trim();
+
             const label = String(item?.label || value).trim();
 
             if (!value) continue;
 
             const key = normalizeText(value);
+
             if (vistos.has(key)) continue;
 
             vistos.add(key);
+
             opciones.push({
                 value,
                 label,
+                id_campana: item?.id_campana || "",
+                sucursal: item?.sucursal || "",
+                nombre_campana: item?.nombre_campana || "",
             });
         }
 
@@ -1525,25 +1613,35 @@ export default function DigitalesProspectos() {
         })();
     }, []);
 
+    const cargarPautasMeta = useCallback(async () => {
+        setLoadingPautas(true);
+
+        try {
+            const res = await api.digitalesCampanasMeta(180);
+
+            const items = Array.isArray(res)
+                ? res
+                : Array.isArray(res?.items)
+                    ? res.items
+                    : Array.isArray(res?.results)
+                        ? res.results
+                        : [];
+
+            setPautasMeta(items);
+        } catch (e) {
+            console.error("Error cargando campañas de campanas_meta_volvo:", e);
+            setPautasMeta([]);
+        } finally {
+            setLoadingPautas(false);
+        }
+    }, []);
+
     useEffect(() => {
         if (!openModal) return;
         if (pautasMeta.length) return;
 
-        (async () => {
-            setLoadingPautas(true);
-            try {
-                const res = await api.digitalesCampanasMeta(30);
-                const items = res?.items || [];
-                setPautasMeta(Array.isArray(items) ? items : []);
-            } catch (e) {
-                console.error("Error cargando campañas meta:", e);
-                setPautasMeta([]);
-            } finally {
-                setLoadingPautas(false);
-            }
-        })();
-    }, [openModal, pautasMeta.length]);
-
+        cargarPautasMeta();
+    }, [openModal, pautasMeta.length, cargarPautasMeta]);
 
     useEffect(() => {
         if (!ready) return;
@@ -2649,7 +2747,7 @@ export default function DigitalesProspectos() {
                                                                         e.preventDefault();
                                                                         e.stopPropagation();
                                                                         navigate(
-                                                                            `/crm_volvo/comercial/prospectos/contacto?tel=${encodeURIComponent(row.telefono || "")}&direct=1`
+                                                                            `/comercial/prospectos/contacto?tel=${encodeURIComponent(row.telefono || "")}&direct=1`
                                                                         );
                                                                     }}
                                                                     className="flex h-9 w-[150px] items-center justify-between rounded-xl border border-black/10 bg-white px-3 shadow-sm transition hover:bg-neutral-50 hover:shadow focus:outline-none focus:ring-2 focus:ring-black/20 active:scale-[0.95] disabled:opacity-50"
@@ -2933,33 +3031,55 @@ export default function DigitalesProspectos() {
                                         />
                                     </div>
                                     <div className="mt-5">
-                                        <div className="mb-1 text-sm font-bold text-black">Pauta de Origen</div>
-                                        {loadingPautas ? (
-                                            <div className="mt-2">
-                                                <Skeleton className="h-10 w-full rounded-lg" />
-                                                <div className="mt-2 flex items-center gap-2 text-xs font-semibold text-black">
-                                                    <Loader2 className="h-4 w-4 animate-spin" />
-                                                    Cargando campañas recientes...
-                                                </div>
-                                            </div>
-                                        ) : (
-                                            <select
-                                                value={draft.pauta || ""}
-                                                onChange={(e) => setDraft((p) => ({ ...p, pauta: e.target.value }))}
-                                                className={[inputBase, inputOk].join(" ")}
+                                        <div className="mb-1 flex items-center justify-between gap-2">
+                                            <div className="text-sm font-bold text-black">Pauta de Origen</div>
+
+                                            <button
+                                                type="button"
+                                                onClick={cargarPautasMeta}
+                                                disabled={loadingPautas}
+                                                className="inline-flex items-center gap-1 rounded-lg border border-black/10 bg-white px-2.5 py-1 text-xs font-bold text-black transition hover:bg-neutral-50 disabled:cursor-not-allowed disabled:opacity-50"
+                                                title="Recargar campañas Meta"
                                             >
-                                                <option value="">— Selecciona una pauta —</option>
-                                                {draft.pauta &&
-                                                    !pautasOptions.some(
-                                                        (item) => normalizeText(item.value) === normalizeText(draft.pauta)
-                                                    ) ? (
-                                                    <option value={draft.pauta}>{draft.pauta} (actual)</option>
-                                                ) : null}
-                                                {pautasOptions.map((item) => (
-                                                    <option key={item.value} value={item.value}>{item.label}</option>
-                                                ))}
-                                            </select>
-                                        )}
+                                                {loadingPautas ? (
+                                                    <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                                                ) : (
+                                                    <ArrowUpDown className="h-3.5 w-3.5" />
+                                                )}
+                                                Recargar
+                                            </button>
+                                        </div>
+
+                                        <select
+                                            value={draft.pauta || ""}
+                                            onChange={(e) =>
+                                                setDraft((prev) => ({
+                                                    ...prev,
+                                                    pauta: e.target.value,
+                                                }))
+                                            }
+                                            disabled={loadingPautas}
+                                            className={[inputBase, inputOk].join(" ")}
+                                        >
+                                            <option value="">
+                                                {loadingPautas ? "Cargando campañas..." : "— Selecciona campaña —"}
+                                            </option>
+
+                                            {draft.pauta &&
+                                                !pautasOptions.some(
+                                                    (item) => normalizeText(item.value) === normalizeText(draft.pauta)
+                                                ) ? (
+                                                <option value={draft.pauta}>
+                                                    {draft.pauta} (actual)
+                                                </option>
+                                            ) : null}
+
+                                            {pautasOptions.map((item) => (
+                                                <option key={item.value} value={item.value}>
+                                                    {item.label}
+                                                </option>
+                                            ))}
+                                        </select>
                                     </div>
                                 </div>
                             </Field>

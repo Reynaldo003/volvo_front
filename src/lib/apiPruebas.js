@@ -146,8 +146,8 @@ export const api = {
       method: "DELETE",
     }),
 
-  digitalesCampanasMeta: (params = {}) =>
-    http(`/digitales/api/campanas-meta/${toQuery(cleanParams(params))}`),
+  digitalesCampanasMeta: (days = 180) =>
+    http(`/digitales/api/campanas-meta/${toQuery({ days })}`),
 
   digitalesGenerarResumen: () =>
     Promise.resolve({

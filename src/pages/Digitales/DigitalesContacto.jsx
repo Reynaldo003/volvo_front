@@ -98,17 +98,6 @@ const PLAZO_COMPRA_OPTIONS = [
     "Desconocido",
 ];
 
-const PAUTAS_ORIGEN = [
-    "Facebook Ads",
-    "Google Ads",
-    "Instagram Ads",
-    "Orgánico",
-    "Referido",
-    "WhatsApp",
-    "Evento",
-    "Otro",
-];
-
 const CHAT_FILTERS = [
     { key: "todos", label: "Todos" },
     { key: "no_leidos", label: "No leídos" },
@@ -125,33 +114,139 @@ const ESTADOS_HEADER = [
 
 // ─── helpers ────────────────────────────────────────────────────────────────
 
-function normalizeCampanasMetaOptions(response) {
-    const rawItems = Array.isArray(response)
-        ? response
-        : Array.isArray(response?.items) ? response.items
-            : Array.isArray(response?.results) ? response.results
-                : Array.isArray(response?.data) ? response.data
+function getCampanaMetaProspecto(prospecto = {}) {
+    const campanaMeta = prospecto?.campana_meta || {};
+
+    const nombreCampana = String(
+        campanaMeta?.nombre_campana ||
+        prospecto?.campana_meta_nombre ||
+        ""
+    ).trim();
+
+    const sucursal = String(
+        campanaMeta?.sucursal ||
+        prospecto?.campana_meta_sucursal ||
+        ""
+    ).trim();
+
+    const pauta = String(
+        campanaMeta?.pauta ||
+        prospecto?.pauta ||
+        ""
+    ).trim();
+
+    return {
+        id_campana: String(campanaMeta?.id_campana || prospecto?.campana_meta_id || "").trim(),
+        nombre_campana: nombreCampana,
+        sucursal,
+        pauta,
+        label: nombreCampana || pauta || "Sin campaña detectada",
+        encontrada: Boolean(campanaMeta?.encontrada),
+        origen: campanaMeta?.origen || "",
+    };
+}
+
+function normalizarPautasMetaOptions(responseOrItems) {
+    const rawItems = Array.isArray(responseOrItems)
+        ? responseOrItems
+        : Array.isArray(responseOrItems?.items)
+            ? responseOrItems.items
+            : Array.isArray(responseOrItems?.results)
+                ? responseOrItems.results
+                : Array.isArray(responseOrItems?.data)
+                    ? responseOrItems.data
                     : [];
 
-    const values = rawItems
-        .map((item) => {
-            if (typeof item === "string") return item;
-            return (item?.value || item?.label || item?.pauta || item?.pauta_origen ||
-                item?.nombre || item?.name || item?.campana || item?.campaign_name ||
-                item?.campaign || item?.ad_name || "");
-        })
-        .map((v) => String(v || "").trim())
-        .filter(Boolean);
+    const opciones = [];
+    const vistos = new Set();
 
-    const unique = [];
-    const seen = new Set();
-    for (const value of [...values, ...PAUTAS_ORIGEN]) {
-        const key = value.toLowerCase();
-        if (seen.has(key)) continue;
-        seen.add(key);
-        unique.push(value);
+    function addOption(value, label = value, extra = {}) {
+        const valueLimpio = String(value || "").trim();
+        const labelLimpio = String(label || value || "").trim();
+
+        if (!valueLimpio) return;
+
+        const key = normalizeText(valueLimpio);
+
+        if (vistos.has(key)) return;
+
+        vistos.add(key);
+
+        opciones.push({
+            value: valueLimpio,
+            label: labelLimpio,
+            id_campana: extra.id_campana || "",
+            sucursal: extra.sucursal || "",
+            nombre_campana: extra.nombre_campana || "",
+        });
     }
-    return unique;
+
+    for (const item of rawItems) {
+        if (typeof item === "string") {
+            addOption(item);
+            continue;
+        }
+
+        const sucursal = String(item?.sucursal || "").trim();
+        const nombreCampana = String(item?.nombre_campana || "").trim();
+        const value = String(
+            item?.value ||
+            item?.label ||
+            item?.pauta ||
+            item?.pauta_origen ||
+            item?.nombre ||
+            item?.name ||
+            nombreCampana ||
+            item?.campaign_name ||
+            item?.campaign ||
+            ""
+        ).trim();
+
+        if (sucursal && nombreCampana) {
+            addOption(`${sucursal} - ${nombreCampana}`, `${sucursal} - ${nombreCampana}`, {
+                id_campana: item?.id_campana || "",
+                sucursal,
+                nombre_campana: nombreCampana,
+            });
+            continue;
+        }
+
+        addOption(value, item?.label || value, {
+            id_campana: item?.id_campana || "",
+            sucursal,
+            nombre_campana: nombreCampana,
+        });
+    }
+
+    return opciones.sort((a, b) =>
+        a.label.localeCompare(b.label, "es", { sensitivity: "base" })
+    );
+}
+
+function renderPautasMetaOptions(options, currentValue, placeholder = "Sin campaña detectada") {
+    const value = String(currentValue || "").trim();
+    const exists = (options || []).some((option) =>
+        String(option?.value || option || "").trim().toLowerCase() === value.toLowerCase()
+    );
+
+    return (
+        <>
+            <option value="">{placeholder}</option>
+            {value && !exists ? <option value={value}>{value} (actual)</option> : null}
+            {(options || []).map((option) => {
+                const optionValue = String(option?.value || option || "").trim();
+                const optionLabel = String(option?.label || optionValue || "").trim();
+
+                if (!optionValue) return null;
+
+                return (
+                    <option key={optionValue} value={optionValue}>
+                        {optionLabel}
+                    </option>
+                );
+            })}
+        </>
+    );
 }
 
 function renderOptionsConValorActual(options, currentValue, placeholder = "Selecciona una opción…") {
@@ -1432,7 +1527,6 @@ export default function DigitalesContacto() {
     const [draftMsg, setDraftMsg] = useState("");
     const [mobileView, setMobileView] = useState("list");
     const [chatSidebarCollapsed, setChatSidebarCollapsed] = useState(false);
-    const [pautasOptions, setPautasOptions] = useState(PAUTAS_ORIGEN);
     const [headerEstado, setHeaderEstado] = useState("");
 
     // Resaltado temporal al saltar a un mensaje citado
@@ -1469,6 +1563,9 @@ export default function DigitalesContacto() {
 
     const [quickEditDraft, setQuickEditDraft] = useState({});
     const [savingQuickEdit, setSavingQuickEdit] = useState(false);
+    const [pautasOptions, setPautasOptions] = useState([]);
+    const [loadingPautas, setLoadingPautas] = useState(false);
+    const [savingHeaderPauta, setSavingHeaderPauta] = useState(false);
 
     const [copiedTel, setCopiedTel] = useState(false);
     const [markingUnreadTel, setMarkingUnreadTel] = useState("");
@@ -1507,6 +1604,19 @@ export default function DigitalesContacto() {
         if (fromList) return fromList;
         return { id: activeTel, telefono: activeTel, nombre: prospecto?.nombre || "Prospecto", agencia: prospecto?.agencia || "", linea: prospecto?.business || "", estado: prospecto?.estado || "", unread: 0, last: { text: "", time: "" } };
     }, [activeTel, chats, prospecto]);
+
+    const campanaMetaProspecto = useMemo(() => {
+        return getCampanaMetaProspecto(prospecto);
+    }, [prospecto]);
+
+    const pautaActual = useMemo(() => {
+        return String(
+            quickEditDraft.pauta ||
+            prospecto?.pauta ||
+            campanaMetaProspecto.pauta ||
+            ""
+        ).trim();
+    }, [quickEditDraft.pauta, prospecto?.pauta, campanaMetaProspecto.pauta]);
 
     const filteredChats = useMemo(() => {
         const query = normalizeText(deferredQ);
@@ -2109,9 +2219,8 @@ export default function DigitalesContacto() {
                 presupuesto_mensual: quickEditDraft.presupuesto_mensual ? Number(String(quickEditDraft.presupuesto_mensual).replace(/\D/g, "")) || null : null,
                 buro_estado: quickEditDraft.buro_estado || "", forma_pago: quickEditDraft.forma_pago || "", tipo_cliente: quickEditDraft.tipo_cliente || "",
                 uso_vehiculo: quickEditDraft.uso_vehiculo || "", plazo_compra: quickEditDraft.plazo_compra || "", comprobacion_ingresos: quickEditDraft.comprobacion_ingresos || "",
+                pauta: String(quickEditDraft.pauta || "").trim(),
             };
-            const pautaLimpia = String(quickEditDraft.pauta || "").trim();
-            if (pautaLimpia) payload.pauta = pautaLimpia;
             await api.digitalesPatchProspecto(prospecto.id, payload);
             await refreshActiveChat(activeTel);
         } catch (error) { alert(`No se pudo guardar: ${error.message}`); }
@@ -2126,6 +2235,61 @@ export default function DigitalesContacto() {
         catch (error) { console.error("Error guardando estado:", error); }
     }
 
+    async function cargarPautasMetaContacto() {
+        setLoadingPautas(true);
+
+        try {
+            if (typeof api.digitalesCampanasMeta !== "function") {
+                setPautasOptions([]);
+                return;
+            }
+
+            const response = await api.digitalesCampanasMeta(180);
+            setPautasOptions(normalizarPautasMetaOptions(response));
+        } catch (error) {
+            console.error("Error cargando campañas de campanas_meta_volvo:", error);
+            setPautasOptions([]);
+        } finally {
+            setLoadingPautas(false);
+        }
+    }
+
+    async function saveHeaderPauta(nuevaPauta) {
+        if (!activeTel) return;
+
+        const pauta = String(nuevaPauta || "").trim();
+        const pautaAnterior = pautaActual;
+
+        setQuickEditDraft((prev) => ({
+            ...prev,
+            pauta,
+        }));
+
+        if (!prospecto?.id) return;
+
+        setSavingHeaderPauta(true);
+
+        try {
+            await api.digitalesPatchProspecto(prospecto.id, { pauta });
+            await refreshActiveChat(activeTel).catch(() => { });
+
+            if (!isDirectChatMode) {
+                await refreshChats().catch(() => { });
+            }
+        } catch (error) {
+            console.error("Error guardando pauta:", error);
+
+            setQuickEditDraft((prev) => ({
+                ...prev,
+                pauta: pautaAnterior,
+            }));
+
+            alert(error?.message || "No se pudo guardar la pauta.");
+        } finally {
+            setSavingHeaderPauta(false);
+        }
+    }
+
     // ── Effects ───────────────────────────────────────────────────────────────
 
     useEffect(() => {
@@ -2133,16 +2297,7 @@ export default function DigitalesContacto() {
     }, []);
 
     useEffect(() => {
-        let mounted = true;
-        (async () => {
-            try {
-                if (typeof api.digitalesCampanasMeta !== "function") return;
-                const response = await api.digitalesCampanasMeta(90);
-                if (!mounted) return;
-                setPautasOptions(normalizeCampanasMetaOptions(response));
-            } catch { if (mounted) setPautasOptions(PAUTAS_ORIGEN); }
-        })();
-        return () => { mounted = false; };
+        cargarPautasMetaContacto().catch(() => { });
     }, []);
 
     useEffect(() => { try { localStorage.setItem(QUICK_BUBBLES_KEY, JSON.stringify(quickBubbles)); } catch { } }, [quickBubbles]);
@@ -2152,11 +2307,20 @@ export default function DigitalesContacto() {
         if (!prospecto) return;
         setHeaderEstado(prospecto.estado || "");
         setQuickEditDraft({
-            nombre: prospecto.nombre || "", auto_interes: prospecto.auto_interes || "", estado: prospecto.estado || "",
-            canal_contacto: prospecto.canal_contacto || "", comentarios: prospecto.comentarios || prospecto.comentario || "",
-            enganche_monto: prospecto.enganche_monto || "", presupuesto_mensual: prospecto.presupuesto_mensual || "",
-            buro_estado: prospecto.buro_estado || "", forma_pago: prospecto.forma_pago || "", tipo_cliente: prospecto.tipo_cliente || "",
-            uso_vehiculo: prospecto.uso_vehiculo || "", plazo_compra: prospecto.plazo_compra || "", comprobacion_ingresos: prospecto.comprobacion_ingresos || "",
+            nombre: prospecto.nombre || "",
+            auto_interes: prospecto.auto_interes || "",
+            estado: prospecto.estado || "",
+            canal_contacto: prospecto.canal_contacto || "",
+            pauta: prospecto.pauta || prospecto.pauta_origen || "",
+            comentarios: prospecto.comentarios || prospecto.comentario || "",
+            enganche_monto: prospecto.enganche_monto || "",
+            presupuesto_mensual: prospecto.presupuesto_mensual || "",
+            buro_estado: prospecto.buro_estado || "",
+            forma_pago: prospecto.forma_pago || "",
+            tipo_cliente: prospecto.tipo_cliente || "",
+            uso_vehiculo: prospecto.uso_vehiculo || "",
+            plazo_compra: prospecto.plazo_compra || "",
+            comprobacion_ingresos: prospecto.comprobacion_ingresos || "",
         });
     }, [prospecto]);
 
@@ -2474,13 +2638,27 @@ export default function DigitalesContacto() {
                                                 {renderOptionsConValorActual(ESTADOS_HEADER, headerEstado, "Sin estado")}
                                             </select>
                                         ) : null}
-                                        {/* Pauta */}
                                         {activeTel ? (
-                                            <select value={quickEditDraft.pauta || prospecto?.pauta || prospecto?.pauta_origen || ""}
-                                                onChange={(e) => setQuickEditDraft(p => ({ ...p, pauta: e.target.value }))}
-                                                className="shrink-0 h-6 rounded-md border border-black/10 bg-white px-1.5 text-[11px] font-semibold text-[#000000] outline-none focus:border-[#000000]/40"
-                                                title="Pauta / campaña">
-                                                {renderOptionsConValorActual(pautasOptions, quickEditDraft.pauta || prospecto?.pauta || prospecto?.pauta_origen || "", "Sin campaña")}
+                                            <select
+                                                value={pautaActual}
+                                                onChange={(e) => saveHeaderPauta(e.target.value)}
+                                                disabled={loadingPautas || savingHeaderPauta || !prospecto?.id}
+                                                className={cls(
+                                                    "shrink-0 h-6 max-w-[280px] rounded-md border px-1.5 text-[11px] font-extrabold outline-none transition",
+                                                    pautaActual
+                                                        ? "border-emerald-200 bg-emerald-50 text-emerald-700"
+                                                        : "border-amber-200 bg-amber-50 text-amber-700",
+                                                    loadingPautas || savingHeaderPauta || !prospecto?.id
+                                                        ? "cursor-not-allowed opacity-70"
+                                                        : "cursor-pointer hover:opacity-90"
+                                                )}
+                                                title={pautaActual || "Sin campaña detectada"}
+                                            >
+                                                {loadingPautas ? (
+                                                    <option value={pautaActual}>{pautaActual || "Cargando campañas..."}</option>
+                                                ) : (
+                                                    renderPautasMetaOptions(pautasOptions, pautaActual, "Sin campaña detectada")
+                                                )}
                                             </select>
                                         ) : null}
                                     </div>
@@ -2544,7 +2722,7 @@ export default function DigitalesContacto() {
 
                                 <div className="border-t border-[#000000]/10 px-4 py-4">
                                     <div className="mx-auto max-w-5xl">
-                                        <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+                                        <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-5">
                                             <div>
                                                 <div className="mb-1 text-[11px] font-extrabold uppercase tracking-wide text-[#000000]/60">Vehículo</div>
                                                 <select value={quickEditDraft.auto_interes || ""} onChange={(e) => setQuickEditDraft(p => ({ ...p, auto_interes: e.target.value }))} className="h-9 w-full rounded-lg border border-black/10 bg-white px-3 text-sm font-semibold text-[#000000] outline-none focus:border-[#000000]/40 focus:ring-1 focus:ring-[#000000]/20">{renderOptionsConValorActual(VEHICULOS, quickEditDraft.auto_interes)}</select>
@@ -2556,6 +2734,61 @@ export default function DigitalesContacto() {
                                             <div>
                                                 <div className="mb-1 text-[11px] font-extrabold uppercase tracking-wide text-[#000000]/60">Canal</div>
                                                 <select value={quickEditDraft.canal_contacto || ""} onChange={(e) => setQuickEditDraft(p => ({ ...p, canal_contacto: e.target.value }))} className="h-9 w-full rounded-lg border border-black/10 bg-white px-3 text-sm font-semibold text-[#000000] outline-none focus:border-[#000000]/40 focus:ring-1 focus:ring-[#000000]/20">{renderOptionsConValorActual(CANALES, quickEditDraft.canal_contacto)}</select>
+                                            </div>
+                                            <div>
+                                                <div className="mb-1 flex items-center justify-between gap-2">
+                                                    <div className="text-[11px] font-extrabold uppercase tracking-wide text-[#000000]/60">Campaña Meta</div>
+                                                    <button
+                                                        type="button"
+                                                        onClick={cargarPautasMetaContacto}
+                                                        disabled={loadingPautas}
+                                                        className="inline-flex h-5 items-center rounded-md border border-black/10 bg-white px-1.5 text-[10px] font-extrabold text-[#000000]/60 transition hover:bg-neutral-50 disabled:cursor-not-allowed disabled:opacity-50"
+                                                        title="Recargar campañas"
+                                                    >
+                                                        {loadingPautas ? "..." : "Recargar"}
+                                                    </button>
+                                                </div>
+
+                                                <select
+                                                    value={quickEditDraft.pauta || pautaActual}
+                                                    onChange={(e) =>
+                                                        setQuickEditDraft((prev) => ({
+                                                            ...prev,
+                                                            pauta: e.target.value,
+                                                        }))
+                                                    }
+                                                    disabled={loadingPautas}
+                                                    className={cls(
+                                                        "h-9 w-full rounded-lg border px-3 text-xs font-extrabold outline-none focus:border-[#000000]/40 focus:ring-1 focus:ring-[#000000]/20",
+                                                        quickEditDraft.pauta || pautaActual
+                                                            ? "border-emerald-200 bg-emerald-50 text-emerald-700"
+                                                            : "border-amber-200 bg-amber-50 text-amber-700",
+                                                        loadingPautas ? "cursor-not-allowed opacity-70" : ""
+                                                    )}
+                                                    title={quickEditDraft.pauta || pautaActual || "Sin campaña detectada"}
+                                                >
+                                                    {loadingPautas ? (
+                                                        <option value={quickEditDraft.pauta || pautaActual}>
+                                                            {(quickEditDraft.pauta || pautaActual) || "Cargando campañas..."}
+                                                        </option>
+                                                    ) : (
+                                                        renderPautasMetaOptions(
+                                                            pautasOptions,
+                                                            quickEditDraft.pauta || pautaActual,
+                                                            "Sin campaña detectada"
+                                                        )
+                                                    )}
+                                                </select>
+
+                                                {campanaMetaProspecto.id_campana ? (
+                                                    <div className="mt-1 truncate text-[10px] font-semibold text-[#000000]/40">
+                                                        Detectada por Meta · ID: {campanaMetaProspecto.id_campana}
+                                                    </div>
+                                                ) : (
+                                                    <div className="mt-1 truncate text-[10px] font-semibold text-[#000000]/40">
+                                                        Puedes corregirla manualmente si la atribución vino equivocada.
+                                                    </div>
+                                                )}
                                             </div>
                                             <div>
                                                 <div className="mb-1 text-[11px] font-extrabold uppercase tracking-wide text-[#000000]/60">Comentarios</div>
