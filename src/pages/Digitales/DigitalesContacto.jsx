@@ -1,6 +1,6 @@
 //volvo
 // src/pages/Digitales/DigitalesContacto.jsx
-import { useEffect, useMemo, useRef, useState, useDeferredValue } from "react";
+import { Fragment, useEffect, useMemo, useRef, useState, useDeferredValue } from "react";
 import { useSearchParams, useNavigate, useLocation } from "react-router-dom";
 import {
     ArrowLeft,
@@ -143,6 +143,37 @@ function getCampanaMetaProspecto(prospecto = {}) {
         label: nombreCampana || pauta || "Sin campaña detectada",
         encontrada: Boolean(campanaMeta?.encontrada),
         origen: campanaMeta?.origen || "",
+    };
+}
+
+function getPautaOrigenFromMessage(message = {}) {
+    const raw = message?.raw && typeof message.raw === "object" ? message.raw : {};
+    const ultimoWebhook = raw?.ultimo_webhook_payload && typeof raw.ultimo_webhook_payload === "object"
+        ? raw.ultimo_webhook_payload
+        : {};
+
+    const atribucion = [raw?.atribucion_meta, ultimoWebhook?.atribucion_meta]
+        .find((item) => item && typeof item === "object") || {};
+
+    const nombreCampana = String(
+        atribucion?.nombre_campana ||
+        atribucion?.campaign_name ||
+        ""
+    ).trim();
+
+    const sucursal = String(atribucion?.sucursal || "").trim();
+    const pauta = String(
+        atribucion?.pauta ||
+        (sucursal && nombreCampana ? `${sucursal} - ${nombreCampana}` : nombreCampana)
+    ).trim();
+
+    if (!pauta) return null;
+
+    return {
+        pauta,
+        nombre_campana: nombreCampana,
+        sucursal,
+        origen: String(atribucion?.motivo || "meta_ads").trim(),
     };
 }
 
@@ -1236,6 +1267,34 @@ function DateSeparator({ date }) {
     );
 }
 
+function PautaOrigenNotice({ pauta, nombreCampana, sucursal }) {
+    if (!pauta) return null;
+
+    return (
+        <div className="my-4 flex justify-center px-3">
+            <div className="flex max-w-2xl items-start gap-3 rounded-2xl border border-black/10 bg-white/95 px-4 py-3 shadow-sm backdrop-blur-sm">
+                <div className="mt-0.5 inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-black text-white">
+                    <LayoutTemplate className="h-4 w-4" />
+                </div>
+
+                <div className="min-w-0">
+                    <div className="text-[11px] font-black uppercase tracking-wide text-black/50">
+                        Pauta de origen detectada
+                    </div>
+                    <div className="mt-0.5 break-words text-sm font-extrabold text-black">
+                        {nombreCampana || pauta}
+                    </div>
+                    {sucursal && nombreCampana ? (
+                        <div className="mt-0.5 text-xs font-semibold text-black/55">
+                            Sucursal: {sucursal}
+                        </div>
+                    ) : null}
+                </div>
+            </div>
+        </div>
+    );
+}
+
 // ─── Función para agrupar mensajes por fecha ──────────────────────────────
 function groupMessagesByDate(messages) {
     const groups = [];
@@ -1617,6 +1676,41 @@ export default function DigitalesContacto() {
             ""
         ).trim();
     }, [quickEditDraft.pauta, prospecto?.pauta, campanaMetaProspecto.pauta]);
+
+    const pautaOrigenMarker = useMemo(() => {
+        const mensajesOrdenados = applyReactionEvents(mensajes);
+
+        for (const message of mensajesOrdenados) {
+            if (message?.mine) continue;
+
+            const pautaMensaje = getPautaOrigenFromMessage(message);
+
+            if (pautaMensaje) {
+                return {
+                    messageKey: getMessageKey(message),
+                    ...pautaMensaje,
+                };
+            }
+        }
+
+        // Fallback para expedientes antiguos o pautas seleccionadas manualmente:
+        // solamente se muestra cuando ya estamos en el inicio real del chat.
+        if (!chatHasMore && pautaActual) {
+            const primerEntrante = mensajesOrdenados.find((message) => !message?.mine);
+
+            if (primerEntrante) {
+                return {
+                    messageKey: getMessageKey(primerEntrante),
+                    pauta: pautaActual,
+                    nombre_campana: campanaMetaProspecto.nombre_campana || pautaActual,
+                    sucursal: campanaMetaProspecto.sucursal || "",
+                    origen: campanaMetaProspecto.origen || "expediente",
+                };
+            }
+        }
+
+        return null;
+    }, [mensajes, chatHasMore, pautaActual, campanaMetaProspecto]);
 
     const filteredChats = useMemo(() => {
         const query = normalizeText(deferredQ);
@@ -2868,34 +2962,48 @@ export default function DigitalesContacto() {
                                             <DateSeparator date={group.date} />
                                             {group.messages.map((message) => {
                                                 const messageId = message.wa_message_id || "";
-                                                const domId = `msg-${getMessageKey(message)}`;
+                                                const messageKey = getMessageKey(message);
+                                                const domId = `msg-${messageKey}`;
                                                 const quoted = message.reply_to_id ? messagesById.get(String(message.reply_to_id)) : null;
+                                                const mostrarPautaOrigen = Boolean(
+                                                    pautaOrigenMarker?.messageKey &&
+                                                    pautaOrigenMarker.messageKey === messageKey
+                                                );
                                                 // Usar formato de hora corta para la burbuja
                                                 const timeDisplay = formatMessageTime(message.created_at || message.local_created_at);
                                                 return (
-                                                    <MessageBubble
-                                                        key={getMessageKey(message)}
-                                                        domId={domId}
-                                                        highlighted={highlightedMsgId === domId}
-                                                        mine={Boolean(message.mine)}
-                                                        text={message.text}
-                                                        time={timeDisplay}
-                                                        status={message.status || "sent"}
-                                                        localPending={Boolean(message.local_pending)}
-                                                        attachments={message.attachments || []}
-                                                        reactions={message.reactions || []}
-                                                        isAi={Boolean(message.is_ai)}
-                                                        renderText={renderTextForBubble}
-                                                        replyPreview={quoted ? {
-                                                            author: getReplyAuthor(quoted),
-                                                            text: getReplyPreview(quoted),
-                                                            onClick: () => scrollToMessage(`msg-${getMessageKey(quoted)}`)
-                                                        } : null}
-                                                        onReply={messageId && !message.local_pending ? () => {
-                                                            setReplyToMsg(message);
-                                                            requestAnimationFrame(() => inputRef.current?.focus?.());
-                                                        } : null}
-                                                    />
+                                                    <Fragment key={messageKey}>
+                                                        {mostrarPautaOrigen ? (
+                                                            <PautaOrigenNotice
+                                                                pauta={pautaOrigenMarker.pauta}
+                                                                nombreCampana={pautaOrigenMarker.nombre_campana}
+                                                                sucursal={pautaOrigenMarker.sucursal}
+                                                            />
+                                                        ) : null}
+
+                                                        <MessageBubble
+                                                            domId={domId}
+                                                            highlighted={highlightedMsgId === domId}
+                                                            mine={Boolean(message.mine)}
+                                                            text={message.text}
+                                                            time={timeDisplay}
+                                                            status={message.status || "sent"}
+                                                            localPending={Boolean(message.local_pending)}
+                                                            attachments={message.attachments || []}
+                                                            reactions={message.reactions || []}
+                                                            isAi={Boolean(message.is_ai)}
+                                                            renderText={renderTextForBubble}
+                                                            replyPreview={quoted ? {
+                                                                author: getReplyAuthor(quoted),
+                                                                text: getReplyPreview(quoted),
+                                                                onClick: () => scrollToMessage(`msg-${getMessageKey(quoted)}`)
+                                                            } : null}
+                                                            onReply={messageId && !message.local_pending ? () => {
+                                                                setReplyToMsg(message);
+                                                                requestAnimationFrame(() => inputRef.current?.focus?.());
+                                                            } : null}
+                                                        />
+                                                    </Fragment>
                                                 );
                                             })}
                                         </div>

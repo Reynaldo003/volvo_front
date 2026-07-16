@@ -18,13 +18,13 @@ import {
 } from "recharts";
 
 // ─── helpers ─────────────────────────────────────────────────────────────────
-const MESES = ["Enero","Febrero","Marzo","Abril","Mayo","Junio","Julio","Agosto","Septiembre","Octubre","Noviembre","Diciembre"];
-const HOURS  = Array.from({ length: 13 }, (_, i) => `${String(i + 8).padStart(2, "0")}:00`);
+const MESES = ["Enero", "Febrero", "Marzo", "Abril", "Mayo", "Junio", "Julio", "Agosto", "Septiembre", "Octubre", "Noviembre", "Diciembre"];
+const HOURS = Array.from({ length: 13 }, (_, i) => `${String(i + 8).padStart(2, "0")}:00`);
 
 function normalizeStr(v) { return String(v ?? "").trim(); }
 function entregaFisicaActiva(value) {
     if (value === true || value === 1) return true;
-    return ["si","sí","true","1","yes","entregada","reportada"].includes(String(value ?? "").trim().toLowerCase());
+    return ["si", "sí", "true", "1", "yes", "entregada", "reportada"].includes(String(value ?? "").trim().toLowerCase());
 }
 function normalizePhoneForSave(value) {
     const d = String(value || "").replace(/\D/g, "");
@@ -37,7 +37,7 @@ function toDTLocal(isoOrNull) {
         const d = new Date(s);
         if (Number.isNaN(d.getTime())) return "";
         const p = (n) => String(n).padStart(2, "0");
-        return `${d.getFullYear()}-${p(d.getMonth()+1)}-${p(d.getDate())}T${p(d.getHours())}:${p(d.getMinutes())}`;
+        return `${d.getFullYear()}-${p(d.getMonth() + 1)}-${p(d.getDate())}T${p(d.getHours())}:${p(d.getMinutes())}`;
     }
     if (/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}/.test(s)) return s.slice(0, 16);
     return "";
@@ -47,7 +47,7 @@ function toYMDLocal(dateLike) {
     const d = new Date(dateLike);
     if (Number.isNaN(d.getTime())) return "";
     const p = (n) => String(n).padStart(2, "0");
-    return `${d.getFullYear()}-${p(d.getMonth()+1)}-${p(d.getDate())}`;
+    return `${d.getFullYear()}-${p(d.getMonth() + 1)}-${p(d.getDate())}`;
 }
 function parseYMDLocal(ymd) {
     if (!ymd || !/^\d{4}-\d{2}-\d{2}$/.test(ymd)) return new Date();
@@ -67,23 +67,23 @@ function startOfWeekMonday(date) {
     d.setHours(0, 0, 0, 0); d.setDate(d.getDate() - delta); return d;
 }
 function formatWeekTitle(start, end) {
-    return `${start.toLocaleDateString("es-MX", { day:"numeric", month:"long" })} — ${end.toLocaleDateString("es-MX", { day:"numeric", month:"long", year:"numeric" })}`;
+    return `${start.toLocaleDateString("es-MX", { day: "numeric", month: "long" })} — ${end.toLocaleDateString("es-MX", { day: "numeric", month: "long", year: "numeric" })}`;
 }
-function weekdayShortEs(d) { return ["Dom","Lun","Mar","Mié","Jue","Vie","Sáb"][d.getDay()] || ""; }
+function weekdayShortEs(d) { return ["Dom", "Lun", "Mar", "Mié", "Jue", "Vie", "Sáb"][d.getDay()] || ""; }
 function formatCardTime(dateLike) {
     if (!dateLike) return "—";
     const d = new Date(dateLike);
-    return Number.isNaN(d.getTime()) ? "—" : d.toLocaleTimeString("es-MX", { hour:"2-digit", minute:"2-digit" });
+    return Number.isNaN(d.getTime()) ? "—" : d.toLocaleTimeString("es-MX", { hour: "2-digit", minute: "2-digit" });
 }
 function formatDateTime(dateLike) {
     if (!dateLike) return "—";
     const d = new Date(dateLike);
-    return Number.isNaN(d.getTime()) ? "—" : d.toLocaleString("es-MX", { day:"2-digit", month:"2-digit", year:"numeric", hour:"2-digit", minute:"2-digit" });
+    return Number.isNaN(d.getTime()) ? "—" : d.toLocaleString("es-MX", { day: "2-digit", month: "2-digit", year: "numeric", hour: "2-digit", minute: "2-digit" });
 }
 function getHourKey(dateLike) {
     if (!dateLike) return "";
     const d = new Date(dateLike);
-    return Number.isNaN(d.getTime()) ? "" : `${String(d.getHours()).padStart(2,"0")}:00`;
+    return Number.isNaN(d.getTime()) ? "" : `${String(d.getHours()).padStart(2, "0")}:00`;
 }
 
 // ─── Skeleton ─────────────────────────────────────────────────────────────────
@@ -167,7 +167,7 @@ function StatusButton({ row, loading, onToggle, compact = false }) {
             ].join(" ")}>
             {loading ? <Loader2 className="h-3 w-3 animate-spin" />
                 : entregada ? <CheckCircle2 className="h-3 w-3" />
-                : <Clock3 className="h-3 w-3" />}
+                    : <Clock3 className="h-3 w-3" />}
             {entregada ? "Entregada" : "Pendiente"}
         </button>
     );
@@ -197,7 +197,7 @@ function EntregaAgendaCard({ row, onEdit, onContext, onToggleEntrega, updatingIn
 
     const cardColor = entregada
         ? { border: "border-emerald-300", bg: "bg-emerald-50", bar: "bg-emerald-500", badge: "bg-emerald-100 text-emerald-700 border-emerald-200" }
-        : { border: "border-amber-300",   bg: "bg-amber-50",   bar: "bg-amber-500",   badge: "bg-amber-100 text-amber-700 border-amber-200" };
+        : { border: "border-amber-300", bg: "bg-amber-50", bar: "bg-amber-500", badge: "bg-amber-100 text-amber-700 border-amber-200" };
 
     return (
         <button
@@ -221,7 +221,7 @@ function EntregaAgendaCard({ row, onEdit, onContext, onToggleEntrega, updatingIn
                         </span>
                         <span className="text-[10px] text-gray-400 font-medium">
                             {row.fecha_hora_entrega
-                                ? new Date(row.fecha_hora_entrega).toLocaleDateString("es-MX", { day:"2-digit", month:"2-digit" })
+                                ? new Date(row.fecha_hora_entrega).toLocaleDateString("es-MX", { day: "2-digit", month: "2-digit" })
                                 : "—"}
                         </span>
                     </div>
@@ -313,7 +313,7 @@ function AgendaMobileList({ rows, loading, onEdit, onContext, onToggleEntrega, u
             {grouped.map(([key, items]) => {
                 const title = key === "sin-fecha"
                     ? "Sin fecha"
-                    : parseYMDLocal(key).toLocaleDateString("es-MX", { weekday:"long", day:"2-digit", month:"long" });
+                    : parseYMDLocal(key).toLocaleDateString("es-MX", { weekday: "long", day: "2-digit", month: "long" });
                 return (
                     <section key={key} className="rounded-xl border border-gray-200 bg-white p-3">
                         <h3 className="mb-3 border-l-[3px] border-amber-400 pl-2 text-xs font-semibold uppercase tracking-wide text-gray-700">{title}</h3>
@@ -333,9 +333,9 @@ function AgendaMobileList({ rows, loading, onEdit, onContext, onToggleEntrega, u
 // ─── Agenda Week View ─────────────────────────────────────────────────────────
 function AgendaWeekView({ rows, loading, currentWeekDate, setCurrentWeekDate, onCreateAt, onEdit, onContext, onToggleEntrega, updatingInline }) {
     const weekStart = useMemo(() => startOfWeekMonday(currentWeekDate), [currentWeekDate]);
-    const weekDays  = useMemo(() => Array.from({ length: 6 }, (_, i) => addDays(weekStart, i)), [weekStart]);
-    const weekEnd   = weekDays[weekDays.length - 1];
-    const todayIso  = toYMDLocal(new Date());
+    const weekDays = useMemo(() => Array.from({ length: 6 }, (_, i) => addDays(weekStart, i)), [weekStart]);
+    const weekEnd = weekDays[weekDays.length - 1];
+    const todayIso = toYMDLocal(new Date());
 
     const rowsBySlot = useMemo(() => {
         const map = new Map();
@@ -350,7 +350,7 @@ function AgendaWeekView({ rows, loading, currentWeekDate, setCurrentWeekDate, on
 
     const outOfSchedule = useMemo(() =>
         rows.filter((r) => { if (!r.fecha_hora_entrega) return true; return !HOURS.includes(getHourKey(r.fecha_hora_entrega)); }),
-    [rows]);
+        [rows]);
 
     const gridStyle = { gridTemplateColumns: "64px repeat(6, minmax(200px, 1fr))" };
 
@@ -378,11 +378,11 @@ function AgendaWeekView({ rows, loading, currentWeekDate, setCurrentWeekDate, on
                 </div>
             </div>
 
-           <div className="overflow-hidden rounded-xl border border-gray-200 bg-white shadow-none">
+            <div className="overflow-hidden rounded-xl border border-gray-200 bg-white shadow-none">
                 <div className="overflow-auto">
                     <div className="min-w-[1280px]">
-                        {/* Header días */}  
-                           <div className="sticky top-0 z-20 grid border-b border-gray-200 bg-gray-50" style={gridStyle}>
+                        {/* Header días */}
+                        <div className="sticky top-0 z-20 grid border-b border-gray-200 bg-gray-50" style={gridStyle}>
                             <div className="px-4 py-3 text-[11px] font-semibold uppercase tracking-wide text-gray-400">Hora</div>
                             {weekDays.map((day) => {
                                 const iso = toYMDLocal(day);
@@ -395,7 +395,7 @@ function AgendaWeekView({ rows, loading, currentWeekDate, setCurrentWeekDate, on
                                                 : "text-gray-500 hover:text-gray-300"].join(" ")}>
 
                                             <span>{weekdayShortEs(day)}</span>
-                                            <span>{day.toLocaleDateString("es-MX", { day:"2-digit", month:"2-digit" })}</span>
+                                            <span>{day.toLocaleDateString("es-MX", { day: "2-digit", month: "2-digit" })}</span>
                                         </div>
                                     </div>
                                 );
@@ -423,7 +423,7 @@ function AgendaWeekView({ rows, loading, currentWeekDate, setCurrentWeekDate, on
                                         return (
                                             <div key={slotKey}
                                                 className={["group relative min-h-[110px] border-l border-gray-100 p-1.5 transition-colors duration-150",
-    isToday ? "bg-orange-50/60" : "bg-white hover:bg-gray-50/60"].join(" ")}>
+                                                    isToday ? "bg-orange-50/60" : "bg-white hover:bg-gray-50/60"].join(" ")}>
                                                 <button type="button" onClick={() => onCreateAt(`${dayKey}T${hour}`)}
                                                     className="absolute right-2 top-2 z-[4] h-7 w-7 inline-flex items-center justify-center rounded-lg border border-gray-200 bg-white text-gray-400 opacity-0 shadow-sm hover:bg-gray-100 group-hover:opacity-100 transition-all duration-150 active:scale-95">
                                                     <Plus className="h-3.5 w-3.5" />
@@ -480,17 +480,17 @@ function CustomTooltip({ active, payload, label }) {
 
 // ─── Gráficas View ────────────────────────────────────────────────────────────
 function GraficasView({ registros }) {
-    const total      = registros.length;
+    const total = registros.length;
     const entregadas = registros.filter((r) => entregaFisicaActiva(r.entrega_reportada)).length;
     const pendientes = total - entregadas;
-    const tasa       = total > 0 ? Math.round((entregadas / total) * 100) : 0;
+    const tasa = total > 0 ? Math.round((entregadas / total) * 100) : 0;
 
     const porMes = useMemo(() => {
         const map = {};
         registros.forEach((r) => {
             if (!r.fecha_hora_entrega) return;
             const d = new Date(r.fecha_hora_entrega);
-            const key = `${MESES[d.getMonth()].slice(0,3)} ${d.getFullYear()}`;
+            const key = `${MESES[d.getMonth()].slice(0, 3)} ${d.getFullYear()}`;
             if (!map[key]) map[key] = { name: key, Entregadas: 0, Pendientes: 0 };
             entregaFisicaActiva(r.entrega_reportada) ? map[key].Entregadas++ : map[key].Pendientes++;
         });
@@ -499,18 +499,18 @@ function GraficasView({ registros }) {
 
     const porModelo = useMemo(() => {
         const map = {};
-        registros.forEach((r) => { const k = r.modelo_version || "Sin especificar"; map[k] = (map[k]||0)+1; });
-        return Object.entries(map).map(([name,value])=>({name,value})).sort((a,b)=>b.value-a.value).slice(0,8);
+        registros.forEach((r) => { const k = r.modelo_version || "Sin especificar"; map[k] = (map[k] || 0) + 1; });
+        return Object.entries(map).map(([name, value]) => ({ name, value })).sort((a, b) => b.value - a.value).slice(0, 8);
     }, [registros]);
 
     const porAsesor = useMemo(() => {
         const map = {};
         registros.forEach((r) => {
-            const k = (r.asesor_ventas||"Sin asignar").split(" ").slice(0,2).join(" ");
+            const k = (r.asesor_ventas || "Sin asignar").split(" ").slice(0, 2).join(" ");
             if (!map[k]) map[k] = { name: k, Entregadas: 0, Pendientes: 0 };
             entregaFisicaActiva(r.entrega_reportada) ? map[k].Entregadas++ : map[k].Pendientes++;
         });
-        return Object.values(map).sort((a,b)=>(b.Entregadas+b.Pendientes)-(a.Entregadas+a.Pendientes));
+        return Object.values(map).sort((a, b) => (b.Entregadas + b.Pendientes) - (a.Entregadas + a.Pendientes));
     }, [registros]);
 
     const tendenciaSemanal = useMemo(() => {
@@ -519,7 +519,7 @@ function GraficasView({ registros }) {
             if (!r.fecha_hora_entrega) return;
             const ws = startOfWeekMonday(new Date(r.fecha_hora_entrega));
             const key = toYMDLocal(ws);
-            if (!map[key]) map[key] = { name: `${ws.toLocaleDateString("es-MX",{day:"2-digit",month:"2-digit"})}`, Entregas: 0 };
+            if (!map[key]) map[key] = { name: `${ws.toLocaleDateString("es-MX", { day: "2-digit", month: "2-digit" })}`, Entregas: 0 };
             map[key].Entregas++;
         });
         return Object.values(map).slice(-8);
@@ -557,7 +557,7 @@ function GraficasView({ registros }) {
                         label: "Pendientes",
                         value: pendientes,
                         icon: Clock3,
-                        sub: `${total > 0 ? Math.round((pendientes/total)*100) : 0}% sin entregar`,
+                        sub: `${total > 0 ? Math.round((pendientes / total) * 100) : 0}% sin entregar`,
                         accent: "#d97706",
                         bg: "#fffbeb",
                     },
@@ -600,15 +600,15 @@ function GraficasView({ registros }) {
                     </div>
                     <div className="mt-4">
                         <ResponsiveContainer width="100%" height={230}>
-                            <BarChart data={porMes} margin={{ top:4, right:4, left:-16, bottom:0 }} barCategoryGap="35%">
+                            <BarChart data={porMes} margin={{ top: 4, right: 4, left: -16, bottom: 0 }} barCategoryGap="35%">
                                 <CartesianGrid strokeDasharray="3 3" stroke="#f3f4f6" vertical={false} />
-                                <XAxis dataKey="name" tick={{ fontSize:11, fill:"#9ca3af" }} axisLine={false} tickLine={false} />
-                                <YAxis tick={{ fontSize:11, fill:"#9ca3af" }} allowDecimals={false} axisLine={false} tickLine={false} />
+                                <XAxis dataKey="name" tick={{ fontSize: 11, fill: "#9ca3af" }} axisLine={false} tickLine={false} />
+                                <YAxis tick={{ fontSize: 11, fill: "#9ca3af" }} allowDecimals={false} axisLine={false} tickLine={false} />
                                 <Tooltip content={<CustomTooltip />} cursor={{ fill: "#f9fafb" }} />
-                                <Legend wrapperStyle={{ fontSize:11, paddingTop:12 }}
-                                    formatter={(v) => <span style={{ color:"#6b7280" }}>{v}</span>} />
-                                <Bar dataKey="Entregadas" stackId="a" fill="#111827" radius={[0,0,0,0]} />
-                                <Bar dataKey="Pendientes" stackId="a" fill="#e5e7eb" radius={[4,4,0,0]} />
+                                <Legend wrapperStyle={{ fontSize: 11, paddingTop: 12 }}
+                                    formatter={(v) => <span style={{ color: "#6b7280" }}>{v}</span>} />
+                                <Bar dataKey="Entregadas" stackId="a" fill="#111827" radius={[0, 0, 0, 0]} />
+                                <Bar dataKey="Pendientes" stackId="a" fill="#e5e7eb" radius={[4, 4, 0, 0]} />
                             </BarChart>
                         </ResponsiveContainer>
                     </div>
@@ -655,7 +655,7 @@ function GraficasView({ registros }) {
                     <p className="text-sm font-semibold text-gray-900">Tendencia semanal</p>
                     <p className="text-xs text-gray-400 mt-0.5 mb-4">Número de entregas registradas por semana</p>
                     <ResponsiveContainer width="100%" height={200}>
-                        <AreaChart data={tendenciaSemanal} margin={{ top:4, right:4, left:-16, bottom:0 }}>
+                        <AreaChart data={tendenciaSemanal} margin={{ top: 4, right: 4, left: -16, bottom: 0 }}>
                             <defs>
                                 <linearGradient id="areaGrad" x1="0" y1="0" x2="0" y2="1">
                                     <stop offset="5%" stopColor="#111827" stopOpacity={0.1} />
@@ -663,12 +663,12 @@ function GraficasView({ registros }) {
                                 </linearGradient>
                             </defs>
                             <CartesianGrid strokeDasharray="3 3" stroke="#f3f4f6" vertical={false} />
-                            <XAxis dataKey="name" tick={{ fontSize:11, fill:"#9ca3af" }} axisLine={false} tickLine={false} />
-                            <YAxis tick={{ fontSize:11, fill:"#9ca3af" }} allowDecimals={false} axisLine={false} tickLine={false} />
-                            <Tooltip content={<CustomTooltip />} cursor={{ stroke:"#e5e7eb" }} />
+                            <XAxis dataKey="name" tick={{ fontSize: 11, fill: "#9ca3af" }} axisLine={false} tickLine={false} />
+                            <YAxis tick={{ fontSize: 11, fill: "#9ca3af" }} allowDecimals={false} axisLine={false} tickLine={false} />
+                            <Tooltip content={<CustomTooltip />} cursor={{ stroke: "#e5e7eb" }} />
                             <Area type="monotone" dataKey="Entregas" stroke="#111827" strokeWidth={2}
-                                fill="url(#areaGrad)" dot={{ r:3, fill:"#111827", strokeWidth:0 }}
-                                activeDot={{ r:5, fill:"#111827", strokeWidth:0 }} />
+                                fill="url(#areaGrad)" dot={{ r: 3, fill: "#111827", strokeWidth: 0 }}
+                                activeDot={{ r: 5, fill: "#111827", strokeWidth: 0 }} />
                         </AreaChart>
                     </ResponsiveContainer>
                 </div>
@@ -677,12 +677,12 @@ function GraficasView({ registros }) {
                     <p className="text-sm font-semibold text-gray-900">Por modelo / versión</p>
                     <p className="text-xs text-gray-400 mt-0.5 mb-4">Entregas registradas por modelo</p>
                     <ResponsiveContainer width="100%" height={200}>
-                        <BarChart data={porModelo} layout="vertical" margin={{ top:0, right:4, left:8, bottom:0 }}>
+                        <BarChart data={porModelo} layout="vertical" margin={{ top: 0, right: 4, left: 8, bottom: 0 }}>
                             <CartesianGrid strokeDasharray="3 3" stroke="#f3f4f6" horizontal={false} />
-                            <XAxis type="number" tick={{ fontSize:11, fill:"#9ca3af" }} allowDecimals={false} axisLine={false} tickLine={false} />
-                            <YAxis type="category" dataKey="name" tick={{ fontSize:10, fill:"#6b7280" }} width={88} axisLine={false} tickLine={false} />
-                            <Tooltip content={<CustomTooltip />} cursor={{ fill:"#f9fafb" }} />
-                            <Bar dataKey="value" name="Entregas" fill="#111827" radius={[0,4,4,0]} barSize={12} />
+                            <XAxis type="number" tick={{ fontSize: 11, fill: "#9ca3af" }} allowDecimals={false} axisLine={false} tickLine={false} />
+                            <YAxis type="category" dataKey="name" tick={{ fontSize: 10, fill: "#6b7280" }} width={88} axisLine={false} tickLine={false} />
+                            <Tooltip content={<CustomTooltip />} cursor={{ fill: "#f9fafb" }} />
+                            <Bar dataKey="value" name="Entregas" fill="#111827" radius={[0, 4, 4, 0]} barSize={12} />
                         </BarChart>
                     </ResponsiveContainer>
                 </div>
@@ -693,15 +693,15 @@ function GraficasView({ registros }) {
                 <p className="text-sm font-semibold text-gray-900">Por asesor de ventas</p>
                 <p className="text-xs text-gray-400 mt-0.5 mb-4">Entregas entregadas y pendientes por asesor</p>
                 <ResponsiveContainer width="100%" height={Math.max(porAsesor.length * 42, 160)}>
-                    <BarChart data={porAsesor} layout="vertical" margin={{ top:0, right:4, left:8, bottom:0 }}>
+                    <BarChart data={porAsesor} layout="vertical" margin={{ top: 0, right: 4, left: 8, bottom: 0 }}>
                         <CartesianGrid strokeDasharray="3 3" stroke="#f3f4f6" horizontal={false} />
-                        <XAxis type="number" tick={{ fontSize:11, fill:"#9ca3af" }} allowDecimals={false} axisLine={false} tickLine={false} />
-                        <YAxis type="category" dataKey="name" tick={{ fontSize:10, fill:"#6b7280" }} width={110} axisLine={false} tickLine={false} />
-                        <Tooltip content={<CustomTooltip />} cursor={{ fill:"#f9fafb" }} />
-                        <Legend wrapperStyle={{ fontSize:11 }}
-                            formatter={(v) => <span style={{ color:"#6b7280" }}>{v}</span>} />
-                        <Bar dataKey="Entregadas" stackId="a" fill="#111827" radius={[0,0,0,0]} barSize={14} />
-                        <Bar dataKey="Pendientes" stackId="a" fill="#e5e7eb" radius={[0,4,4,0]} barSize={14} />
+                        <XAxis type="number" tick={{ fontSize: 11, fill: "#9ca3af" }} allowDecimals={false} axisLine={false} tickLine={false} />
+                        <YAxis type="category" dataKey="name" tick={{ fontSize: 10, fill: "#6b7280" }} width={110} axisLine={false} tickLine={false} />
+                        <Tooltip content={<CustomTooltip />} cursor={{ fill: "#f9fafb" }} />
+                        <Legend wrapperStyle={{ fontSize: 11 }}
+                            formatter={(v) => <span style={{ color: "#6b7280" }}>{v}</span>} />
+                        <Bar dataKey="Entregadas" stackId="a" fill="#111827" radius={[0, 0, 0, 0]} barSize={14} />
+                        <Bar dataKey="Pendientes" stackId="a" fill="#e5e7eb" radius={[0, 4, 4, 0]} barSize={14} />
                     </BarChart>
                 </ResponsiveContainer>
             </div>
@@ -723,25 +723,25 @@ export default function RegistroEntregas() {
     const userAgencia = String(user?.agencia || "").trim();
     const [entregas, setEntregas] = useState([]);
 
-    const DEALERS  = useMemo(() => ["Volvo"], []);
-    const ASESORES = ["Enrique Vazquez Islas","Ricardo Platas","Verónica Del Rayo Galindo León","Julio Camacho Barragán","Fernanda Romero Aguilar"];
-    const MODELOS  = ["EX30","EX40","EC40","EX90","XC60","XC90","XC60 Black Edition","XC90 Black Edition","Seminuevos","Avaluo"];
+    const DEALERS = useMemo(() => ["Volvo"], []);
+    const ASESORES = ["Enrique Vazquez Islas", "Ricardo Platas", "Verónica Del Rayo Galindo León", "Julio Camacho Barragán", "Fernanda Romero Aguilar", "Zaira Vanessa Hernández Gómez",];
+    const MODELOS = ["EX30", "EX40", "EC40", "EX90", "XC60", "XC90", "XC60 Black Edition", "XC90 Black Edition", "Seminuevos", "Avaluo"];
 
-    const [ctxMenu, setCtxMenu]                 = useState({ open:false, x:0, y:0, row:null });
-    const [viewMode, setViewMode]               = useState("tabla");
+    const [ctxMenu, setCtxMenu] = useState({ open: false, x: 0, y: 0, row: null });
+    const [viewMode, setViewMode] = useState("tabla");
     const [currentWeekDate, setCurrentWeekDate] = useState(new Date());
-    const [sort, setSort]                       = useState({ key:"fecha_hora_entrega", dir:"desc" });
-    const toggleSort = (key) => setSort((p) => p.key !== key ? { key, dir:"asc" } : { key, dir: p.dir==="asc"?"desc":"asc" });
+    const [sort, setSort] = useState({ key: "fecha_hora_entrega", dir: "desc" });
+    const toggleSort = (key) => setSort((p) => p.key !== key ? { key, dir: "asc" } : { key, dir: p.dir === "asc" ? "desc" : "asc" });
 
-    const [filters, setFilters]     = useState({ q:"", agencia:"Todos", rangoDesde:"", rangoHasta:"" });
+    const [filters, setFilters] = useState({ q: "", agencia: "Todos", rangoDesde: "", rangoHasta: "" });
     const [openModal, setOpenModal] = useState(false);
-    const [mode, setMode]           = useState("create");
-    const [draft, setDraft]         = useState(null);
-    const [loadingList, setLoadingList]       = useState(false);
-    const [loadingDetail, setLoadingDetail]   = useState(false);
-    const [saving, setSaving]                 = useState(false);
+    const [mode, setMode] = useState("create");
+    const [draft, setDraft] = useState(null);
+    const [loadingList, setLoadingList] = useState(false);
+    const [loadingDetail, setLoadingDetail] = useState(false);
+    const [saving, setSaving] = useState(false);
     const [updatingInline, setUpdatingInline] = useState({});
-    const REQUIRED = useMemo(() => ({ cliente_telefono:"Teléfono", fecha_hora_entrega:"Fecha y hora de entrega" }), []);
+    const REQUIRED = useMemo(() => ({ cliente_telefono: "Teléfono", fecha_hora_entrega: "Fecha y hora de entrega" }), []);
     const [touchedSave, setTouchedSave] = useState(false);
 
     const missing = useMemo(() => {
@@ -749,10 +749,10 @@ export default function RegistroEntregas() {
         return Object.keys(REQUIRED).filter((key) => { const v = draft[key]; return v === null || v === undefined || (typeof v === "string" && v.trim() === ""); });
     }, [draft, REQUIRED]);
 
-    const isInvalid  = (key) => touchedSave && missing.includes(key);
-    const telDigits  = useMemo(() => String(draft?.cliente_telefono || "").replace(/\D/g,""), [draft?.cliente_telefono]);
-    const telIsOk    = useMemo(() => /^(?:\d{10}|52\d{10})$/.test(telDigits), [telDigits]);
-    const telError   = useMemo(() => {
+    const isInvalid = (key) => touchedSave && missing.includes(key);
+    const telDigits = useMemo(() => String(draft?.cliente_telefono || "").replace(/\D/g, ""), [draft?.cliente_telefono]);
+    const telIsOk = useMemo(() => /^(?:\d{10}|52\d{10})$/.test(telDigits), [telDigits]);
+    const telError = useMemo(() => {
         if (!openModal || !draft || !telDigits) return "";
         if (/^\d{10}$/.test(telDigits) || /^52\d{10}$/.test(telDigits)) return "";
         if (telDigits.length < 10) return "Número incompleto (mínimo 10 dígitos)";
@@ -764,16 +764,16 @@ export default function RegistroEntregas() {
     const telInvalid = !!telError;
 
     const inputBase = "w-full rounded-lg border px-3 py-2 text-sm text-gray-800 font-medium outline-none transition focus:ring-2 focus:ring-gray-900/10";
-    const inputOk   = "border-gray-200 bg-gray-50 focus:border-gray-400";
-    const inputBad  = "border-red-400 bg-red-50 focus:border-red-500";
+    const inputOk = "border-gray-200 bg-gray-50 focus:border-gray-400";
+    const inputBad = "border-red-400 bg-red-50 focus:border-red-500";
 
     useEffect(() => {
-        const close = () => setCtxMenu((p) => ({ ...p, open:false, row:null }));
+        const close = () => setCtxMenu((p) => ({ ...p, open: false, row: null }));
         window.addEventListener("click", close); window.addEventListener("scroll", close, true); window.addEventListener("resize", close);
         return () => { window.removeEventListener("click", close); window.removeEventListener("scroll", close, true); window.removeEventListener("resize", close); };
     }, []);
 
-    const onRowContextMenu = (e, row) => { e.preventDefault(); e.stopPropagation(); setCtxMenu({ open:true, x:e.clientX, y:e.clientY, row }); };
+    const onRowContextMenu = (e, row) => { e.preventDefault(); e.stopPropagation(); setCtxMenu({ open: true, x: e.clientX, y: e.clientY, row }); };
 
     const refreshList = async () => {
         setLoadingList(true);
@@ -784,7 +784,7 @@ export default function RegistroEntregas() {
     useEffect(() => { refreshList(); }, []);
 
     const dealers = useMemo(() => {
-        const set = new Set((entregas||[]).map((i) => normalizeStr(i.agencia)).filter(Boolean));
+        const set = new Set((entregas || []).map((i) => normalizeStr(i.agencia)).filter(Boolean));
         if (!isAdmin && userAgencia) return ["Todos", userAgencia];
         return ["Todos", ...Array.from(set)];
     }, [entregas, isAdmin, userAgencia]);
@@ -792,7 +792,7 @@ export default function RegistroEntregas() {
     const filtered = useMemo(() => {
         const q = filters.q.trim().toLowerCase();
         const desdeInt = ymdToInt(filters.rangoDesde), hastaInt = ymdToInt(filters.rangoHasta);
-        return (entregas||[]).filter((item) => {
+        return (entregas || []).filter((item) => {
             if (!isAdmin && userAgencia && normalizeStr(item.agencia) !== normalizeStr(userAgencia)) return false;
             const matchQ = !q || [item.agencia, item?.cliente?.nombre, item?.cliente?.telefono, item.vin, item.modelo_version, item.asesor_ventas, item.preparada_por, item.id_cliente_sf_nadin, item.id_cliente_sf_dms, item.comentarios]
                 .some((v) => normalizeStr(v).toLowerCase().includes(q));
@@ -814,9 +814,9 @@ export default function RegistroEntregas() {
         if (!key) return data;
         const mult = dir === "asc" ? 1 : -1;
         return data.sort((a, b) => {
-            if (key === "fecha_hora_entrega") return (new Date(a.fecha_hora_entrega||0).getTime() - new Date(b.fecha_hora_entrega||0).getTime()) * mult;
+            if (key === "fecha_hora_entrega") return (new Date(a.fecha_hora_entrega || 0).getTime() - new Date(b.fecha_hora_entrega || 0).getTime()) * mult;
             const va = normalizeStr(a?.[key]).toLowerCase(), vb = normalizeStr(b?.[key]).toLowerCase();
-            if (va < vb) return -1*mult; if (va > vb) return 1*mult; return 0;
+            if (va < vb) return -1 * mult; if (va > vb) return 1 * mult; return 0;
         });
     }, [filtered, sort]);
 
@@ -827,12 +827,12 @@ export default function RegistroEntregas() {
             if (!r.fecha_hora_entrega) return true;
             const i = ymdToInt(toYMDLocal(r.fecha_hora_entrega));
             return i >= minI && i <= maxI;
-        }).sort((a,b) => new Date(a.fecha_hora_entrega||0).getTime() - new Date(b.fecha_hora_entrega||0).getTime());
+        }).sort((a, b) => new Date(a.fecha_hora_entrega || 0).getTime() - new Date(b.fecha_hora_entrega || 0).getTime());
     }, [filtered, currentWeekDate]);
 
     const openCreate = (fechaHoraDefault = "") => {
         setTouchedSave(false); setMode("create");
-        setDraft({ id:null, cliente_id:null, agencia:isAdmin?"":userAgencia, cliente_nombre:"", cliente_telefono:"", vin:"", modelo_version:"", fecha_hora_entrega:fechaHoraDefault, entrega_reportada:false, asesor_ventas:"", preparada_por:"", id_cliente_sf_nadin:"", id_cliente_sf_dms:"", comentarios:"" });
+        setDraft({ id: null, cliente_id: null, agencia: isAdmin ? "" : userAgencia, cliente_nombre: "", cliente_telefono: "", vin: "", modelo_version: "", fecha_hora_entrega: fechaHoraDefault, entrega_reportada: false, asesor_ventas: "", preparada_por: "", id_cliente_sf_nadin: "", id_cliente_sf_dms: "", comentarios: "" });
         setOpenModal(true);
     };
 
@@ -842,7 +842,7 @@ export default function RegistroEntregas() {
             setTouchedSave(false); setMode("edit"); setLoadingDetail(true); setOpenModal(true);
             const item = await apiEntregas.get(row.id);
             if (!isAdmin && userAgencia && normalizeStr(item.agencia) !== normalizeStr(userAgencia)) { alert("No tienes permisos."); setOpenModal(false); return; }
-            setDraft({ id:item.id, cliente_id:item?.cliente?.id_cliente??null, agencia:item.agencia||(isAdmin?"":userAgencia), cliente_nombre:item?.cliente?.nombre||"", cliente_telefono:item?.cliente?.telefono||"", vin:item.vin||"", modelo_version:item.modelo_version||"", fecha_hora_entrega:toDTLocal(item.fecha_hora_entrega), entrega_reportada:entregaFisicaActiva(item.entrega_reportada), asesor_ventas:item.asesor_ventas||"", preparada_por:item.preparada_por||"", id_cliente_sf_nadin:item.id_cliente_sf_nadin||"", id_cliente_sf_dms:item.id_cliente_sf_dms||"", comentarios:item.comentarios||"" });
+            setDraft({ id: item.id, cliente_id: item?.cliente?.id_cliente ?? null, agencia: item.agencia || (isAdmin ? "" : userAgencia), cliente_nombre: item?.cliente?.nombre || "", cliente_telefono: item?.cliente?.telefono || "", vin: item.vin || "", modelo_version: item.modelo_version || "", fecha_hora_entrega: toDTLocal(item.fecha_hora_entrega), entrega_reportada: entregaFisicaActiva(item.entrega_reportada), asesor_ventas: item.asesor_ventas || "", preparada_por: item.preparada_por || "", id_cliente_sf_nadin: item.id_cliente_sf_nadin || "", id_cliente_sf_dms: item.id_cliente_sf_dms || "", comentarios: item.comentarios || "" });
         } catch (e) { console.error(e); alert("No se pudo abrir la entrega."); setOpenModal(false); }
         finally { setLoadingDetail(false); }
     };
@@ -852,8 +852,8 @@ export default function RegistroEntregas() {
     const eliminarEntrega = async (row) => {
         if (!row?.id) return;
         if (!isAdmin && userAgencia && normalizeStr(row.agencia) !== normalizeStr(userAgencia)) { alert("Sin permisos."); return; }
-        if (!confirm(`¿Eliminar la entrega de ${row?.cliente?.nombre||row?.cliente?.telefono||"cliente"}?`)) return;
-        try { await apiEntregas.remove(row.id); setEntregas((p) => p.filter((i) => i.id !== row.id)); setCtxMenu({ open:false, x:0, y:0, row:null }); }
+        if (!confirm(`¿Eliminar la entrega de ${row?.cliente?.nombre || row?.cliente?.telefono || "cliente"}?`)) return;
+        try { await apiEntregas.remove(row.id); setEntregas((p) => p.filter((i) => i.id !== row.id)); setCtxMenu({ open: false, x: 0, y: 0, row: null }); }
         catch (e) { console.error(e); alert("No se pudo eliminar."); }
     };
 
@@ -863,8 +863,8 @@ export default function RegistroEntregas() {
         if (missing.length || !telIsOk) return;
         setSaving(true);
         try {
-            const agenciaFinal = isAdmin ? normalizeStr(draft.agencia||"") : userAgencia;
-            const payload = { agencia:agenciaFinal, ...(draft.cliente_id ? { cliente_id:draft.cliente_id } : {}), nombre:draft.cliente_nombre||"", telefono:normalizePhoneForSave(draft.cliente_telefono), vin:draft.vin||"", modelo_version:draft.modelo_version||"", fecha_hora_entrega:fromDTLocalToISO(draft.fecha_hora_entrega), entrega_reportada:!!draft.entrega_reportada, asesor_ventas:draft.asesor_ventas||"", preparada_por:draft.preparada_por||"", id_cliente_sf_nadin:draft.id_cliente_sf_nadin||"", id_cliente_sf_dms:draft.id_cliente_sf_dms||"", comentarios:draft.comentarios||"" };
+            const agenciaFinal = isAdmin ? normalizeStr(draft.agencia || "") : userAgencia;
+            const payload = { agencia: agenciaFinal, ...(draft.cliente_id ? { cliente_id: draft.cliente_id } : {}), nombre: draft.cliente_nombre || "", telefono: normalizePhoneForSave(draft.cliente_telefono), vin: draft.vin || "", modelo_version: draft.modelo_version || "", fecha_hora_entrega: fromDTLocalToISO(draft.fecha_hora_entrega), entrega_reportada: !!draft.entrega_reportada, asesor_ventas: draft.asesor_ventas || "", preparada_por: draft.preparada_por || "", id_cliente_sf_nadin: draft.id_cliente_sf_nadin || "", id_cliente_sf_dms: draft.id_cliente_sf_dms || "", comentarios: draft.comentarios || "" };
             if (mode === "create") await apiEntregas.create(payload);
             else await apiEntregas.update(draft.id, payload);
             await refreshList(); closeModal();
@@ -876,27 +876,27 @@ export default function RegistroEntregas() {
         const id = row?.id; if (!id) return;
         if (!isAdmin && userAgencia && normalizeStr(row.agencia) !== normalizeStr(userAgencia)) { alert("Sin permisos."); return; }
         const prev = entregaFisicaActiva(row.entrega_reportada);
-        setEntregas((p) => p.map((i) => i.id===id ? { ...i, entrega_reportada:!prev } : i));
-        setUpdatingInline((p) => ({ ...p, [id]:true }));
-        try { await apiEntregas.patch(id, { entrega_reportada:!prev }); }
-        catch (e) { console.error(e); setEntregas((p) => p.map((i) => i.id===id ? { ...i, entrega_reportada:prev } : i)); alert("No se pudo actualizar."); }
-        finally { setUpdatingInline((p) => { const n={...p}; delete n[id]; return n; }); }
+        setEntregas((p) => p.map((i) => i.id === id ? { ...i, entrega_reportada: !prev } : i));
+        setUpdatingInline((p) => ({ ...p, [id]: true }));
+        try { await apiEntregas.patch(id, { entrega_reportada: !prev }); }
+        catch (e) { console.error(e); setEntregas((p) => p.map((i) => i.id === id ? { ...i, entrega_reportada: prev } : i)); alert("No se pudo actualizar."); }
+        finally { setUpdatingInline((p) => { const n = { ...p }; delete n[id]; return n; }); }
     };
 
-    const resetFilters = () => { setFilters({ q:"", agencia:"Todos", rangoDesde:"", rangoHasta:"" }); setCurrentWeekDate(new Date()); };
-    const setHoy = () => { const h=toYMDLocal(new Date()); setCurrentWeekDate(new Date()); setFilters((p)=>({...p, rangoDesde:h, rangoHasta:h})); };
-    const onChangeDateFilter = (key, value) => { setFilters((p)=>({...p,[key]:value})); if (value) setCurrentWeekDate(parseYMDLocal(value)); };
+    const resetFilters = () => { setFilters({ q: "", agencia: "Todos", rangoDesde: "", rangoHasta: "" }); setCurrentWeekDate(new Date()); };
+    const setHoy = () => { const h = toYMDLocal(new Date()); setCurrentWeekDate(new Date()); setFilters((p) => ({ ...p, rangoDesde: h, rangoHasta: h })); };
+    const onChangeDateFilter = (key, value) => { setFilters((p) => ({ ...p, [key]: value })); if (value) setCurrentWeekDate(parseYMDLocal(value)); };
 
     const VIEWS = [
-        { key:"agenda",   label:"Agenda",   Icon:CalendarDays },
-        { key:"tabla",    label:"Tabla",    Icon:TableProperties },
-        { key:"graficas", label:"Gráficas", Icon:BarChart2 },
+        { key: "agenda", label: "Agenda", Icon: CalendarDays },
+        { key: "tabla", label: "Tabla", Icon: TableProperties },
+        { key: "graficas", label: "Gráficas", Icon: BarChart2 },
     ];
 
-    const totalEntregas   = entregas.length;
+    const totalEntregas = entregas.length;
     const totalEntregadas = entregas.filter(r => entregaFisicaActiva(r.entrega_reportada)).length;
     const totalPendientes = totalEntregas - totalEntregadas;
-    const entregasHoy     = entregas.filter(r => r.fecha_hora_entrega && toYMDLocal(r.fecha_hora_entrega) === toYMDLocal(new Date())).length;
+    const entregasHoy = entregas.filter(r => r.fecha_hora_entrega && toYMDLocal(r.fecha_hora_entrega) === toYMDLocal(new Date())).length;
 
     // ── Estadísticas para las tarjetas de métricas ────────────────────────────
     const metricCards = [
@@ -1028,12 +1028,12 @@ export default function RegistroEntregas() {
                             <Search className="h-4 w-4 shrink-0 text-gray-400" />
                             <input
                                 value={filters.q}
-                                onChange={(e) => setFilters((p)=>({...p,q:e.target.value}))}
+                                onChange={(e) => setFilters((p) => ({ ...p, q: e.target.value }))}
                                 placeholder="Buscar por dealer, cliente, VIN, modelo, asesor…"
                                 className="w-full bg-transparent text-sm text-gray-800 outline-none placeholder:text-gray-400"
                             />
                             {filters.q && (
-                                <button onClick={() => setFilters((p)=>({...p,q:""}))}
+                                <button onClick={() => setFilters((p) => ({ ...p, q: "" }))}
                                     className="text-gray-400 hover:text-gray-700 transition-colors active:scale-90">
                                     <X className="h-4 w-4" />
                                 </button>
@@ -1048,7 +1048,7 @@ export default function RegistroEntregas() {
                         </label>
                         <select
                             value={filters.agencia}
-                            onChange={(e) => setFilters((p)=>({...p,agencia:e.target.value}))}
+                            onChange={(e) => setFilters((p) => ({ ...p, agencia: e.target.value }))}
                             className="w-full rounded-lg border border-gray-200 bg-gray-50 px-3 py-2 text-sm text-gray-800 outline-none focus:border-gray-400 focus:ring-2 focus:ring-gray-900/5 transition-all">
                             {dealers.map((d) => <option key={d} value={d}>{d}</option>)}
                         </select>
@@ -1106,19 +1106,19 @@ export default function RegistroEntregas() {
                     <div className="overflow-x-auto">
                         <table className="min-w-full text-left text-sm">
                             <thead>
-                                <tr style={{ background:"#111827" }} className="text-xs text-gray-300">
+                                <tr style={{ background: "#111827" }} className="text-xs text-gray-300">
                                     {[
-                                        { key:"fecha_hora_entrega", label:"Fecha y Hora",  sort:true  },
-                                        { key:"agencia",            label:"Dealer",        sort:true  },
-                                        { key:null,                 label:"Cliente",       sort:false },
-                                        { key:null,                 label:"Chasis / VIN",  sort:false },
-                                        { key:null,                 label:"Modelo",        sort:false },
-                                        { key:null,                 label:"Asesor",        sort:false },
-                                        { key:null,                 label:"Estatus",       sort:false },
-                                        { key:null,                 label:"Preparada por", sort:false },
-                                        { key:null,                 label:"ID SF-NADIN",   sort:false },
-                                        { key:null,                 label:"ID SF-DMS",     sort:false },
-                                        { key:null,                 label:"Comentarios",   sort:false },
+                                        { key: "fecha_hora_entrega", label: "Fecha y Hora", sort: true },
+                                        { key: "agencia", label: "Dealer", sort: true },
+                                        { key: null, label: "Cliente", sort: false },
+                                        { key: null, label: "Chasis / VIN", sort: false },
+                                        { key: null, label: "Modelo", sort: false },
+                                        { key: null, label: "Asesor", sort: false },
+                                        { key: null, label: "Estatus", sort: false },
+                                        { key: null, label: "Preparada por", sort: false },
+                                        { key: null, label: "ID SF-NADIN", sort: false },
+                                        { key: null, label: "ID SF-DMS", sort: false },
+                                        { key: null, label: "Comentarios", sort: false },
                                     ].map(({ key, label, sort: s }) => (
                                         <th key={label} className="px-4 py-3.5 font-semibold whitespace-nowrap first:pl-5">
                                             {s ? (
@@ -1138,49 +1138,49 @@ export default function RegistroEntregas() {
                             </thead>
                             <tbody className="divide-y divide-gray-100">
                                 {loadingList
-                                    ? Array.from({ length:8 }).map((_,i) => <SkeletonRow key={i} />)
+                                    ? Array.from({ length: 8 }).map((_, i) => <SkeletonRow key={i} />)
                                     : sorted.length === 0
-                                    ? (
-                                        <tr>
-                                            <td colSpan={11} className="px-4 py-16 text-center">
-                                                <div className="flex flex-col items-center gap-2">
-                                                    <Package className="h-8 w-8 text-gray-200" />
-                                                    <span className="text-sm text-gray-400">No hay resultados con esos filtros.</span>
-                                                </div>
-                                            </td>
-                                        </tr>
-                                    )
-                                    : sorted.map((row, idx) => {
-                                        const isUpdating = !!updatingInline[row.id];
-                                        return (
-                                            <tr key={row.id}
-                                                onDoubleClick={() => openEdit(row)}
-                                                onContextMenu={(e) => onRowContextMenu(e, row)}
-                                                className={[
-                                                    "cursor-pointer transition-colors duration-100 group",
-                                                    idx % 2 === 0 ? "bg-white hover:bg-gray-50" : "bg-gray-50/40 hover:bg-gray-50",
-                                                ].join(" ")}
-                                                title="Doble clic para editar · Click derecho para eliminar">
-                                                <td className="px-4 py-3.5 pl-5 text-gray-500 whitespace-nowrap tabular-nums text-xs">
-                                                    {formatDateTime(row.fecha_hora_entrega)}
-                                                </td>
-                                                <td className="px-4 py-3.5 font-semibold text-gray-800">{row.agencia||"—"}</td>
-                                                <td className="px-4 py-3.5 text-gray-700 font-medium">{row?.cliente?.nombre||"—"}</td>
-                                                <td className="px-4 py-3.5 font-mono text-xs text-gray-500 tracking-wide">{row.vin||"—"}</td>
-                                                <td className="px-4 py-3.5 text-gray-700">{row.modelo_version||"—"}</td>
-                                                <td className="px-4 py-3.5 text-gray-700">{row.asesor_ventas||"—"}</td>
-                                                <td className="px-4 py-3.5">
-                                                    <StatusButton row={row} loading={isUpdating} onToggle={toggleEntregaInline} />
-                                                </td>
-                                                <td className="px-4 py-3.5 text-gray-500">{row.preparada_por||"—"}</td>
-                                                <td className="px-4 py-3.5 text-gray-500 font-mono text-xs">{row.id_cliente_sf_nadin||"—"}</td>
-                                                <td className="px-4 py-3.5 text-gray-500 font-mono text-xs">{row.id_cliente_sf_dms||"—"}</td>
-                                                <td className="px-4 py-3.5 text-gray-500 max-w-[180px]">
-                                                    <span className="line-clamp-2 text-xs">{row.comentarios||"—"}</span>
+                                        ? (
+                                            <tr>
+                                                <td colSpan={11} className="px-4 py-16 text-center">
+                                                    <div className="flex flex-col items-center gap-2">
+                                                        <Package className="h-8 w-8 text-gray-200" />
+                                                        <span className="text-sm text-gray-400">No hay resultados con esos filtros.</span>
+                                                    </div>
                                                 </td>
                                             </tr>
-                                        );
-                                    })
+                                        )
+                                        : sorted.map((row, idx) => {
+                                            const isUpdating = !!updatingInline[row.id];
+                                            return (
+                                                <tr key={row.id}
+                                                    onDoubleClick={() => openEdit(row)}
+                                                    onContextMenu={(e) => onRowContextMenu(e, row)}
+                                                    className={[
+                                                        "cursor-pointer transition-colors duration-100 group",
+                                                        idx % 2 === 0 ? "bg-white hover:bg-gray-50" : "bg-gray-50/40 hover:bg-gray-50",
+                                                    ].join(" ")}
+                                                    title="Doble clic para editar · Click derecho para eliminar">
+                                                    <td className="px-4 py-3.5 pl-5 text-gray-500 whitespace-nowrap tabular-nums text-xs">
+                                                        {formatDateTime(row.fecha_hora_entrega)}
+                                                    </td>
+                                                    <td className="px-4 py-3.5 font-semibold text-gray-800">{row.agencia || "—"}</td>
+                                                    <td className="px-4 py-3.5 text-gray-700 font-medium">{row?.cliente?.nombre || "—"}</td>
+                                                    <td className="px-4 py-3.5 font-mono text-xs text-gray-500 tracking-wide">{row.vin || "—"}</td>
+                                                    <td className="px-4 py-3.5 text-gray-700">{row.modelo_version || "—"}</td>
+                                                    <td className="px-4 py-3.5 text-gray-700">{row.asesor_ventas || "—"}</td>
+                                                    <td className="px-4 py-3.5">
+                                                        <StatusButton row={row} loading={isUpdating} onToggle={toggleEntregaInline} />
+                                                    </td>
+                                                    <td className="px-4 py-3.5 text-gray-500">{row.preparada_por || "—"}</td>
+                                                    <td className="px-4 py-3.5 text-gray-500 font-mono text-xs">{row.id_cliente_sf_nadin || "—"}</td>
+                                                    <td className="px-4 py-3.5 text-gray-500 font-mono text-xs">{row.id_cliente_sf_dms || "—"}</td>
+                                                    <td className="px-4 py-3.5 text-gray-500 max-w-[180px]">
+                                                        <span className="line-clamp-2 text-xs">{row.comentarios || "—"}</span>
+                                                    </td>
+                                                </tr>
+                                            );
+                                        })
                                 }
                             </tbody>
                         </table>
@@ -1202,13 +1202,13 @@ export default function RegistroEntregas() {
             )}
 
             <ContextMenu ctxMenu={ctxMenu}
-                onDelete={async (row) => { await eliminarEntrega(row); setCtxMenu({ open:false, x:0, y:0, row:null }); }}
-                onClose={() => setCtxMenu({ open:false, x:0, y:0, row:null })} />
+                onDelete={async (row) => { await eliminarEntrega(row); setCtxMenu({ open: false, x: 0, y: 0, row: null }); }}
+                onClose={() => setCtxMenu({ open: false, x: 0, y: 0, row: null })} />
 
             {/* ── MODAL ── */}
             <Modal
                 open={openModal}
-                title={mode==="create" ? "Nueva Entrega" : `Editar Entrega · #${draft?.id}`}
+                title={mode === "create" ? "Nueva Entrega" : `Editar Entrega · #${draft?.id}`}
                 onClose={closeModal}
                 footer={
                     <>
@@ -1216,7 +1216,7 @@ export default function RegistroEntregas() {
                             className="inline-flex items-center gap-2 rounded-xl border border-gray-200 bg-white px-4 py-2 text-sm font-semibold text-gray-700 hover:bg-gray-50 disabled:opacity-50 transition-all duration-150 active:scale-95">
                             <X className="h-4 w-4" /> Cancelar
                         </button>
-                        <button onClick={save} disabled={saving||loadingDetail||telInvalid||(draft?.cliente_telefono?!telIsOk:false)}
+                        <button onClick={save} disabled={saving || loadingDetail || telInvalid || (draft?.cliente_telefono ? !telIsOk : false)}
                             className="inline-flex items-center gap-2 rounded-xl bg-gray-900 px-4 py-2 text-sm font-semibold text-white hover:bg-black disabled:opacity-50 transition-all duration-150 active:scale-95">
                             {saving ? <Loader2 className="h-4 w-4 animate-spin" /> : <Save className="h-4 w-4" />}
                             {saving ? "Guardando…" : "Guardar cambios"}
@@ -1226,44 +1226,44 @@ export default function RegistroEntregas() {
                 {loadingDetail ? <ModalSkeleton /> : !draft ? null : (
                     <div className="grid gap-3 md:grid-cols-3">
                         <Field label="Dealer" icon={Building2}>
-                            <select value={draft.agencia||""} onChange={(e)=>setDraft((p)=>({...p,agencia:e.target.value}))}
-                                disabled={!isAdmin} className={[inputBase,inputOk,!isAdmin?"opacity-60 cursor-not-allowed":""].join(" ")}>
+                            <select value={draft.agencia || ""} onChange={(e) => setDraft((p) => ({ ...p, agencia: e.target.value }))}
+                                disabled={!isAdmin} className={[inputBase, inputOk, !isAdmin ? "opacity-60 cursor-not-allowed" : ""].join(" ")}>
                                 <option value="" disabled>Selecciona un dealer…</option>
-                                {(isAdmin?DEALERS:userAgencia?[userAgencia]:DEALERS).map((d)=><option key={d} value={d}>{d}</option>)}
+                                {(isAdmin ? DEALERS : userAgencia ? [userAgencia] : DEALERS).map((d) => <option key={d} value={d}>{d}</option>)}
                             </select>
                         </Field>
                         <Field label="Nombre del cliente" icon={User}>
-                            <input value={draft.cliente_nombre} onChange={(e)=>setDraft((p)=>({...p,cliente_nombre:e.target.value}))}
-                                className={[inputBase,inputOk].join(" ")} placeholder="Nombre completo" />
+                            <input value={draft.cliente_nombre} onChange={(e) => setDraft((p) => ({ ...p, cliente_nombre: e.target.value }))}
+                                className={[inputBase, inputOk].join(" ")} placeholder="Nombre completo" />
                         </Field>
                         <Field label="Teléfono" icon={Phone}>
                             <input maxLength={12} value={draft.cliente_telefono}
-                                onChange={(e)=>setDraft((p)=>({...p,cliente_telefono:e.target.value.replace(/\D/g,"").slice(0,12)}))}
-                                disabled={mode==="edit"}
-                                className={[inputBase,isInvalid("cliente_telefono")||telInvalid?inputBad:inputOk,mode==="edit"?"opacity-60 cursor-not-allowed":""].join(" ")} />
+                                onChange={(e) => setDraft((p) => ({ ...p, cliente_telefono: e.target.value.replace(/\D/g, "").slice(0, 12) }))}
+                                disabled={mode === "edit"}
+                                className={[inputBase, isInvalid("cliente_telefono") || telInvalid ? inputBad : inputOk, mode === "edit" ? "opacity-60 cursor-not-allowed" : ""].join(" ")} />
                             {isInvalid("cliente_telefono") && <p className="mt-1.5 text-xs text-red-600">Teléfono es requerido.</p>}
                             {!isInvalid("cliente_telefono") && telError && <p className="mt-1.5 text-xs text-red-600">{telError}</p>}
                             {!telError && /^\d{10}$/.test(telDigits) && <p className="mt-1.5 text-xs text-emerald-600">Se guardará con prefijo 52.</p>}
                         </Field>
                         <Field label="VIN / Chasis" icon={Hash}>
-                            <input value={draft.vin} onChange={(e)=>setDraft((p)=>({...p,vin:e.target.value.toUpperCase()}))}
-                                className={[inputBase,inputOk,"font-mono"].join(" ")} placeholder="VIN / chasis" />
+                            <input value={draft.vin} onChange={(e) => setDraft((p) => ({ ...p, vin: e.target.value.toUpperCase() }))}
+                                className={[inputBase, inputOk, "font-mono"].join(" ")} placeholder="VIN / chasis" />
                         </Field>
                         <Field label="Modelo / Versión" icon={CarFront}>
-                            <select value={draft.modelo_version||""} onChange={(e)=>setDraft((p)=>({...p,modelo_version:e.target.value}))}
-                                className={[inputBase,inputOk].join(" ")}>
+                            <select value={draft.modelo_version || ""} onChange={(e) => setDraft((p) => ({ ...p, modelo_version: e.target.value }))}
+                                className={[inputBase, inputOk].join(" ")}>
                                 <option value="" disabled>Selecciona un modelo…</option>
-                                {MODELOS.map((m)=><option key={m} value={m}>{m}</option>)}
+                                {MODELOS.map((m) => <option key={m} value={m}>{m}</option>)}
                             </select>
                         </Field>
                         <Field label="Fecha y Hora de Entrega" icon={CalendarDays}>
                             <input type="datetime-local" value={draft.fecha_hora_entrega}
-                                onChange={(e)=>setDraft((p)=>({...p,fecha_hora_entrega:e.target.value}))}
-                                className={[inputBase,isInvalid("fecha_hora_entrega")?inputBad:inputOk].join(" ")} />
+                                onChange={(e) => setDraft((p) => ({ ...p, fecha_hora_entrega: e.target.value }))}
+                                className={[inputBase, isInvalid("fecha_hora_entrega") ? inputBad : inputOk].join(" ")} />
                             {isInvalid("fecha_hora_entrega") && <p className="mt-1.5 text-xs text-red-600">Fecha y hora es requerido.</p>}
                         </Field>
                         <Field label="Entrega Física" icon={UserCheck}>
-                            <button type="button" onClick={()=>setDraft((p)=>({...p,entrega_reportada:!p.entrega_reportada}))}
+                            <button type="button" onClick={() => setDraft((p) => ({ ...p, entrega_reportada: !p.entrega_reportada }))}
                                 className={["inline-flex w-full items-center justify-center gap-2 rounded-lg border px-3 py-2 text-sm font-semibold transition-all duration-150 active:scale-95",
                                     draft.entrega_reportada
                                         ? "border-emerald-200 bg-emerald-50 text-emerald-700 hover:bg-emerald-100"
@@ -1273,28 +1273,28 @@ export default function RegistroEntregas() {
                             </button>
                         </Field>
                         <Field label="Asesor Ventas" icon={UserStar}>
-                            <select value={draft.asesor_ventas||""} onChange={(e)=>setDraft((p)=>({...p,asesor_ventas:e.target.value}))}
-                                className={[inputBase,inputOk].join(" ")}>
+                            <select value={draft.asesor_ventas || ""} onChange={(e) => setDraft((p) => ({ ...p, asesor_ventas: e.target.value }))}
+                                className={[inputBase, inputOk].join(" ")}>
                                 <option value="" disabled>Selecciona un asesor…</option>
-                                {ASESORES.map((a)=><option key={a} value={a}>{a}</option>)}
+                                {ASESORES.map((a) => <option key={a} value={a}>{a}</option>)}
                             </select>
                         </Field>
                         <Field label="Preparada por" icon={ClipboardList}>
-                            <input value={draft.preparada_por} onChange={(e)=>setDraft((p)=>({...p,preparada_por:e.target.value}))}
-                                className={[inputBase,inputOk].join(" ")} placeholder="Nombre de quien preparó" />
+                            <input value={draft.preparada_por} onChange={(e) => setDraft((p) => ({ ...p, preparada_por: e.target.value }))}
+                                className={[inputBase, inputOk].join(" ")} placeholder="Nombre de quien preparó" />
                         </Field>
                         <Field label="ID Cliente / SF-NADIN" icon={IdCard}>
-                            <input value={draft.id_cliente_sf_nadin} onChange={(e)=>setDraft((p)=>({...p,id_cliente_sf_nadin:e.target.value}))}
-                                className={[inputBase,inputOk].join(" ")} placeholder="ID SF-NADIN" />
+                            <input value={draft.id_cliente_sf_nadin} onChange={(e) => setDraft((p) => ({ ...p, id_cliente_sf_nadin: e.target.value }))}
+                                className={[inputBase, inputOk].join(" ")} placeholder="ID SF-NADIN" />
                         </Field>
                         <Field label="ID Cliente / SF-DMS" icon={Table2}>
-                            <input value={draft.id_cliente_sf_dms} onChange={(e)=>setDraft((p)=>({...p,id_cliente_sf_dms:e.target.value}))}
-                                className={[inputBase,inputOk].join(" ")} placeholder="ID SF-DMS" />
+                            <input value={draft.id_cliente_sf_dms} onChange={(e) => setDraft((p) => ({ ...p, id_cliente_sf_dms: e.target.value }))}
+                                className={[inputBase, inputOk].join(" ")} placeholder="ID SF-DMS" />
                         </Field>
                         <div className="md:col-span-3">
                             <Field label="Comentarios" icon={MessageSquareText}>
-                                <textarea value={draft.comentarios} onChange={(e)=>setDraft((p)=>({...p,comentarios:e.target.value}))}
-                                    className={[inputBase,inputOk,"min-h-[100px] resize-none"].join(" ")} placeholder="Notas internas…" />
+                                <textarea value={draft.comentarios} onChange={(e) => setDraft((p) => ({ ...p, comentarios: e.target.value }))}
+                                    className={[inputBase, inputOk, "min-h-[100px] resize-none"].join(" ")} placeholder="Notas internas…" />
                             </Field>
                         </div>
                     </div>

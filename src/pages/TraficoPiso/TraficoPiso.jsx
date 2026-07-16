@@ -18,18 +18,18 @@ import { apiTraficoPiso } from "../../lib/apiTraficoPiso";
 
 // ─── constantes ──────────────────────────────────────────────────────────────
 const DEALERS = ["Volvo"];
-const VEHICULOS = ["EX30","EX40","EC40","EX90","XC60","XC90","XC60 Black Edition","XC90 Black Edition","Seminuevos","Avaluo"];
-const MOTIVOS_INGRESO = ["Vi anuncios en la TV","Vi anuncios en las redes sociales","Vi publicitarios","Siempre me ha gustado la marca","Pasé y sentí curiosidad","Recibí información por Whastapp"];
+const VEHICULOS = ["EX30", "EX40", "EC40", "EX90", "XC60", "XC90", "XC60 Black Edition", "XC90 Black Edition", "Seminuevos", "Avaluo"];
+const MOTIVOS_INGRESO = ["Vi anuncios en la TV", "Vi anuncios en las redes sociales", "Vi publicitarios", "Siempre me ha gustado la marca", "Pasé y sentí curiosidad", "Recibí información por Whastapp"];
 const TIPOS_PERSONA = ["Física", "Moral"];
 const TIEMPOS_COMPRA = ["Este mes", "De 1 a 3 meses", "De 3 a 6 meses"];
-const FORMAS_CAPITALIZACION = ["Deseo un Crédito","Quiero pagarlo de contado","Me interesa un arrendamiento","Me interesa un Autofinanciamiento"];
+const FORMAS_CAPITALIZACION = ["Deseo un Crédito", "Quiero pagarlo de contado", "Me interesa un arrendamiento", "Me interesa un Autofinanciamiento"];
 const MENSUALIDADES = [3, 6, 12, 18, 26, 36, 48, 60, 72];
-const FORMAS_COMPROBAR_INGRESOS = ["No cuenta","Recibo de Nómina","Factura por Servicios","Estado de Cuenta","Declaración de Impuestos","Pago de Pensión","Carta de Ingresos"];
-const MOTIVOS_COMPRA = ["Renovar auto","Mi familia se hace más grande","Mi trabajo me lo pide","Mi estilo de vida me lo pide"];
-const PERFILES_PROFESIONALES = ["Comerciales","Asalariado Sector Público","Asalariado Sector Privado","Pensionado","Profesionista Independiente"];
+const FORMAS_COMPROBAR_INGRESOS = ["No cuenta", "Recibo de Nómina", "Factura por Servicios", "Estado de Cuenta", "Declaración de Impuestos", "Pago de Pensión", "Carta de Ingresos"];
+const MOTIVOS_COMPRA = ["Renovar auto", "Mi familia se hace más grande", "Mi trabajo me lo pide", "Mi estilo de vida me lo pide"];
+const PERFILES_PROFESIONALES = ["Comerciales", "Asalariado Sector Público", "Asalariado Sector Privado", "Pensionado", "Profesionista Independiente"];
 const ESTADOS_CIVILES = ["Soltero", "Casado", "Divorciado"];
-const ASESORES = ["Enrique Vazquez Islas","Ricardo Platas","Verónica Del Rayo Galindo León","Julio Camacho Barragán","Fernanda Romero Aguilar"];
-const PASATIEMPOS = ["Ciclismo","Natación","Futbol","Pesca","Senderismo","Tenis-frontón","Golf","Mixología","Cocinar","Coleccionar objetos","Viajar dentro del país","Viajar fuera del país","Automovilismo","Fotografía","Pintura","Arquitectura","Conciertos","Ajedrez","Lectura","Desarrollo personal","Pilates","Yoga","Neurociencias","Aprendizaje de idioma"];
+const ASESORES = ["Enrique Vazquez Islas", "Ricardo Platas", "Verónica Del Rayo Galindo León", "Julio Camacho Barragán", "Fernanda Romero Aguilar", "Zaira Vanessa Hernández Gómez",];
+const PASATIEMPOS = ["Ciclismo", "Natación", "Futbol", "Pesca", "Senderismo", "Tenis-frontón", "Golf", "Mixología", "Cocinar", "Coleccionar objetos", "Viajar dentro del país", "Viajar fuera del país", "Automovilismo", "Fotografía", "Pintura", "Arquitectura", "Conciertos", "Ajedrez", "Lectura", "Desarrollo personal", "Pilates", "Yoga", "Neurociencias", "Aprendizaje de idioma"];
 const PIE_COLORS = ["#000000", "#2a2a2a", "#555555", "#808080", "#aaaaaa"];
 const PAGE_SIZE = 10;
 
@@ -59,14 +59,14 @@ function mensajeTelefono(v) {
 function validarEmail(v) { const e = normalizeStr(v); if (!e) return true; return /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(e); }
 function money(v) { return Number(v || 0).toLocaleString("es-MX", { style: "currency", currency: "MXN", maximumFractionDigits: 0 }); }
 function dateTime(v) { if (!v) return "—"; const d = new Date(v); if (isNaN(d)) return "—"; return d.toLocaleString("es-MX", { year: "numeric", month: "short", day: "2-digit", hour: "2-digit", minute: "2-digit" }); }
-function toYMDLocal(v) { const d = new Date(v); if (isNaN(d)) return ""; const p = (n) => String(n).padStart(2, "0"); return `${d.getFullYear()}-${p(d.getMonth()+1)}-${p(d.getDate())}`; }
+function toYMDLocal(v) { const d = new Date(v); if (isNaN(d)) return ""; const p = (n) => String(n).padStart(2, "0"); return `${d.getFullYear()}-${p(d.getMonth() + 1)}-${p(d.getDate())}`; }
 function ymdToInt(ymd) { if (!ymd || !/^\d{4}-\d{2}-\d{2}$/.test(ymd)) return null; return Number(ymd.replaceAll("-", "")); }
 function addDays(date, days) { const d = new Date(date); d.setDate(d.getDate() + days); return d; }
-function startOfWeekMonday(date) { const d = new Date(date); const delta = (d.getDay() + 6) % 7; d.setHours(0,0,0,0); d.setDate(d.getDate() - delta); return d; }
-function weekdayShortEs(d) { return ["Dom","Lun","Mar","Mie","Jue","Vie","Sab"][d.getDay()] || ""; }
+function startOfWeekMonday(date) { const d = new Date(date); const delta = (d.getDay() + 6) % 7; d.setHours(0, 0, 0, 0); d.setDate(d.getDate() - delta); return d; }
+function weekdayShortEs(d) { return ["Dom", "Lun", "Mar", "Mie", "Jue", "Vie", "Sab"][d.getDay()] || ""; }
 function timeShort(v) { if (!v) return ""; const d = new Date(v); if (isNaN(d)) return ""; return d.toLocaleTimeString("es-MX", { hour: "2-digit", minute: "2-digit" }); }
 function formatWeekTitle(s, e) {
-    return `${s.toLocaleDateString("es-MX",{day:"numeric",month:"long"})} — ${e.toLocaleDateString("es-MX",{day:"numeric",month:"long",year:"numeric"})}`;
+    return `${s.toLocaleDateString("es-MX", { day: "numeric", month: "long" })} — ${e.toLocaleDateString("es-MX", { day: "numeric", month: "long", year: "numeric" })}`;
 }
 function getInitials(nombre) {
     const parts = normalizeStr(nombre).split(/\s+/).filter(Boolean);
@@ -211,7 +211,7 @@ function PasatiemposPicker({ value, onChange }) {
                 {PASATIEMPOS.map((item) => {
                     const active = sel.has(item);
                     return (
-                        <button key={item} type="button" onClick={() => { if (active) onChange((value||[]).filter(x=>x!==item)); else onChange([...(value||[]),item]); }}
+                        <button key={item} type="button" onClick={() => { if (active) onChange((value || []).filter(x => x !== item)); else onChange([...(value || []), item]); }}
                             className={["rounded-full border px-3 py-2 text-xs font-extrabold transition", active ? "border-black bg-black text-white" : "border-black/15 bg-white text-black hover:border-black"].join(" ")}>
                             {item}
                         </button>
@@ -227,7 +227,7 @@ function AsesorAutocomplete({ value, onChange, invalid }) {
     const wrapperRef = useRef(null);
     const opciones = useMemo(() => {
         const q = normalizarBusqueda(value);
-        return q ? ASESORES.filter(a => normalizarBusqueda(a).includes(q)).slice(0,20) : ASESORES.slice(0,20);
+        return q ? ASESORES.filter(a => normalizarBusqueda(a).includes(q)).slice(0, 20) : ASESORES.slice(0, 20);
     }, [value]);
     useEffect(() => {
         const fn = (e) => { if (wrapperRef.current && !wrapperRef.current.contains(e.target)) setOpen(false); };
@@ -282,8 +282,8 @@ function AgendaCard({ item, onEdit, onContext }) {
         item.tiempo_compra === "Este mes"
             ? { bg: "bg-emerald-50", text: "text-emerald-700", border: "border-emerald-200" }
             : item.tiempo_compra === "De 1 a 3 meses"
-            ? { bg: "bg-amber-50", text: "text-amber-700", border: "border-amber-200" }
-            : { bg: "bg-slate-50", text: "text-slate-500", border: "border-slate-200" };
+                ? { bg: "bg-amber-50", text: "text-amber-700", border: "border-amber-200" }
+                : { bg: "bg-slate-50", text: "text-slate-500", border: "border-slate-200" };
 
     return (
         <button
@@ -365,36 +365,36 @@ function AgendaWeekView({ rows, loading, currentWeekDate, setCurrentWeekDate, on
         <div className="hidden lg:block">
             {/* nav semana */}
             <div className="mb-3 flex flex-col gap-3 rounded-xl border border-slate-200 bg-white p-3 shadow-sm xl:flex-row xl:items-center xl:justify-between">
-    <div>
-        <div className="text-[10px] font-bold uppercase tracking-widest text-slate-400">Semana</div>
-        <div className="truncate text-sm font-bold text-slate-900">{formatWeekTitle(weekStart, weekEnd)}</div>
-    </div>
-    <div className="flex items-center gap-2">
-        <button
-            type="button"
-            onClick={() => setCurrentWeekDate(d => addDays(d, -7))}
-            className="inline-flex h-9 w-9 items-center justify-center rounded-lg border border-slate-200 bg-white text-slate-600 hover:bg-slate-50 transition"
-            aria-label="Semana anterior"
-        >
-            <ChevronLeft className="h-4 w-4" />
-        </button>
-        <button
-            type="button"
-            onClick={() => setCurrentWeekDate(new Date())}
-            className="inline-flex items-center justify-center gap-1 rounded-lg border border-slate-200 bg-white px-4 py-2 text-xs font-semibold text-slate-700 hover:bg-slate-50 transition"
-        >
-            Hoy
-        </button>
-        <button
-            type="button"
-            onClick={() => setCurrentWeekDate(d => addDays(d, 7))}
-            className="inline-flex h-9 w-9 items-center justify-center rounded-lg border border-slate-200 bg-white text-slate-600 hover:bg-slate-50 transition"
-            aria-label="Semana siguiente"
-        >
-            <ChevronRight className="h-4 w-4" />
-        </button>
-    </div>
-</div>
+                <div>
+                    <div className="text-[10px] font-bold uppercase tracking-widest text-slate-400">Semana</div>
+                    <div className="truncate text-sm font-bold text-slate-900">{formatWeekTitle(weekStart, weekEnd)}</div>
+                </div>
+                <div className="flex items-center gap-2">
+                    <button
+                        type="button"
+                        onClick={() => setCurrentWeekDate(d => addDays(d, -7))}
+                        className="inline-flex h-9 w-9 items-center justify-center rounded-lg border border-slate-200 bg-white text-slate-600 hover:bg-slate-50 transition"
+                        aria-label="Semana anterior"
+                    >
+                        <ChevronLeft className="h-4 w-4" />
+                    </button>
+                    <button
+                        type="button"
+                        onClick={() => setCurrentWeekDate(new Date())}
+                        className="inline-flex items-center justify-center gap-1 rounded-lg border border-slate-200 bg-white px-4 py-2 text-xs font-semibold text-slate-700 hover:bg-slate-50 transition"
+                    >
+                        Hoy
+                    </button>
+                    <button
+                        type="button"
+                        onClick={() => setCurrentWeekDate(d => addDays(d, 7))}
+                        className="inline-flex h-9 w-9 items-center justify-center rounded-lg border border-slate-200 bg-white text-slate-600 hover:bg-slate-50 transition"
+                        aria-label="Semana siguiente"
+                    >
+                        <ChevronRight className="h-4 w-4" />
+                    </button>
+                </div>
+            </div>
             {/* agenda por columnas de día — cada columna crece libremente, sin recortes */}
             <div className="overflow-hidden rounded-xl border border-black/15 bg-white shadow-sm">
                 <div className="overflow-x-auto">
@@ -420,31 +420,31 @@ function AgendaWeekView({ rows, loading, currentWeekDate, setCurrentWeekDate, on
                                 return (
                                     <div key={dayKey} className="flex flex-col border-r border-black/8 last:border-r-0">
                                         <div className="sticky top-0 z-10 flex items-center justify-between gap-2 border-b border-slate-200 bg-slate-50 px-3 py-3">
-    <div>
-        <div className="text-[10px] font-semibold uppercase tracking-widest text-slate-400">{weekdayShortEs(day)}</div>
-        <div className="mt-1 flex items-center gap-2">
-            <span className={[
-                "inline-flex h-7 w-7 items-center justify-center rounded-full text-sm font-bold",
-                isToday ? "bg-slate-900 text-white" : "text-slate-700"
-            ].join(" ")}>
-                {day.getDate()}
-            </span>
-            {items.length > 0 && (
-                <span className="text-[9px] font-semibold text-slate-400">
-                    {items.length} ingreso{items.length !== 1 ? "s" : ""}
-                </span>
-            )}
-        </div>
-    </div>
-    <button
-        type="button"
-        onClick={onOpenCreate}
-        className="inline-flex h-7 w-7 shrink-0 items-center justify-center rounded-md border border-slate-200 bg-white text-slate-500 hover:bg-slate-100 hover:text-slate-700 transition"
-        title="Nuevo ingreso"
-    >
-        <Plus className="h-3.5 w-3.5" />
-    </button>
-</div>
+                                            <div>
+                                                <div className="text-[10px] font-semibold uppercase tracking-widest text-slate-400">{weekdayShortEs(day)}</div>
+                                                <div className="mt-1 flex items-center gap-2">
+                                                    <span className={[
+                                                        "inline-flex h-7 w-7 items-center justify-center rounded-full text-sm font-bold",
+                                                        isToday ? "bg-slate-900 text-white" : "text-slate-700"
+                                                    ].join(" ")}>
+                                                        {day.getDate()}
+                                                    </span>
+                                                    {items.length > 0 && (
+                                                        <span className="text-[9px] font-semibold text-slate-400">
+                                                            {items.length} ingreso{items.length !== 1 ? "s" : ""}
+                                                        </span>
+                                                    )}
+                                                </div>
+                                            </div>
+                                            <button
+                                                type="button"
+                                                onClick={onOpenCreate}
+                                                className="inline-flex h-7 w-7 shrink-0 items-center justify-center rounded-md border border-slate-200 bg-white text-slate-500 hover:bg-slate-100 hover:text-slate-700 transition"
+                                                title="Nuevo ingreso"
+                                            >
+                                                <Plus className="h-3.5 w-3.5" />
+                                            </button>
+                                        </div>
                                         <div className="flex-1 space-y-2 bg-white p-2">
                                             {items.length === 0 ? (
                                                 <div className="rounded-lg border border-dashed border-black/10 px-2 py-8 text-center text-[10px] font-semibold text-slate-300">
@@ -466,13 +466,13 @@ function AgendaWeekView({ rows, loading, currentWeekDate, setCurrentWeekDate, on
             {!loading && outOfWeek.length ? (
                 <div className="mt-3 overflow-hidden rounded-xl border border-black/15 bg-white shadow-sm">
                     <div className="border-b border-slate-200 bg-slate-50 px-4 py-2.5 flex items-center gap-2">
-    <span className="text-[10px] font-semibold uppercase tracking-widest text-slate-500">
-        Ingresos fuera de esta semana
-    </span>
-    <span className="inline-flex h-5 w-5 items-center justify-center rounded-full bg-slate-200 text-[9px] font-bold text-slate-600">
-        {outOfWeek.length}
-    </span>
-</div>
+                        <span className="text-[10px] font-semibold uppercase tracking-widest text-slate-500">
+                            Ingresos fuera de esta semana
+                        </span>
+                        <span className="inline-flex h-5 w-5 items-center justify-center rounded-full bg-slate-200 text-[9px] font-bold text-slate-600">
+                            {outOfWeek.length}
+                        </span>
+                    </div>
                     <div className="grid gap-2 p-3 md:grid-cols-3 xl:grid-cols-4">
                         {outOfWeek.map(item => (
                             <AgendaCard key={item.id_trafico} item={item} onEdit={onEdit} onContext={onContext} />
@@ -523,8 +523,8 @@ function AgendaMobileList({ rows, loading, onEdit, onContext }) {
                     <section key={key} className="overflow-hidden rounded-xl border border-black/15 bg-white shadow-sm">
                         {/* encabezado de fecha — NEGRO */}
                         <div className="border-b border-slate-200 bg-slate-50 px-4 py-3">
-    <h3 className="text-xs font-semibold uppercase tracking-widest text-slate-500">{title}</h3>
-</div>
+                            <h3 className="text-xs font-semibold uppercase tracking-widest text-slate-500">{title}</h3>
+                        </div>
                         <div className="grid gap-2 p-3 sm:grid-cols-2">
                             {items.map(item => (
                                 <AgendaCard key={item.id_trafico} item={item} onEdit={onEdit} onContext={onContext} />
@@ -825,10 +825,10 @@ export default function TraficoPiso() {
         const { key, dir } = sort;
         const mult = dir === "asc" ? 1 : -1;
         return data.sort((a, b) => {
-            if (key === "creado_en") return (new Date(a[key]||0).getTime() - new Date(b[key]||0).getTime()) * mult;
-            if (["presupuesto_estimado","enganche_presupuestado"].includes(key)) return (Number(a[key]||0) - Number(b[key]||0)) * mult;
+            if (key === "creado_en") return (new Date(a[key] || 0).getTime() - new Date(b[key] || 0).getTime()) * mult;
+            if (["presupuesto_estimado", "enganche_presupuestado"].includes(key)) return (Number(a[key] || 0) - Number(b[key] || 0)) * mult;
             const va = normalizeStr(a?.[key]).toLowerCase(), vb = normalizeStr(b?.[key]).toLowerCase();
-            return va < vb ? -1*mult : va > vb ? 1*mult : 0;
+            return va < vb ? -1 * mult : va > vb ? 1 * mult : 0;
         });
     }, [filtered, sort]);
 
@@ -877,8 +877,8 @@ export default function TraficoPiso() {
                         {viewMode === "tabla"
                             ? "Control de prospectos que ingresan a la agencia."
                             : viewMode === "agenda"
-                            ? "Vista semanal de ingresos a piso."
-                            : "Estadísticas de tráfico de piso."}
+                                ? "Vista semanal de ingresos a piso."
+                                : "Estadísticas de tráfico de piso."}
                     </p>
                 </div>
 
@@ -921,7 +921,7 @@ export default function TraficoPiso() {
 
             {/* alertas */}
             {error ? <div className="rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm font-medium text-red-700">{error}</div> : null}
-            {ok    ? <div className="rounded-lg border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm font-medium text-emerald-700">{ok}</div> : null}
+            {ok ? <div className="rounded-lg border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm font-medium text-emerald-700">{ok}</div> : null}
 
             {/* filtros */}
             {viewMode !== "graficas" && (
@@ -1150,8 +1150,8 @@ export default function TraficoPiso() {
                             <div className="grid gap-3 md:grid-cols-3">
                                 <Field label="Dealer" icon={Building2} invalid={isInvalid("agencia")}><Select value={draft.agencia} invalid={isInvalid("agencia")} onChange={e => updateField("agencia", e.target.value)}><option value="">Seleccionar dealer...</option>{DEALERS.map(d => <option key={d} value={d}>{d}</option>)}</Select></Field>
                                 <Field label="Nombre del prospecto" icon={User} hint="Mayúsculas" invalid={isInvalid("nombre_prospecto")}><Input value={draft.nombre_prospecto} invalid={isInvalid("nombre_prospecto")} onChange={e => updateField("nombre_prospecto", e.target.value.toUpperCase())} placeholder="NOMBRE COMPLETO" /></Field>
-                                <Field label="Código postal" icon={ClipboardList} invalid={isInvalid("codigo_postal")}><Input value={draft.codigo_postal} invalid={isInvalid("codigo_postal")} onChange={e => updateField("codigo_postal", soloNumeros(e.target.value).slice(0,5))} inputMode="numeric" placeholder="68300" /></Field>
-                                <Field label="Teléfono" icon={Phone} invalid={isInvalid("telefono")}><Input value={draft.telefono} invalid={isInvalid("telefono")} onChange={e => updateField("telefono", soloNumeros(e.target.value).slice(0,12))} inputMode="numeric" placeholder="10 dígitos" /></Field>
+                                <Field label="Código postal" icon={ClipboardList} invalid={isInvalid("codigo_postal")}><Input value={draft.codigo_postal} invalid={isInvalid("codigo_postal")} onChange={e => updateField("codigo_postal", soloNumeros(e.target.value).slice(0, 5))} inputMode="numeric" placeholder="68300" /></Field>
+                                <Field label="Teléfono" icon={Phone} invalid={isInvalid("telefono")}><Input value={draft.telefono} invalid={isInvalid("telefono")} onChange={e => updateField("telefono", soloNumeros(e.target.value).slice(0, 12))} inputMode="numeric" placeholder="10 dígitos" /></Field>
                                 <Field label="E-mail" icon={Mail} invalid={isInvalid("email")}><Input type="email" value={draft.email} invalid={isInvalid("email")} onChange={e => updateField("email", e.target.value)} placeholder="correo@dominio.com" /></Field>
                                 <Field label="Asesor de ventas" icon={UserRoundSearch} hint="Buscar" invalid={isInvalid("asesor_ventas")}><AsesorAutocomplete value={draft.asesor_ventas} invalid={isInvalid("asesor_ventas")} onChange={v => updateField("asesor_ventas", v)} /></Field>
                                 <Field label="Ingresó a la agencia porque" icon={MessageSquareText} invalid={isInvalid("motivo_ingreso")}><Select value={draft.motivo_ingreso} invalid={isInvalid("motivo_ingreso")} onChange={e => updateField("motivo_ingreso", e.target.value)}><option value="">Seleccionar...</option>{MOTIVOS_INGRESO.map(x => <option key={x} value={x}>{x}</option>)}</Select></Field>
@@ -1188,8 +1188,8 @@ export default function TraficoPiso() {
                                 <Field label="Motivo de compra" icon={MessageSquareText} invalid={isInvalid("motivo_compra")}><Select value={draft.motivo_compra} invalid={isInvalid("motivo_compra")} onChange={e => updateField("motivo_compra", e.target.value)}><option value="">Seleccionar...</option>{MOTIVOS_COMPRA.map(x => <option key={x} value={x}>{x}</option>)}</Select></Field>
                                 <Field label="Perfil profesional" icon={BriefcaseBusiness} invalid={isInvalid("perfil_profesional")}><Select value={draft.perfil_profesional} invalid={isInvalid("perfil_profesional")} onChange={e => updateField("perfil_profesional", e.target.value)}><option value="">Seleccionar...</option>{PERFILES_PROFESIONALES.map(x => <option key={x} value={x}>{x}</option>)}</Select></Field>
                                 <Field label="Estado civil" icon={Users} invalid={isInvalid("estado_civil")}><Select value={draft.estado_civil} invalid={isInvalid("estado_civil")} onChange={e => updateField("estado_civil", e.target.value)}><option value="">Seleccionar...</option>{ESTADOS_CIVILES.map(x => <option key={x} value={x}>{x}</option>)}</Select></Field>
-                                <Field label="Edad" icon={User}><Input value={draft.edad} onChange={e => updateField("edad", soloNumeros(e.target.value).slice(0,3))} inputMode="numeric" placeholder="35" /></Field>
-                                <Field label="Cantidad de hijos" icon={Users}><Input value={draft.cantidad_hijos} onChange={e => updateField("cantidad_hijos", soloNumeros(e.target.value).slice(0,2))} inputMode="numeric" placeholder="0" /></Field>
+                                <Field label="Edad" icon={User}><Input value={draft.edad} onChange={e => updateField("edad", soloNumeros(e.target.value).slice(0, 3))} inputMode="numeric" placeholder="35" /></Field>
+                                <Field label="Cantidad de hijos" icon={Users}><Input value={draft.cantidad_hijos} onChange={e => updateField("cantidad_hijos", soloNumeros(e.target.value).slice(0, 2))} inputMode="numeric" placeholder="0" /></Field>
                             </div>
                             <div className="mt-3"><PasatiemposPicker value={draft.pasatiempos || []} onChange={v => updateField("pasatiempos", v)} /></div>
                             <div className="mt-3"><Field label="Comentarios" icon={MessageSquareText}><Textarea value={draft.comentarios} onChange={e => updateField("comentarios", e.target.value)} placeholder="Notas adicionales del asesor..." /></Field></div>

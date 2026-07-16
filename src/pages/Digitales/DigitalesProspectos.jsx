@@ -61,14 +61,80 @@ const lineaMeta = {
 };
 
 const origenMeta = {
-    "Volvo-Concesionarios": { Icon: ImgIcon(CONCESIONARIO, "Volvo-Concesionarios"), label: "Volvo-Concesionarios" },
+    "Volvo-Concesionario": { Icon: ImgIcon(CONCESIONARIO, "Volvo-Concesionario"), label: "Volvo-Concesionario" },
     WhatsApp: { Icon: ImgIcon(WAP, "WhatsApp"), label: "WhatsApp" },
     Facebook: { Icon: ImgIcon(FB, "Facebook"), label: "Facebook" },
     "Llamada Entrante": { Icon: ImgIcon(PHONE, "Llamada Entrante"), label: "Llamada Entrante" },
 };
 
+function normalizarCanalContacto(value) {
+    const canal = String(value || "").trim();
+
+    // Compatibilidad con registros anteriores guardados con el nombre en plural.
+    if (canal === "Volvo-Concesionarios") return "Volvo-Concesionario";
+
+    return canal;
+}
+
 const ASESORES_DIGITALES = ["Mariana Tlamani"];
-const ESTADOS_PROSPECTO = ["Descalificado", "Contactado", "Sin Respuesta"];
+const ESTADOS_PROSPECTO = [
+    "Contactado",
+    "Calificado",
+    "Pendiente de Cotización",
+    "Requiere Asesor",
+    "Financiamiento",
+    "Sin Respuesta",
+    "Descalificado",
+];
+
+const MOTIVOS_DESCALIFICACION = [
+    "Mala forma de trabajo",
+    "No contesto",
+    "Poco presupuesto",
+    "Descalificado por consultor",
+    "Compro en otra marca",
+];
+
+const BURO_OPTIONS = [
+    { value: "", label: "— Selecciona —" },
+    { value: "bueno", label: "Bueno" },
+    { value: "regular", label: "Regular" },
+    { value: "iniciando", label: "Iniciando" },
+    { value: "desconocido", label: "Desconocido" },
+];
+
+const FORMA_PAGO_OPTIONS = [
+    { value: "", label: "— Selecciona —" },
+    { value: "contado", label: "Contado" },
+    { value: "credito", label: "Crédito" },
+    { value: "arrendamiento", label: "Arrendamiento" },
+    { value: "desconocido", label: "Desconocido" },
+];
+
+const TIPO_CLIENTE_OPTIONS = [
+    { value: "", label: "— Selecciona —" },
+    { value: "persona_fisica", label: "Persona física" },
+    { value: "persona_moral", label: "Persona moral" },
+    { value: "desconocido", label: "Desconocido" },
+];
+
+const SOLICITUD_CREDITO_OPTIONS = [
+    { value: "", label: "— Selecciona —" },
+    { value: "autorizado", label: "Autorizado" },
+    { value: "rechazado", label: "Rechazado" },
+    { value: "condicionado", label: "Condicionado" },
+];
+
+const PLAZO_COMPRA_OPTIONS = [
+    "",
+    "Inmediato",
+    "Esta semana",
+    "Este mes",
+    "1 a 3 meses",
+    "3 a 6 meses",
+    "Más de 6 meses",
+    "Sin definir",
+];
 
 const VEHICULOS = [
     "EX30",
@@ -570,6 +636,13 @@ function getSortValue(row, key) {
     return String(row?.[key] ?? "").toLowerCase();
 }
 
+function toNullableNumber(value) {
+    if (value === null || value === undefined || value === "") return null;
+
+    const numero = Number(String(value).replace(/[^\d]/g, ""));
+    return Number.isFinite(numero) && numero > 0 ? Math.round(numero) : null;
+}
+
 function normalizeProspecto(p) {
     const { nombre, apellidos } = splitNombre(p.nombre);
 
@@ -582,10 +655,24 @@ function normalizeProspecto(p) {
         telefono: String(p.telefono || ""),
         correo: p.correo || "",
         linea: p.business || "",
-        origen: p.canal_contacto || "",
+        origen: normalizarCanalContacto(p.canal_contacto),
         pauta: p.pauta || "",
         estado: p.estado || "",
+        motivo_descalificacion: p.motivo_descalificacion || "",
         comentarios: p.comentarios || "",
+        enganche_monto: p.enganche_monto ?? "",
+        presupuesto_mensual: p.presupuesto_mensual ?? "",
+        buro_estado: p.buro_estado || "",
+        forma_pago: p.forma_pago || "",
+        tipo_cliente: p.tipo_cliente || "",
+        plazo_compra: p.plazo_compra || "",
+        uso_vehiculo: p.uso_vehiculo || "",
+        comprobacion_ingresos: p.comprobacion_ingresos || "",
+        id_cotizacion: p.id_cotizacion || "",
+        folio_solicitud_credito: p.folio_solicitud_credito || "",
+        solicitud_credito_estado: p.solicitud_credito_estado || "",
+        vin_facturado: p.vin_facturado || "",
+        vin_estatus_entrega: p.vin_estatus_entrega || "",
         resumen: p.resumen || "",
         resumen_actualizado_at: toDTLocal(p.resumen_actualizado_at),
         resumen_fuente: p.resumen_fuente || "",
@@ -1404,6 +1491,7 @@ export default function DigitalesProspectos() {
         "Verónica Del Rayo Galindo León",
         "Julio Camacho Barragán",
         "Fernanda Romero Aguilar",
+        "Zaira Vanessa Hernández Gómez",
     ];
 
     const [ctxMenu, setCtxMenu] = useState({ open: false, x: 0, y: 0, row: null });
@@ -1552,6 +1640,7 @@ export default function DigitalesProspectos() {
     const REQUIRED = useMemo(
         () => ({
             telefono: "Teléfono",
+            motivo_descalificacion: "Motivo de descalificación",
         }),
         []
     );
@@ -1561,11 +1650,19 @@ export default function DigitalesProspectos() {
     const missing = useMemo(() => {
         if (!draft) return [];
         const m = [];
-        for (const key of Object.keys(REQUIRED)) {
-            const v = draft[key];
-            const isEmpty = v === null || v === undefined || (typeof v === "string" && v.trim() === "");
-            if (isEmpty) m.push(key);
+
+        const telefono = draft.telefono;
+        if (telefono === null || telefono === undefined || String(telefono).trim() === "") {
+            m.push("telefono");
         }
+
+        if (
+            normalizeText(draft.estado) === "descalificado" &&
+            !String(draft.motivo_descalificacion || "").trim()
+        ) {
+            m.push("motivo_descalificacion");
+        }
+
         return m;
     }, [draft, REQUIRED]);
 
@@ -1721,7 +1818,19 @@ export default function DigitalesProspectos() {
                 String(c.linea || "").toLowerCase().includes(q) ||
                 String(c.origen || "").toLowerCase().includes(q) ||
                 String(c.cliente_interes || "").toLowerCase().includes(q) ||
-                String(c.pauta || "").toLowerCase().includes(q);
+                String(c.pauta || "").toLowerCase().includes(q) ||
+                String(c.motivo_descalificacion || "").toLowerCase().includes(q) ||
+                String(c.enganche_monto || "").toLowerCase().includes(q) ||
+                String(c.presupuesto_mensual || "").toLowerCase().includes(q) ||
+                String(c.buro_estado || "").toLowerCase().includes(q) ||
+                String(c.forma_pago || "").toLowerCase().includes(q) ||
+                String(c.tipo_cliente || "").toLowerCase().includes(q) ||
+                String(c.plazo_compra || "").toLowerCase().includes(q) ||
+                String(c.uso_vehiculo || "").toLowerCase().includes(q) ||
+                String(c.comprobacion_ingresos || "").toLowerCase().includes(q) ||
+                String(c.id_cotizacion || "").toLowerCase().includes(q) ||
+                String(c.folio_solicitud_credito || "").toLowerCase().includes(q) ||
+                String(c.vin_facturado || "").toLowerCase().includes(q);
 
             const matchEstado =
                 filters.estado === "Todos" || c.estado === filters.estado;
@@ -1816,8 +1925,22 @@ export default function DigitalesProspectos() {
             origen: "",
             pauta: "",
             estado: "Contactado",
+            motivo_descalificacion: "",
             cliente_interes: "",
             comentarios: "",
+            enganche_monto: "",
+            presupuesto_mensual: "",
+            buro_estado: "",
+            forma_pago: "",
+            tipo_cliente: "",
+            plazo_compra: "",
+            uso_vehiculo: "",
+            comprobacion_ingresos: "",
+            id_cotizacion: "",
+            folio_solicitud_credito: "",
+            solicitud_credito_estado: "",
+            vin_facturado: "",
+            vin_estatus_entrega: "",
             asesor_digital: asesorDigitalPorSesion,
             asesor_solicita: "",
             creado: nowLocal,
@@ -1897,11 +2020,25 @@ export default function DigitalesProspectos() {
                 telefono: String(p.telefono || ""),
                 correo: p.correo || "",
                 linea: p.business || "",
-                origen: p.canal_contacto || "",
+                origen: normalizarCanalContacto(p.canal_contacto),
                 pauta: p.pauta || "",
                 estado: p.estado || "",
+                motivo_descalificacion: p.motivo_descalificacion || "",
                 cliente_interes: p.auto_interes || "",
                 comentarios: p.comentarios || "",
+                enganche_monto: p.enganche_monto ?? "",
+                presupuesto_mensual: p.presupuesto_mensual ?? "",
+                buro_estado: p.buro_estado || "",
+                forma_pago: p.forma_pago || "",
+                tipo_cliente: p.tipo_cliente || "",
+                plazo_compra: p.plazo_compra || "",
+                uso_vehiculo: p.uso_vehiculo || "",
+                comprobacion_ingresos: p.comprobacion_ingresos || "",
+                id_cotizacion: p.id_cotizacion || "",
+                folio_solicitud_credito: p.folio_solicitud_credito || "",
+                solicitud_credito_estado: p.solicitud_credito_estado || "",
+                vin_facturado: p.vin_facturado || "",
+                vin_estatus_entrega: p.vin_estatus_entrega || "",
                 resumen: p.resumen || "",
                 resumen_actualizado_at: toDTLocal(p.resumen_actualizado_at),
                 resumen_fuente: p.resumen_fuente || "",
@@ -1985,6 +2122,20 @@ export default function DigitalesProspectos() {
             "Canal de Contacto": limpiarValorExcel(row.origen),
             "Pauta de Origen": limpiarValorExcel(row.pauta),
             Estado: limpiarValorExcel(row.estado),
+            "Motivo de descalificación": limpiarValorExcel(row.motivo_descalificacion),
+            Enganche: limpiarValorExcel(row.enganche_monto),
+            "Presupuesto mensual": limpiarValorExcel(row.presupuesto_mensual),
+            Buró: limpiarValorExcel(row.buro_estado),
+            "Forma de pago": limpiarValorExcel(row.forma_pago),
+            "Tipo de cliente": limpiarValorExcel(row.tipo_cliente),
+            "Plazo de compra": limpiarValorExcel(row.plazo_compra),
+            "Uso del vehículo": limpiarValorExcel(row.uso_vehiculo),
+            "Comprobación de ingresos": limpiarValorExcel(row.comprobacion_ingresos),
+            "ID cotización": limpiarValorExcel(row.id_cotizacion),
+            "Folio solicitud crédito": limpiarValorExcel(row.folio_solicitud_credito),
+            "Estado solicitud crédito": limpiarValorExcel(row.solicitud_credito_estado),
+            "VIN facturado": limpiarValorExcel(row.vin_facturado),
+            "Estatus de entrega": limpiarValorExcel(row.vin_estatus_entrega),
             "Asesor Digital": limpiarValorExcel(row.asesor_digital),
             "Asignado a": limpiarValorExcel(row.asesor_solicita),
             "Volvo de sus sueños": limpiarValorExcel(row.cliente_interes),
@@ -2071,10 +2222,27 @@ export default function DigitalesProspectos() {
                 canal_contacto: draft.origen,
                 pauta: draft.pauta,
                 estado: draft.estado,
+                motivo_descalificacion:
+                    normalizeText(draft.estado) === "descalificado"
+                        ? String(draft.motivo_descalificacion || "").trim()
+                        : "",
                 asesor_digital: asesorDigitalFinal,
                 asesor_ventas: draft.asesor_solicita || "",
                 auto_interes: draft.cliente_interes || "",
                 comentarios: draft.comentarios || "",
+                enganche_monto: toNullableNumber(draft.enganche_monto),
+                presupuesto_mensual: toNullableNumber(draft.presupuesto_mensual),
+                buro_estado: draft.buro_estado || "",
+                forma_pago: draft.forma_pago || "",
+                tipo_cliente: draft.tipo_cliente || "",
+                plazo_compra: draft.plazo_compra || "",
+                uso_vehiculo: draft.uso_vehiculo || "",
+                comprobacion_ingresos: draft.comprobacion_ingresos || "",
+                id_cotizacion: String(draft.id_cotizacion || "").trim(),
+                folio_solicitud_credito: String(draft.folio_solicitud_credito || "").trim(),
+                solicitud_credito_estado: draft.solicitud_credito_estado || "",
+                vin_facturado: String(draft.vin_facturado || "").trim().toUpperCase(),
+                vin_estatus_entrega: draft.vin_estatus_entrega || "",
             };
 
             if (mode === "create") {
@@ -2154,6 +2322,14 @@ export default function DigitalesProspectos() {
     const updateEstadoInline = async (row, newEstado) => {
         const id = row?.id_exp;
         if (!id) return;
+
+        // La descalificación necesita un motivo obligatorio, por eso se abre el modal
+        // en lugar de guardar un registro incompleto desde el selector de la tabla.
+        if (normalizeText(newEstado) === "descalificado") {
+            await openEdit(row);
+            setDraft((prev) => prev ? { ...prev, estado: newEstado } : prev);
+            return;
+        }
 
         const prevEstado = row.estado;
 
@@ -3002,7 +3178,17 @@ export default function DigitalesProspectos() {
                                         <div className="mb-1 text-sm font-bold text-black">Estado</div>
                                         <select
                                             value={draft.estado || ""}
-                                            onChange={(e) => setDraft((p) => ({ ...p, estado: e.target.value }))}
+                                            onChange={(e) => {
+                                                const estado = e.target.value;
+                                                setDraft((p) => ({
+                                                    ...p,
+                                                    estado,
+                                                    motivo_descalificacion:
+                                                        normalizeText(estado) === "descalificado"
+                                                            ? p.motivo_descalificacion || ""
+                                                            : "",
+                                                }));
+                                            }}
                                             className={[inputBase, inputOk].join(" ")}
                                         >
                                             {ESTADOS_PROSPECTO.map((s) => (
@@ -3012,6 +3198,37 @@ export default function DigitalesProspectos() {
                                         <div className="mt-2">
                                             <BadgeEstado value={draft.estado} />
                                         </div>
+
+                                        {normalizeText(draft.estado) === "descalificado" ? (
+                                            <div className="mt-3">
+                                                <div className="mb-1 text-sm font-bold text-black">
+                                                    Motivo de descalificación <span className="text-red-600">*</span>
+                                                </div>
+                                                <select
+                                                    value={draft.motivo_descalificacion || ""}
+                                                    onChange={(e) =>
+                                                        setDraft((p) => ({
+                                                            ...p,
+                                                            motivo_descalificacion: e.target.value,
+                                                        }))
+                                                    }
+                                                    className={[
+                                                        inputBase,
+                                                        isInvalid("motivo_descalificacion") ? inputBad : inputOk,
+                                                    ].join(" ")}
+                                                >
+                                                    <option value="">— Selecciona el motivo —</option>
+                                                    {MOTIVOS_DESCALIFICACION.map((motivo) => (
+                                                        <option key={motivo} value={motivo}>{motivo}</option>
+                                                    ))}
+                                                </select>
+                                                {isInvalid("motivo_descalificacion") ? (
+                                                    <div className="mt-1 text-xs font-bold text-red-600">
+                                                        Selecciona el motivo de descalificación.
+                                                    </div>
+                                                ) : null}
+                                            </div>
+                                        ) : null}
                                     </div>
                                     <div>
                                         <div className="mb-1 text-sm font-bold text-black">Canal de Contacto</div>
@@ -3081,6 +3298,190 @@ export default function DigitalesProspectos() {
                                             ))}
                                         </select>
                                     </div>
+                                </div>
+                            </Field>
+                        </div>
+
+                        <div className="md:col-span-3">
+                            <Field label="Perfil financiero y de compra" icon={Gauge}>
+                                <div className="grid gap-3 md:grid-cols-4">
+                                    <div>
+                                        <div className="mb-1 text-sm font-bold text-black">Enganche disponible</div>
+                                        <input
+                                            type="number"
+                                            min="0"
+                                            inputMode="numeric"
+                                            value={draft.enganche_monto || ""}
+                                            onChange={(e) =>
+                                                setDraft((p) => ({
+                                                    ...p,
+                                                    enganche_monto: e.target.value.replace(/\D/g, ""),
+                                                }))
+                                            }
+                                            className={[inputBase, inputOk].join(" ")}
+                                            placeholder="Ej. 150000"
+                                        />
+                                    </div>
+                                    <div>
+                                        <div className="mb-1 text-sm font-bold text-black">Presupuesto mensual</div>
+                                        <input
+                                            type="number"
+                                            min="0"
+                                            inputMode="numeric"
+                                            value={draft.presupuesto_mensual || ""}
+                                            onChange={(e) =>
+                                                setDraft((p) => ({
+                                                    ...p,
+                                                    presupuesto_mensual: e.target.value.replace(/\D/g, ""),
+                                                }))
+                                            }
+                                            className={[inputBase, inputOk].join(" ")}
+                                            placeholder="Ej. 18000"
+                                        />
+                                    </div>
+                                    <div>
+                                        <div className="mb-1 text-sm font-bold text-black">Buró de crédito</div>
+                                        <select
+                                            value={draft.buro_estado || ""}
+                                            onChange={(e) => setDraft((p) => ({ ...p, buro_estado: e.target.value }))}
+                                            className={[inputBase, inputOk].join(" ")}
+                                        >
+                                            {BURO_OPTIONS.map((item) => (
+                                                <option key={item.value} value={item.value}>{item.label}</option>
+                                            ))}
+                                        </select>
+                                    </div>
+                                    <div>
+                                        <div className="mb-1 text-sm font-bold text-black">Forma de pago</div>
+                                        <select
+                                            value={draft.forma_pago || ""}
+                                            onChange={(e) => setDraft((p) => ({ ...p, forma_pago: e.target.value }))}
+                                            className={[inputBase, inputOk].join(" ")}
+                                        >
+                                            {FORMA_PAGO_OPTIONS.map((item) => (
+                                                <option key={item.value} value={item.value}>{item.label}</option>
+                                            ))}
+                                        </select>
+                                    </div>
+                                </div>
+
+                                <div className="mt-4 grid gap-3 md:grid-cols-4">
+                                    <div>
+                                        <div className="mb-1 text-sm font-bold text-black">Tipo de cliente</div>
+                                        <select
+                                            value={draft.tipo_cliente || ""}
+                                            onChange={(e) => setDraft((p) => ({ ...p, tipo_cliente: e.target.value }))}
+                                            className={[inputBase, inputOk].join(" ")}
+                                        >
+                                            {TIPO_CLIENTE_OPTIONS.map((item) => (
+                                                <option key={item.value} value={item.value}>{item.label}</option>
+                                            ))}
+                                        </select>
+                                    </div>
+                                    <div>
+                                        <div className="mb-1 text-sm font-bold text-black">Plazo de compra</div>
+                                        <select
+                                            value={draft.plazo_compra || ""}
+                                            onChange={(e) => setDraft((p) => ({ ...p, plazo_compra: e.target.value }))}
+                                            className={[inputBase, inputOk].join(" ")}
+                                        >
+                                            {PLAZO_COMPRA_OPTIONS.map((item) => (
+                                                <option key={item || "vacio"} value={item}>
+                                                    {item || "— Selecciona —"}
+                                                </option>
+                                            ))}
+                                        </select>
+                                    </div>
+                                    <div>
+                                        <div className="mb-1 text-sm font-bold text-black">Uso del vehículo</div>
+                                        <input
+                                            value={draft.uso_vehiculo || ""}
+                                            onChange={(e) => setDraft((p) => ({ ...p, uso_vehiculo: e.target.value }))}
+                                            className={[inputBase, inputOk].join(" ")}
+                                            placeholder="Personal, familiar, empresarial..."
+                                        />
+                                    </div>
+                                    <div>
+                                        <div className="mb-1 text-sm font-bold text-black">Comprobación de ingresos</div>
+                                        <input
+                                            value={draft.comprobacion_ingresos || ""}
+                                            onChange={(e) =>
+                                                setDraft((p) => ({ ...p, comprobacion_ingresos: e.target.value }))
+                                            }
+                                            className={[inputBase, inputOk].join(" ")}
+                                            placeholder="Nómina, estados de cuenta, negocio..."
+                                        />
+                                    </div>
+                                </div>
+                            </Field>
+                        </div>
+
+                        <div className="md:col-span-3">
+                            <Field label="Seguimiento comercial" icon={ClipboardCheck}>
+                                <div className="grid gap-3 md:grid-cols-4">
+                                    <div>
+                                        <div className="mb-1 text-sm font-bold text-black">ID de cotización</div>
+                                        <input
+                                            value={draft.id_cotizacion || ""}
+                                            onChange={(e) => setDraft((p) => ({ ...p, id_cotizacion: e.target.value }))}
+                                            className={[inputBase, inputOk].join(" ")}
+                                            placeholder="Folio o ID interno"
+                                        />
+                                    </div>
+                                    <div>
+                                        <div className="mb-1 text-sm font-bold text-black">Folio solicitud de crédito</div>
+                                        <input
+                                            value={draft.folio_solicitud_credito || ""}
+                                            onChange={(e) =>
+                                                setDraft((p) => ({ ...p, folio_solicitud_credito: e.target.value }))
+                                            }
+                                            className={[inputBase, inputOk].join(" ")}
+                                            placeholder="Folio de la financiera"
+                                        />
+                                    </div>
+                                    <div>
+                                        <div className="mb-1 text-sm font-bold text-black">Estado de solicitud</div>
+                                        <select
+                                            value={draft.solicitud_credito_estado || ""}
+                                            onChange={(e) =>
+                                                setDraft((p) => ({ ...p, solicitud_credito_estado: e.target.value }))
+                                            }
+                                            className={[inputBase, inputOk].join(" ")}
+                                        >
+                                            {SOLICITUD_CREDITO_OPTIONS.map((item) => (
+                                                <option key={item.value} value={item.value}>{item.label}</option>
+                                            ))}
+                                        </select>
+                                    </div>
+                                    <div>
+                                        <div className="mb-1 text-sm font-bold text-black">VIN facturado</div>
+                                        <input
+                                            value={draft.vin_facturado || ""}
+                                            onChange={(e) =>
+                                                setDraft((p) => ({
+                                                    ...p,
+                                                    vin_facturado: e.target.value.toUpperCase().slice(0, 32),
+                                                }))
+                                            }
+                                            className={[inputBase, inputOk].join(" ")}
+                                            placeholder="VIN del vehículo"
+                                        />
+                                    </div>
+                                </div>
+
+                                <div className="mt-4 max-w-sm">
+                                    <div className="mb-1 text-sm font-bold text-black">Estatus de entrega</div>
+                                    <select
+                                        value={draft.vin_estatus_entrega || ""}
+                                        onChange={(e) =>
+                                            setDraft((p) => ({ ...p, vin_estatus_entrega: e.target.value }))
+                                        }
+                                        className={[inputBase, inputOk].join(" ")}
+                                    >
+                                        <option value="">— Sin definir —</option>
+                                        <option value="entregado">Entregado</option>
+                                        <option value="cancelado">Cancelado</option>
+                                    </select>
                                 </div>
                             </Field>
                         </div>

@@ -77,18 +77,18 @@ function initialsOf(name) {
     return (parts[0][0] + parts[1][0]).toUpperCase();
 }
 
-const DIAS_CORTOS  = ["Lun", "Mar", "Mié", "Jue", "Vie", "Sáb", "Dom"];
-const DIAS_LARGOS  = ["Lunes", "Martes", "Miércoles", "Jueves", "Viernes", "Sábado", "Domingo"];
-const MESES        = ["Enero","Febrero","Marzo","Abril","Mayo","Junio","Julio","Agosto","Septiembre","Octubre","Noviembre","Diciembre"];
-const HOURS        = Array.from({ length: 13 }, (_, i) => i + 8);
-const TIMELINE_START = 8  * 60;
-const TIMELINE_END   = 21 * 60;
+const DIAS_CORTOS = ["Lun", "Mar", "Mié", "Jue", "Vie", "Sáb", "Dom"];
+const DIAS_LARGOS = ["Lunes", "Martes", "Miércoles", "Jueves", "Viernes", "Sábado", "Domingo"];
+const MESES = ["Enero", "Febrero", "Marzo", "Abril", "Mayo", "Junio", "Julio", "Agosto", "Septiembre", "Octubre", "Noviembre", "Diciembre"];
+const HOURS = Array.from({ length: 13 }, (_, i) => i + 8);
+const TIMELINE_START = 8 * 60;
+const TIMELINE_END = 21 * 60;
 const TIMELINE_RANGE = TIMELINE_END - TIMELINE_START;
 
 const TIPO_COLOR = {
-    "Prueba de Manejo": { bg: "bg-blue-50",   border: "border-blue-300",   text: "text-blue-700",   dot: "bg-blue-500"   },
-    "Tradicional":      { bg: "bg-amber-50",  border: "border-amber-300",  text: "text-amber-700",  dot: "bg-amber-500"  },
-    "Digital":          { bg: "bg-violet-50", border: "border-violet-300", text: "text-violet-700", dot: "bg-violet-500" },
+    "Prueba de Manejo": { bg: "bg-blue-50", border: "border-blue-300", text: "text-blue-700", dot: "bg-blue-500" },
+    "Tradicional": { bg: "bg-amber-50", border: "border-amber-300", text: "text-amber-700", dot: "bg-amber-500" },
+    "Digital": { bg: "bg-violet-50", border: "border-violet-300", text: "text-violet-700", dot: "bg-violet-500" },
 };
 const FALLBACK_COLOR = { bg: "bg-slate-50", border: "border-slate-300", text: "text-slate-600", dot: "bg-slate-400" };
 function colorFor(tipo) { return TIPO_COLOR[tipo] ?? FALLBACK_COLOR; }
@@ -245,11 +245,11 @@ function KpiRow({ citas }) {
 
     return (
         <div className="grid gap-3 grid-cols-1 sm:grid-cols-2 lg:grid-cols-5">
-            <KpiCard icon={CalendarDays}  iconBg="bg-blue-50"    iconColor="text-blue-500"   label="Citas de hoy"       value={stats.citasHoy} />
-            <KpiCard icon={Clock}         iconBg="bg-neutral-100" iconColor="text-neutral-500" label="Pendientes"         value={stats.pendientes} />
-            <KpiCard icon={CheckCircle2}  iconBg="bg-blue-50"    iconColor="text-blue-500"   label="Asistieron"         value={stats.asistieron} />
-            <KpiCard icon={XCircle}       iconBg="bg-red-50"     iconColor="text-red-400"    label="No asistieron"      value={stats.noAsistieron} />
-            <KpiCard icon={PieChart}      iconBg="bg-blue-50"    iconColor="text-blue-500"   label="Tasa de asistencia" value={`${stats.tasa}%`} sub={`${stats.asistieron} de ${stats.totalDecidido}`} />
+            <KpiCard icon={CalendarDays} iconBg="bg-blue-50" iconColor="text-blue-500" label="Citas de hoy" value={stats.citasHoy} />
+            <KpiCard icon={Clock} iconBg="bg-neutral-100" iconColor="text-neutral-500" label="Pendientes" value={stats.pendientes} />
+            <KpiCard icon={CheckCircle2} iconBg="bg-blue-50" iconColor="text-blue-500" label="Asistieron" value={stats.asistieron} />
+            <KpiCard icon={XCircle} iconBg="bg-red-50" iconColor="text-red-400" label="No asistieron" value={stats.noAsistieron} />
+            <KpiCard icon={PieChart} iconBg="bg-blue-50" iconColor="text-blue-500" label="Tasa de asistencia" value={`${stats.tasa}%`} sub={`${stats.asistieron} de ${stats.totalDecidido}`} />
         </div>
     );
 }
@@ -324,8 +324,8 @@ function MonthCalendar({ citas, selectedDay, onSelectDay }) {
                                 isSelected
                                     ? "bg-[#131E5C] text-white font-bold"
                                     : isToday
-                                    ? "bg-neutral-900 text-white font-bold"
-                                    : "hover:bg-neutral-100",
+                                        ? "bg-neutral-900 text-white font-bold"
+                                        : "hover:bg-neutral-100",
                             ].join(" ")}
                         >
                             {day.getDate()}
@@ -589,11 +589,11 @@ function CitaDetailPanel({ cita, onClose }) {
                 )}
             </div>
             <div className="flex-1 space-y-3 p-5">
-                {cita.agencia     && <DetailRow icon={Building2}  label="Agencia"        value={cita.agencia} />}
-                {cita?.cliente?.nombre && <DetailRow icon={User}   label="Cliente"        value={cita.cliente.nombre} />}
-                {cita.auto_interes && <DetailRow icon={CarFront}   label="Auto de interés" value={cita.auto_interes} />}
+                {cita.agencia && <DetailRow icon={Building2} label="Agencia" value={cita.agencia} />}
+                {cita?.cliente?.nombre && <DetailRow icon={User} label="Cliente" value={cita.cliente.nombre} />}
+                {cita.auto_interes && <DetailRow icon={CarFront} label="Auto de interés" value={cita.auto_interes} />}
                 {cita.asesor_digital && <DetailRow icon={UserMinus} label="Asesor digital" value={cita.asesor_digital} />}
-                {cita.asesor_piso   && <DetailRow icon={UserStar}  label="Asesor piso"    value={cita.asesor_piso} />}
+                {cita.asesor_piso && <DetailRow icon={UserStar} label="Asesor piso" value={cita.asesor_piso} />}
                 <div className="pt-1"><AsistenciaBadge value={cita.asistencia} /></div>
                 {cita.comentarios && (
                     <div className="rounded-lg border border-black/10 bg-neutral-50 p-3">
@@ -647,16 +647,16 @@ function CitaBlock({ cita, topPct, onClick, selected }) {
 
 // ─── Vista Agenda ─────────────────────────────────────────────────────────────
 function AgendaView({ citas, loadingList, onEditCita }) {
-    const [selectedCita, setSelectedCita]   = useState(null);
-    const [weekStart, setWeekStart]         = useState(() => startOfWeek(new Date()));
-    const [selectedDay, setSelectedDay]     = useState(() => localYMD(new Date()));
+    const [selectedCita, setSelectedCita] = useState(null);
+    const [weekStart, setWeekStart] = useState(() => startOfWeek(new Date()));
+    const [selectedDay, setSelectedDay] = useState(() => localYMD(new Date()));
 
     const weekDays = useMemo(() => Array.from({ length: 7 }, (_, i) => addDays(weekStart, i)), [weekStart]);
     const todayYMD = localYMD(new Date());
 
     const prevWeek = () => setWeekStart((d) => addDays(d, -7));
     const nextWeek = () => setWeekStart((d) => addDays(d, 7));
-    const goToday  = () => { setWeekStart(startOfWeek(new Date())); setSelectedDay(todayYMD); };
+    const goToday = () => { setWeekStart(startOfWeek(new Date())); setSelectedDay(todayYMD); };
 
     const citasByDay = useMemo(() => {
         const map = {};
@@ -715,9 +715,9 @@ function AgendaView({ citas, loadingList, onEditCita }) {
                 <div className="grid grid-cols-7">
                     {weekDays.map((day, i) => {
                         const ymd = localYMD(day);
-                        const isToday    = ymd === todayYMD;
+                        const isToday = ymd === todayYMD;
                         const isSelected = ymd === selectedDay;
-                        const dayCitas   = citasByDay[ymd] || [];
+                        const dayCitas = citasByDay[ymd] || [];
                         return (
                             <button key={ymd} onClick={() => setSelectedDay(ymd)}
                                 className={["relative flex flex-col items-center gap-1 py-3 transition border-r last:border-r-0 border-black/5", isSelected ? "bg-black text-white" : "hover:bg-slate-50"].join(" ")}>
@@ -775,9 +775,9 @@ function AgendaView({ citas, loadingList, onEditCita }) {
                                 </div>
                             ))}
                             {selectedDay === todayYMD && (() => {
-                                const now  = new Date();
+                                const now = new Date();
                                 const mins = now.getHours() * 60 + now.getMinutes();
-                                const pct  = ((mins - TIMELINE_START) / TIMELINE_RANGE) * 100;
+                                const pct = ((mins - TIMELINE_START) / TIMELINE_RANGE) * 100;
                                 if (pct < 0 || pct > 100) return null;
                                 return (
                                     <div className="absolute left-14 right-2 z-40 flex items-center" style={{ top: `${pct}%` }}>
@@ -819,9 +819,9 @@ function AgendaView({ citas, loadingList, onEditCita }) {
                         ) : (
                             <div className="divide-y divide-black/5 max-h-[380px] overflow-auto">
                                 {upcomingCitas.map((cita) => {
-                                    const dt     = parseLocalDT(cita.fecha_hora_cita);
-                                    const color  = colorFor(cita.tipo_cita);
-                                    const ymd    = dt ? localYMD(dt) : "";
+                                    const dt = parseLocalDT(cita.fecha_hora_cita);
+                                    const color = colorFor(cita.tipo_cita);
+                                    const ymd = dt ? localYMD(dt) : "";
                                     const active = ymd === selectedDay;
                                     return (
                                         <button key={cita.id}
@@ -882,8 +882,8 @@ export default function RegistroCitas() {
 
     const userAgencia = String(user?.agencia || "").trim();
 
-    const [citas, setCitas]       = useState([]);
-    const [vista, setVista]       = useState("tabla");
+    const [citas, setCitas] = useState([]);
+    const [vista, setVista] = useState("tabla");
     const [selectedDay, setSelectedDay] = useState(() => localYMD(new Date()));
 
     const DEALERS = useMemo(() => ["Volvo"], []);
@@ -891,7 +891,7 @@ export default function RegistroCitas() {
     const ASESORES = [
         "Enrique Vazquez Islas", "Ricardo Platas",
         "Verónica Del Rayo Galindo León", "Julio Camacho Barragán",
-        "Fernanda Romero Aguilar",
+        "Fernanda Romero Aguilar", "Zaira Vanessa Hernández Gómez",
     ];
     const FUENTE = [
         "Facebook", "WhatsApp", "VW-Concesionarios", "Llamada Entrante",
@@ -904,18 +904,18 @@ export default function RegistroCitas() {
     ];
     const TIPO_CITA = ["Prueba de Manejo", "Tradicional", "Digital"];
 
-    const [ctxMenu, setCtxMenu]             = useState({ open: false, x: 0, y: 0, row: null });
-    const [sort, setSort]                   = useState({ key: "fecha_hora_cita", dir: "asc" });
-    const [filters, setFilters]             = useState({ q: "", agencia: "Todos", asesorDigital: "Todos", rangoDesde: "", rangoHasta: "" });
-    const [openModal, setOpenModal]         = useState(false);
-    const [mode, setMode]                   = useState("create");
-    const [draft, setDraft]                 = useState(null);
-    const [loadingList, setLoadingList]     = useState(false);
+    const [ctxMenu, setCtxMenu] = useState({ open: false, x: 0, y: 0, row: null });
+    const [sort, setSort] = useState({ key: "fecha_hora_cita", dir: "asc" });
+    const [filters, setFilters] = useState({ q: "", agencia: "Todos", asesorDigital: "Todos", rangoDesde: "", rangoHasta: "" });
+    const [openModal, setOpenModal] = useState(false);
+    const [mode, setMode] = useState("create");
+    const [draft, setDraft] = useState(null);
+    const [loadingList, setLoadingList] = useState(false);
     const [loadingDetail, setLoadingDetail] = useState(false);
-    const [saving, setSaving]               = useState(false);
-    const [touchedSave, setTouchedSave]     = useState(false);
+    const [saving, setSaving] = useState(false);
+    const [touchedSave, setTouchedSave] = useState(false);
     const [updatingInline, setUpdatingInline] = useState({});
-    const [page, setPage]                   = useState(1);
+    const [page, setPage] = useState(1);
     const PAGE_SIZE = 5;
 
     const REQUIRED = useMemo(() => ({ cliente_telefono: "Teléfono", fecha_hora_cita: "Fecha y hora" }), []);
@@ -930,23 +930,23 @@ export default function RegistroCitas() {
 
     const isInvalid = (key) => touchedSave && missing.includes(key);
 
-    const telDigits       = useMemo(() => String(draft?.cliente_telefono || "").replace(/\D/g, ""), [draft?.cliente_telefono]);
-    const telIsOk         = useMemo(() => /^(?:\d{10}|52\d{10})$/.test(telDigits), [telDigits]);
+    const telDigits = useMemo(() => String(draft?.cliente_telefono || "").replace(/\D/g, ""), [draft?.cliente_telefono]);
+    const telIsOk = useMemo(() => /^(?:\d{10}|52\d{10})$/.test(telDigits), [telDigits]);
     const telIsNormalized = useMemo(() => /^52\d{10}$/.test(telDigits), [telDigits]);
-    const telError        = useMemo(() => {
+    const telError = useMemo(() => {
         if (!openModal || !draft || !telDigits) return "";
         if (/^\d{10}$/.test(telDigits) || /^52\d{10}$/.test(telDigits)) return "";
-        if (telDigits.length < 10)  return "Número incompleto (mínimo 10 dígitos)";
+        if (telDigits.length < 10) return "Número incompleto (mínimo 10 dígitos)";
         if (telDigits.length === 11) return "Número incorrecto (11 dígitos no válido)";
         if (telDigits.length === 12 && !telDigits.startsWith("52")) return "Si tiene 12 dígitos debe iniciar con 52";
-        if (telDigits.length > 12)  return "Número incorrecto (máximo 12 dígitos)";
+        if (telDigits.length > 12) return "Número incorrecto (máximo 12 dígitos)";
         return "Número inválido";
     }, [openModal, draft, telDigits]);
 
     const telInvalid = !!telError;
-    const inputBase  = "w-full rounded-lg border shadow-sm px-3 py-2 text-sm text-black font-semibold outline-none";
-    const inputOk    = "border-black/20 bg-neutral-100";
-    const inputBad   = "border-red-500 bg-red-50";
+    const inputBase = "w-full rounded-lg border shadow-sm px-3 py-2 text-sm text-black font-semibold outline-none";
+    const inputOk = "border-black/20 bg-neutral-100";
+    const inputBad = "border-red-500 bg-red-50";
 
     function toggleSort(key) {
         setSort((prev) => ({ key, dir: prev.key === key && prev.dir === "asc" ? "desc" : "asc" }));
@@ -987,14 +987,14 @@ export default function RegistroCitas() {
     }, [citas]);
 
     const filtered = useMemo(() => {
-        const q        = filters.q.trim().toLowerCase();
+        const q = filters.q.trim().toLowerCase();
         const desdeInt = ymdToInt(filters.rangoDesde);
         const hastaInt = ymdToInt(filters.rangoHasta);
         return (citas || []).filter((c) => {
             if (!isAdmin && userAgencia && normalizeStr(c.agencia) !== normalizeStr(userAgencia)) return false;
-            const matchQ       = !q || [c.agencia, c?.cliente?.nombre, c?.cliente?.telefono, c.auto_interes, c.tipo_cita, c.fuente_prospeccion, c.asesor_digital, c.asesor_piso, c.comentarios].map((v) => normalizeStr(v).toLowerCase()).join(" ").includes(q);
+            const matchQ = !q || [c.agencia, c?.cliente?.nombre, c?.cliente?.telefono, c.auto_interes, c.tipo_cita, c.fuente_prospeccion, c.asesor_digital, c.asesor_piso, c.comentarios].map((v) => normalizeStr(v).toLowerCase()).join(" ").includes(q);
             const matchAgencia = filters.agencia === "Todos" || normalizeStr(c.agencia) === normalizeStr(filters.agencia);
-            const matchAsesor  = filters.asesorDigital === "Todos" || normalizeStr(c.asesor_digital) === normalizeStr(filters.asesorDigital);
+            const matchAsesor = filters.asesorDigital === "Todos" || normalizeStr(c.asesor_digital) === normalizeStr(filters.asesorDigital);
             let matchRango = true;
             if (desdeInt !== null || hastaInt !== null) {
                 const ymdInt = ymdToInt(c.fecha_hora_cita ? toYMDLocal(c.fecha_hora_cita) : "");
