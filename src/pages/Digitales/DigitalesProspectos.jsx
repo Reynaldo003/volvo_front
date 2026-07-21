@@ -88,11 +88,13 @@ const ESTADOS_PROSPECTO = [
 ];
 
 const MOTIVOS_DESCALIFICACION = [
-    "Mala forma de trabajo",
+    "Busca trabajo",
     "No contesto",
     "Poco presupuesto",
     "Descalificado por consultor",
     "Compro en otra marca",
+    "Buscaba ofrecer productos y/o servicio",
+    "Informacion de Postventa",
 ];
 
 const BURO_OPTIONS = [
@@ -141,6 +143,7 @@ const VEHICULOS = [
     "EX40",
     "EC40",
     "EX90",
+    "XC40",
     "XC60",
     "XC90",
     "XC60 Black Edition",

@@ -899,8 +899,17 @@ export default function RegistroCitas() {
         "Base de Datos", "Ubicacion",
     ];
     const VEHICULOS = [
-        "EX30", "EX40", "EC40", "EX90", "XC60", "XC90",
-        "XC60 Black Edition", "XC90 Black Edition", "Seminuevos", "Avaluo",
+        "EX30",
+        "EX40",
+        "EC40",
+        "EX90",
+        "XC40",
+        "XC60",
+        "XC90",
+        "XC60 Black Edition",
+        "XC90 Black Edition",
+        "Seminuevos",
+        "Avalúo",
     ];
     const TIPO_CITA = ["Prueba de Manejo", "Tradicional", "Digital"];
 

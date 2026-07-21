@@ -725,7 +725,19 @@ export default function RegistroEntregas() {
 
     const DEALERS = useMemo(() => ["Volvo"], []);
     const ASESORES = ["Enrique Vazquez Islas", "Ricardo Platas", "Verónica Del Rayo Galindo León", "Julio Camacho Barragán", "Fernanda Romero Aguilar", "Zaira Vanessa Hernández Gómez",];
-    const MODELOS = ["EX30", "EX40", "EC40", "EX90", "XC60", "XC90", "XC60 Black Edition", "XC90 Black Edition", "Seminuevos", "Avaluo"];
+    const MODELOS = [
+        "EX30",
+        "EX40",
+        "EC40",
+        "EX90",
+        "XC40",
+        "XC60",
+        "XC90",
+        "XC60 Black Edition",
+        "XC90 Black Edition",
+        "Seminuevos",
+        "Avalúo",
+    ];
 
     const [ctxMenu, setCtxMenu] = useState({ open: false, x: 0, y: 0, row: null });
     const [viewMode, setViewMode] = useState("tabla");

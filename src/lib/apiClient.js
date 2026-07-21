@@ -1,4 +1,3 @@
-// src/lib/apiClient.js
 export const API_BASE = "https://crmvolvo.grupoautomotrizryr.com";
 
 const TOKEN_KEY = "crm_volvo_token";
@@ -60,7 +59,7 @@ export function setAuthSession({ token, usuario }) {
   localStorage.setItem(TOKEN_KEY, token);
   localStorage.setItem(USER_KEY, JSON.stringify(usuario));
 
-  // Compatibilidad con APIs viejos del front que leen auth.access o auth.
+  // Compatibilidad con APIs viejas del frontend.
   localStorage.setItem("auth.access", token);
   localStorage.setItem(
     "auth",
@@ -71,7 +70,6 @@ export function setAuthSession({ token, usuario }) {
     }),
   );
 
-  // Limpieza de llaves anteriores.
   localStorage.removeItem("crm_chevrolet_token");
   localStorage.removeItem("crm_chevrolet_usuario");
 }
@@ -79,10 +77,8 @@ export function setAuthSession({ token, usuario }) {
 export function clearAuthSession() {
   localStorage.removeItem(TOKEN_KEY);
   localStorage.removeItem(USER_KEY);
-
   localStorage.removeItem("auth.access");
   localStorage.removeItem("auth");
-
   localStorage.removeItem("crm_chevrolet_token");
   localStorage.removeItem("crm_chevrolet_usuario");
 }
@@ -90,9 +86,7 @@ export function clearAuthSession() {
 export function getAuthHeader() {
   const token = getAuthToken();
 
-  if (!token) {
-    return {};
-  }
+  if (!token) return {};
 
   return {
     Authorization: `Bearer ${token}`,
@@ -104,9 +98,7 @@ function isFormData(value) {
 }
 
 async function parseResponse(response) {
-  if (response.status === 204) {
-    return null;
-  }
+  if (response.status === 204) return null;
 
   const contentType = response.headers.get("content-type") || "";
 
@@ -119,17 +111,12 @@ async function parseResponse(response) {
 }
 
 function obtenerPrimerError(data) {
-  if (!data || typeof data !== "object") {
-    return null;
-  }
+  if (!data || typeof data !== "object") return null;
 
-  if (data.detail) {
-    return data.detail;
-  }
-
-  if (data.message) {
-    return data.message;
-  }
+  if (data.error) return data.error;
+  if (data.detail) return data.detail;
+  if (data.message) return data.message;
+  if (data.mensaje) return data.mensaje;
 
   if (
     Array.isArray(data.non_field_errors) &&
@@ -140,9 +127,7 @@ function obtenerPrimerError(data) {
 
   const primeraClave = Object.keys(data)[0];
 
-  if (!primeraClave) {
-    return null;
-  }
+  if (!primeraClave) return null;
 
   const valor = data[primeraClave];
 
@@ -187,8 +172,14 @@ export async function http(path, { method = "GET", body, headers } = {}) {
 
   if (!response.ok) {
     const mensaje = obtenerPrimerError(data) || `Error HTTP ${response.status}`;
+    const error = new Error(mensaje);
 
-    throw new Error(mensaje);
+    // Estos datos son necesarios para leer el análisis 409 de plantillas.
+    error.status = response.status;
+    error.data = data;
+    error.response = response;
+
+    throw error;
   }
 
   return data;
@@ -198,14 +189,10 @@ export function toQuery(params = {}) {
   const query = new URLSearchParams();
 
   Object.entries(params).forEach(([key, value]) => {
-    if (value === undefined || value === null || value === "") {
-      return;
-    }
-
+    if (value === undefined || value === null || value === "") return;
     query.append(key, String(value));
   });
 
   const queryString = query.toString();
-
   return queryString ? `?${queryString}` : "";
 }

@@ -1,4 +1,3 @@
-// src/lib/apiPruebas.js
 import { http, toQuery } from "./apiClient";
 
 const NUMERO_ASESOR_VOLVO = "522211092815";
@@ -216,8 +215,80 @@ export const api = {
     });
   },
 
+  // Plantillas disponibles para enviar desde el chat.
   digitalesPlantillas: (params = {}) =>
     http(`/digitales/mensajes/plantillas/${toQuery(withNumeroAsesor(params))}`),
+
+  // Panel administrativo de plantillas: lista todos los estados.
+  digitalesPlantillasAdmin: (numeroAsesor = "") =>
+    http(
+      `/digitales/mensajes/plantillas/admin/${toQuery(
+        withNumeroAsesor({ numero_asesor: numeroAsesor }),
+      )}`,
+    ),
+
+  digitalesPlantillaCrear: (numeroAsesor = "", payload = {}) =>
+    http(
+      `/digitales/mensajes/plantillas/admin/${toQuery(
+        withNumeroAsesor({ numero_asesor: numeroAsesor }),
+      )}`,
+      {
+        method: "POST",
+        ...jsonBody(
+          withNumeroAsesor({
+            ...payload,
+            numero_asesor: numeroAsesor,
+          }),
+        ),
+      },
+    ),
+
+  digitalesPlantillaAnalizar: (numeroAsesor = "", payload = {}) =>
+    http(
+      `/digitales/mensajes/plantillas/admin/analizar/${toQuery(
+        withNumeroAsesor({ numero_asesor: numeroAsesor }),
+      )}`,
+      {
+        method: "POST",
+        ...jsonBody(
+          withNumeroAsesor({
+            ...payload,
+            numero_asesor: numeroAsesor,
+          }),
+        ),
+      },
+    ),
+
+  digitalesPlantillaEditar: (numeroAsesor = "", templateId, payload = {}) =>
+    http(
+      `/digitales/mensajes/plantillas/admin/${encodeURIComponent(
+        String(templateId || ""),
+      )}/${toQuery(withNumeroAsesor({ numero_asesor: numeroAsesor }))}`,
+      {
+        method: "PATCH",
+        ...jsonBody(
+          withNumeroAsesor({
+            ...payload,
+            numero_asesor: numeroAsesor,
+          }),
+        ),
+      },
+    ),
+
+  digitalesPlantillaEliminar: (numeroAsesor = "", templateId, name = "") =>
+    http(
+      `/digitales/mensajes/plantillas/admin/${encodeURIComponent(
+        String(templateId || ""),
+      )}/${toQuery(
+        withNumeroAsesor({
+          numero_asesor: numeroAsesor,
+          name,
+        }),
+      )}`,
+      {
+        method: "DELETE",
+      },
+    ),
 
   digitalesEnviarMensaje: ({
     to,
@@ -306,6 +377,60 @@ export const api = {
           numero_asesor,
         }),
       ),
+    }),
+
+  // ------------------ HELPERS HTTP PARA CONFIG IA ------------------
+  get: (url) => http(url),
+  post: (url, payload = {}) =>
+    http(url, { method: "POST", ...jsonBody(payload) }),
+  patch: (url, payload = {}) =>
+    http(url, { method: "PATCH", ...jsonBody(payload) }),
+  delete: (url) => http(url, { method: "DELETE" }),
+
+  // ------------------ INTELIGENCIA ARTIFICIAL ------------------
+  iaLineas: () => http("/digitales/ia/lineas/"),
+
+  iaConfigList: () => http("/digitales/ia/config/"),
+
+  iaConfigGet: (numeroAsesor = "") =>
+    http(`/digitales/ia/config/${getNumeroAsesor(numeroAsesor)}/`),
+
+  iaConfigPatch: (numeroAsesor = "", payload = {}) =>
+    http(`/digitales/ia/config/${getNumeroAsesor(numeroAsesor)}/`, {
+      method: "PATCH",
+      ...jsonBody(payload),
+    }),
+
+  iaConfigPublicar: (numeroAsesor = "") =>
+    http(`/digitales/ia/config/${getNumeroAsesor(numeroAsesor)}/publicar/`, {
+      method: "POST",
+      ...jsonBody({}),
+    }),
+
+  iaEstadoConversacion: ({ tel, telefono, numero_asesor } = {}) =>
+    http(
+      `/digitales/ia/conversacion/estado/${toQuery(
+        withNumeroAsesor({ tel: tel || telefono, numero_asesor }),
+      )}`,
+    ),
+
+  iaPausarConversacion: ({
+    tel,
+    telefono,
+    motivo = "manual_desde_chat",
+    numero_asesor,
+  } = {}) =>
+    http("/digitales/ia/conversacion/pausar/", {
+      method: "POST",
+      ...jsonBody(
+        withNumeroAsesor({ tel: tel || telefono, motivo, numero_asesor }),
+      ),
+    }),
+
+  iaReactivarConversacion: ({ tel, telefono, numero_asesor } = {}) =>
+    http("/digitales/ia/conversacion/reactivar/", {
+      method: "POST",
+      ...jsonBody(withNumeroAsesor({ tel: tel || telefono, numero_asesor })),
     }),
 
   digitalesEliminarMensaje: () =>

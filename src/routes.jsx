@@ -42,6 +42,9 @@ import RegistroPruebaManejo from "./pages/PruebasManejo/RegistroPruebaManejo";
 import CampanasMeta from "./pages/CampanasMeta/CampanasMeta";
 import RegistroEntregas from "./pages/Entregas/RegistroEntregas";
 
+import ConfigIA from "./pages/IA/ConfigIA";
+import Plantillas from "./pages/Plantillas/Plantillas";
+
 export const router = createBrowserRouter(
     [
         {
@@ -76,6 +79,10 @@ export const router = createBrowserRouter(
                                         {
                                             index: true,
                                             element: <DigitalesProspectos />,
+                                        },
+                                        {
+                                            path: "plantillas",
+                                            element: <Plantillas />,
                                         },
                                         {
                                             path: "contacto",
@@ -167,7 +174,10 @@ export const router = createBrowserRouter(
                                 },
                             ],
                         },
-
+                        {
+                            path: "IAConfig",
+                            element: <ConfigIA />,
+                        },
                         {
                             path: "*",
                             element: <NotFound />,

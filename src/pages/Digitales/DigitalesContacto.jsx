@@ -143,37 +143,111 @@ function getCampanaMetaProspecto(prospecto = {}) {
         label: nombreCampana || pauta || "Sin campaña detectada",
         encontrada: Boolean(campanaMeta?.encontrada),
         origen: campanaMeta?.origen || "",
+        origin_preview: asObject(prospecto?.origen_preview || prospecto?.origin_preview),
     };
 }
 
+function asObject(value) {
+    return value && typeof value === "object" && !Array.isArray(value) ? value : {};
+}
+
+function firstNonEmpty(...values) {
+    for (const value of values) {
+        const clean = String(value || "").trim();
+        if (clean) return clean;
+    }
+    return "";
+}
+
 function getPautaOrigenFromMessage(message = {}) {
-    const raw = message?.raw && typeof message.raw === "object" ? message.raw : {};
-    const ultimoWebhook = raw?.ultimo_webhook_payload && typeof raw.ultimo_webhook_payload === "object"
-        ? raw.ultimo_webhook_payload
-        : {};
+    const raw = asObject(message?.raw);
+    const ultimoWebhook = asObject(raw?.ultimo_webhook_payload);
 
-    const atribucion = [raw?.atribucion_meta, ultimoWebhook?.atribucion_meta]
-        .find((item) => item && typeof item === "object") || {};
+    // El serializer nuevo ya entrega el objeto normalizado. Se mantiene el
+    // análisis de raw para conversaciones guardadas antes de la actualización.
+    const originPreview = asObject(message?.origin_preview);
 
-    const nombreCampana = String(
-        atribucion?.nombre_campana ||
-        atribucion?.campaign_name ||
-        ""
-    ).trim();
+    const referral = [
+        asObject(message?.referral),
+        asObject(originPreview?.referral),
+        asObject(raw?.referral),
+        asObject(raw?.context)?.referral,
+        asObject(ultimoWebhook?.referral),
+        asObject(ultimoWebhook?.context)?.referral,
+    ].map(asObject).find((item) => Object.keys(item).length > 0) || {};
 
-    const sucursal = String(atribucion?.sucursal || "").trim();
-    const pauta = String(
-        atribucion?.pauta ||
-        (sucursal && nombreCampana ? `${sucursal} - ${nombreCampana}` : nombreCampana)
-    ).trim();
+    const atribucion = [
+        asObject(originPreview?.atribucion),
+        asObject(raw?.atribucion_meta),
+        asObject(ultimoWebhook?.atribucion_meta),
+    ].find((item) => Object.keys(item).length > 0) || {};
 
-    if (!pauta) return null;
+    const nombreCampana = firstNonEmpty(
+        originPreview?.nombre_campana,
+        atribucion?.nombre_campana,
+        atribucion?.campaign_name,
+    );
+
+    const nombreAnuncio = firstNonEmpty(
+        originPreview?.nombre_anuncio,
+        atribucion?.nombre_anuncio,
+        referral?.headline,
+    );
+
+    const sucursal = firstNonEmpty(
+        originPreview?.sucursal,
+        atribucion?.sucursal,
+    );
+
+    const pauta = firstNonEmpty(
+        originPreview?.pauta,
+        atribucion?.pauta,
+        sucursal && nombreCampana ? `${sucursal} - ${nombreCampana}` : "",
+        nombreCampana,
+        nombreAnuncio,
+    );
+
+    const headline = firstNonEmpty(
+        originPreview?.headline,
+        referral?.headline,
+        nombreAnuncio,
+        nombreCampana,
+        pauta,
+    );
+
+    const body = firstNonEmpty(
+        originPreview?.body,
+        referral?.body,
+        atribucion?.nombre_conjunto,
+    );
+
+    const sourceUrl = firstNonEmpty(
+        originPreview?.source_url,
+        referral?.source_url,
+    );
+
+    const imageUrl = firstNonEmpty(
+        originPreview?.image_url,
+        referral?.image_url,
+        referral?.thumbnail_url,
+        referral?.video_thumbnail_url,
+    );
+
+    if (!pauta && !headline && !sourceUrl && !imageUrl) return null;
 
     return {
-        pauta,
+        pauta: pauta || headline,
         nombre_campana: nombreCampana,
+        nombre_anuncio: nombreAnuncio,
         sucursal,
-        origen: String(atribucion?.motivo || "meta_ads").trim(),
+        headline: headline || pauta,
+        body,
+        source_url: sourceUrl,
+        image_url: imageUrl,
+        media_type: firstNonEmpty(originPreview?.media_type, referral?.media_type),
+        source_type: firstNonEmpty(originPreview?.source_type, referral?.source_type),
+        source_id: firstNonEmpty(originPreview?.source_id, referral?.source_id),
+        origen: firstNonEmpty(originPreview?.origen, atribucion?.motivo, "meta_ads"),
     };
 }
 
@@ -817,6 +891,7 @@ function normalizeMessage(message = {}) {
         reply_to_id: message.reply_to_id || getReplyToId(message),
         reactions: getMessageReactions(message),
         is_reaction_event: reactionEvent,
+        origin_preview: reactionEvent ? null : getPautaOrigenFromMessage(message),
     };
 }
 
@@ -1267,31 +1342,72 @@ function DateSeparator({ date }) {
     );
 }
 
-function PautaOrigenNotice({ pauta, nombreCampana, sucursal }) {
-    if (!pauta) return null;
+function getHostLabel(url) {
+    try {
+        return new URL(url).hostname.replace(/^www\./, "");
+    } catch {
+        return "Meta Ads";
+    }
+}
 
-    return (
-        <div className="my-4 flex justify-center px-3">
-            <div className="flex max-w-2xl items-start gap-3 rounded-2xl border border-black/10 bg-white/95 px-4 py-3 shadow-sm backdrop-blur-sm">
-                <div className="mt-0.5 inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-black text-white">
-                    <LayoutTemplate className="h-4 w-4" />
-                </div>
+function PautaOrigenCard({ data }) {
+    const [imageFailed, setImageFailed] = useState(false);
 
-                <div className="min-w-0">
-                    <div className="text-[11px] font-black uppercase tracking-wide text-black/50">
-                        Pauta de origen detectada
+    if (!data?.pauta && !data?.headline && !data?.image_url) return null;
+
+    const content = (
+        <div className="overflow-hidden rounded-xl border border-black/10 bg-[#F0F2F5] shadow-sm">
+            <div className="flex min-w-[270px] max-w-[430px] items-stretch">
+                {data.image_url && !imageFailed ? (
+                    <div className="h-[92px] w-[92px] shrink-0 overflow-hidden bg-neutral-200">
+                        <img
+                            src={data.image_url}
+                            alt={data.headline || data.pauta || "Anuncio de origen"}
+                            className="h-full w-full object-cover"
+                            loading="eager"
+                            referrerPolicy="no-referrer"
+                            onError={() => setImageFailed(true)}
+                        />
                     </div>
-                    <div className="mt-0.5 break-words text-sm font-extrabold text-black">
-                        {nombreCampana || pauta}
+                ) : (
+                    <div className="flex h-[92px] w-[72px] shrink-0 items-center justify-center bg-[#000000] text-white">
+                        <LayoutTemplate className="h-5 w-5" />
                     </div>
-                    {sucursal && nombreCampana ? (
-                        <div className="mt-0.5 text-xs font-semibold text-black/55">
-                            Sucursal: {sucursal}
+                )}
+
+                <div className="min-w-0 flex-1 px-3 py-2.5">
+                    <div className="text-[10px] font-black uppercase tracking-wide text-[#667781]">
+                        Anuncio de origen
+                    </div>
+                    <div className="mt-0.5 line-clamp-2 text-sm font-extrabold leading-snug text-[#111B21]">
+                        {data.headline || data.nombre_campana || data.pauta}
+                    </div>
+                    {data.body ? (
+                        <div className="mt-1 line-clamp-2 text-[11px] font-medium leading-snug text-[#667781]">
+                            {data.body}
                         </div>
                     ) : null}
+                    <div className="mt-1 flex items-center gap-1 text-[10px] font-bold text-[#667781]">
+                        <span className="truncate">{data.nombre_campana || data.pauta}</span>
+                        {data.source_url ? <span className="shrink-0">· {getHostLabel(data.source_url)}</span> : null}
+                    </div>
                 </div>
             </div>
         </div>
+    );
+
+    if (!data.source_url) return <div className="mb-2">{content}</div>;
+
+    return (
+        <a
+            href={data.source_url}
+            target="_blank"
+            rel="noreferrer"
+            className="mb-2 block transition hover:brightness-[0.98]"
+            title="Abrir anuncio de origen"
+        >
+            {content}
+        </a>
     );
 }
 
@@ -1367,6 +1483,7 @@ function MessageBubble({
     localPending,
     domId,
     highlighted,
+    originPreview,
 }) {
     const rawText = renderText ? renderText(text) : text;
     const shown = cleanMediaTextForBubble(rawText, attachments);
@@ -1419,6 +1536,10 @@ function MessageBubble({
                             )
                     )}
                 >
+                    {!mine && originPreview && !stickerOnly ? (
+                        <PautaOrigenCard data={originPreview} />
+                    ) : null}
+
                     {replyPreview && !stickerOnly ? (
                         <button
                             type="button"
@@ -1693,24 +1814,42 @@ export default function DigitalesContacto() {
             }
         }
 
-        // Fallback para expedientes antiguos o pautas seleccionadas manualmente:
-        // solamente se muestra cuando ya estamos en el inicio real del chat.
-        if (!chatHasMore && pautaActual) {
-            const primerEntrante = mensajesOrdenados.find((message) => !message?.mine);
+        const previewExpediente = asObject(campanaMetaProspecto.origin_preview);
+        const primerEntranteVisible = mensajesOrdenados.find((message) => !message?.mine);
 
-            if (primerEntrante) {
+        // El backend consulta el mensaje original de atribución aunque todavía no
+        // esté dentro de la página visible del chat. Así podemos conservar imagen,
+        // encabezado y enlace del anuncio desde el primer render.
+        if (primerEntranteVisible && Object.keys(previewExpediente).length > 0) {
+            return {
+                messageKey: getMessageKey(primerEntranteVisible),
+                ...previewExpediente,
+                pauta: previewExpediente.pauta || pautaActual,
+                headline: previewExpediente.headline || previewExpediente.nombre_campana || pautaActual,
+            };
+        }
+
+        // Fallback inmediato: aunque la conversación tenga mensajes anteriores sin
+        // cargar, mostramos al menos el nombre de la pauta en la primera burbuja
+        // entrante visible.
+        if (pautaActual) {
+            if (primerEntranteVisible) {
                 return {
-                    messageKey: getMessageKey(primerEntrante),
+                    messageKey: getMessageKey(primerEntranteVisible),
                     pauta: pautaActual,
                     nombre_campana: campanaMetaProspecto.nombre_campana || pautaActual,
                     sucursal: campanaMetaProspecto.sucursal || "",
+                    headline: campanaMetaProspecto.nombre_campana || pautaActual,
+                    body: "Prospecto originado desde una campaña de Meta.",
+                    source_url: "",
+                    image_url: "",
                     origen: campanaMetaProspecto.origen || "expediente",
                 };
             }
         }
 
         return null;
-    }, [mensajes, chatHasMore, pautaActual, campanaMetaProspecto]);
+    }, [mensajes, pautaActual, campanaMetaProspecto]);
 
     const filteredChats = useMemo(() => {
         const query = normalizeText(deferredQ);
@@ -2965,22 +3104,23 @@ export default function DigitalesContacto() {
                                                 const messageKey = getMessageKey(message);
                                                 const domId = `msg-${messageKey}`;
                                                 const quoted = message.reply_to_id ? messagesById.get(String(message.reply_to_id)) : null;
+                                                const origenDirecto = !message?.mine
+                                                    ? (message?.origin_preview || getPautaOrigenFromMessage(message))
+                                                    : null;
+
                                                 const mostrarPautaOrigen = Boolean(
                                                     pautaOrigenMarker?.messageKey &&
                                                     pautaOrigenMarker.messageKey === messageKey
                                                 );
+
+                                                const origenParaBurbuja =
+                                                    origenDirecto ||
+                                                    (mostrarPautaOrigen ? pautaOrigenMarker : null);
+
                                                 // Usar formato de hora corta para la burbuja
                                                 const timeDisplay = formatMessageTime(message.created_at || message.local_created_at);
                                                 return (
                                                     <Fragment key={messageKey}>
-                                                        {mostrarPautaOrigen ? (
-                                                            <PautaOrigenNotice
-                                                                pauta={pautaOrigenMarker.pauta}
-                                                                nombreCampana={pautaOrigenMarker.nombre_campana}
-                                                                sucursal={pautaOrigenMarker.sucursal}
-                                                            />
-                                                        ) : null}
-
                                                         <MessageBubble
                                                             domId={domId}
                                                             highlighted={highlightedMsgId === domId}
@@ -2992,6 +3132,7 @@ export default function DigitalesContacto() {
                                                             attachments={message.attachments || []}
                                                             reactions={message.reactions || []}
                                                             isAi={Boolean(message.is_ai)}
+                                                            originPreview={origenParaBurbuja}
                                                             renderText={renderTextForBubble}
                                                             replyPreview={quoted ? {
                                                                 author: getReplyAuthor(quoted),

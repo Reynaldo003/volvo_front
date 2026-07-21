@@ -18,7 +18,19 @@ import { apiTraficoPiso } from "../../lib/apiTraficoPiso";
 
 // ─── constantes ──────────────────────────────────────────────────────────────
 const DEALERS = ["Volvo"];
-const VEHICULOS = ["EX30", "EX40", "EC40", "EX90", "XC60", "XC90", "XC60 Black Edition", "XC90 Black Edition", "Seminuevos", "Avaluo"];
+const VEHICULOS = [
+    "EX30",
+    "EX40",
+    "EC40",
+    "EX90",
+    "XC40",
+    "XC60",
+    "XC90",
+    "XC60 Black Edition",
+    "XC90 Black Edition",
+    "Seminuevos",
+    "Avalúo",
+];
 const MOTIVOS_INGRESO = ["Vi anuncios en la TV", "Vi anuncios en las redes sociales", "Vi publicitarios", "Siempre me ha gustado la marca", "Pasé y sentí curiosidad", "Recibí información por Whastapp"];
 const TIPOS_PERSONA = ["Física", "Moral"];
 const TIEMPOS_COMPRA = ["Este mes", "De 1 a 3 meses", "De 3 a 6 meses"];

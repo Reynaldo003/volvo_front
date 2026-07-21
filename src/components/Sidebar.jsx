@@ -10,6 +10,7 @@ import {
     ChevronLeft,
     ChevronRight,
     X,
+    BrainCircuit,
 } from "lucide-react";
 import { useAuth } from "../auth/AuthContext";
 
@@ -56,6 +57,12 @@ const managementItems = [
         label: "Gestión Calidad",
         to: "/calidad/checklist_recepcion",
         icon: BadgeCheck,
+        end: false,
+    },
+    {
+        label: "Panel de Inteligencias Artificiales",
+        to: "/IAConfig",
+        icon: BrainCircuit,
         end: false,
     },
 ];

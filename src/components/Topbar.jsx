@@ -9,6 +9,7 @@ import {
     Menu,
     UserRoundSearch,
     ChartNoAxesColumn,
+    LayoutPanelTop,
 } from "lucide-react";
 
 const gestionCalidadTabs = [
@@ -35,6 +36,11 @@ const gestionComercialTabs = [
         to: "/comercial/prospectos",
         icon: UserRoundSearch,
         end: true,
+    },
+    {
+        label: "Plantillas",
+        to: "/comercial/prospectos/plantillas",
+        icon: LayoutPanelTop,
     },
     {
         label: "Contacto",
