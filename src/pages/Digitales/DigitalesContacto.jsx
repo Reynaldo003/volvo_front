@@ -942,7 +942,7 @@ function buildTemplatePreviewText(template, draft, context = {}) {
 
     if (fromMeta) return fromMeta;
 
-    return interpolateNumberedText(template.help || template.text || "", template.fields || [], draft);
+    return interpolateNumberedText(template.help || template.text || "", getTemplateFields(template), draft);
 }
 
 function parseTemplateMarkerText(text) {
@@ -978,40 +978,144 @@ function parseTemplateMarkerText(text) {
     return { isTemplate: false, templateName: "", params: [], plainText: String(text || "") };
 }
 
+function getTemplateFields(template = {}) {
+    const provided = Array.isArray(template?.fields) ? template.fields : [];
+    const components = Array.isArray(template?.components_meta)
+        ? template.components_meta
+        : Array.isArray(template?.components)
+            ? template.components
+            : [];
+
+    const fieldsByKey = new Map();
+
+    function addField(field = {}) {
+        const key = String(field?.key || "").trim();
+        if (!key) return;
+
+        const current = fieldsByKey.get(key) || {};
+        fieldsByKey.set(key, {
+            required: true,
+            type: "text",
+            component: "body",
+            index: 1,
+            ...current,
+            ...field,
+            key,
+            label: String(field?.label || current?.label || key).trim(),
+            component: String(field?.component || current?.component || "body").toLowerCase(),
+            type: String(field?.type || current?.type || "text").toLowerCase(),
+            index: Number(field?.index ?? current?.index ?? 1),
+            button_index: Number(field?.button_index ?? current?.button_index ?? 0),
+            sub_type: String(field?.sub_type || current?.sub_type || "").toLowerCase(),
+            media_type: String(field?.media_type || current?.media_type || "").toLowerCase(),
+        });
+    }
+
+    provided.forEach(addField);
+
+    for (const component of components) {
+        const componentType = String(component?.type || "").toUpperCase();
+        const text = String(component?.text || "");
+
+        if (componentType === "HEADER") {
+            const format = String(component?.format || "TEXT").toUpperCase();
+
+            if (format === "TEXT") {
+                for (const index of variableIndexes(text)) {
+                    addField({
+                        key: `header_${index}`,
+                        label: `Encabezado · dato ${index}`,
+                        type: "text",
+                        component: "header",
+                        index,
+                    });
+                }
+            } else if (["IMAGE", "VIDEO", "DOCUMENT"].includes(format)) {
+                addField({
+                    key: "header_media",
+                    label: `${format === "IMAGE" ? "Imagen" : format === "VIDEO" ? "Video" : "Documento"} del encabezado`,
+                    type: "media",
+                    component: "header",
+                    index: 0,
+                    media_type: format.toLowerCase(),
+                    help: "Pega una URL pública HTTPS o un media ID previamente cargado en Meta.",
+                });
+            }
+        }
+
+        if (componentType === "BODY") {
+            for (const index of variableIndexes(text)) {
+                addField({
+                    key: `body_${index}`,
+                    label: `Cuerpo · dato ${index}`,
+                    type: "text",
+                    component: "body",
+                    index,
+                });
+            }
+        }
+
+        if (componentType === "BUTTONS") {
+            const buttons = Array.isArray(component?.buttons) ? component.buttons : [];
+
+            buttons.forEach((button, buttonIndex) => {
+                const buttonType = String(button?.type || "").toUpperCase();
+                const buttonText = String(button?.text || `Botón ${buttonIndex + 1}`).trim();
+
+                if (buttonType === "URL") {
+                    const url = String(button?.url || "");
+
+                    for (const index of variableIndexes(url)) {
+                        addField({
+                            key: `button_${buttonIndex}_${index}`,
+                            label: `${buttonText} · dato dinámico de URL`,
+                            type: "text",
+                            component: "button",
+                            sub_type: "url",
+                            button_index: buttonIndex,
+                            index,
+                            help: "Escribe únicamente el valor dinámico, no la URL completa.",
+                        });
+                    }
+                }
+
+                if (["COPY_CODE", "COUPON_CODE"].includes(buttonType)) {
+                    addField({
+                        key: `button_${buttonIndex}_code`,
+                        label: `${buttonText} · código`,
+                        type: "text",
+                        component: "button",
+                        sub_type: "copy_code",
+                        parameter_type: "coupon_code",
+                        button_index: buttonIndex,
+                        index: 1,
+                    });
+                }
+            });
+        }
+    }
+
+    const order = { header: 0, body: 1, button: 2 };
+
+    return [...fieldsByKey.values()].sort((a, b) => {
+        const componentDiff = (order[a.component] ?? 9) - (order[b.component] ?? 9);
+        if (componentDiff !== 0) return componentDiff;
+
+        const buttonDiff = Number(a.button_index || 0) - Number(b.button_index || 0);
+        if (buttonDiff !== 0) return buttonDiff;
+
+        return Number(a.index || 0) - Number(b.index || 0);
+    });
+}
+
 function buildDraftFromTemplateParams(template, params = [], context = {}) {
     const draft = {};
-    const fields = Array.isArray(template?.fields) ? template.fields : [];
+    const fields = getTemplateFields(template);
 
     fields.forEach((field, index) => {
         const fromParams = String(params[index] || "").trim();
         draft[field.key] = fromParams || getDefaultValueForTemplateField(field, context);
     });
-
-    if (!fields.length) {
-        const components = Array.isArray(template?.components_meta)
-            ? template.components_meta
-            : Array.isArray(template?.components)
-                ? template.components
-                : [];
-
-        let paramIndex = 0;
-
-        for (const component of components) {
-            const type = getTemplateComponentType(component);
-            const text = String(component?.text || "");
-            const matches = [...text.matchAll(/\{\{(\d+)\}\}/g)];
-
-            for (const match of matches) {
-                const index = match[1];
-                const key = `${type}_${index}`;
-
-                if (draft[key]) continue;
-
-                draft[key] = String(params[paramIndex] || "").trim() || getTemplateContextFallback(index, context);
-                paramIndex += 1;
-            }
-        }
-    }
 
     return draft;
 }
@@ -1042,6 +1146,11 @@ function getFieldOptions(field) {
 }
 
 function getDefaultValueForTemplateField(field, context) {
+    const explicitDefault = String(field?.default_value || field?.default || "").trim();
+    if (explicitDefault) return explicitDefault;
+
+    if (String(field?.type || "").toLowerCase() === "media") return "";
+
     const label = safeLower(field?.label), key = safeLower(field?.key);
     if (label.includes("asesor") || key.includes("asesor") || label.includes("quién eres")) return context.asesor || "";
     if (label.includes("nombre") || label.includes("prospecto") || label.includes("cliente") || key.includes("nombre")) return context.nombre || "";
@@ -1053,13 +1162,128 @@ function getDefaultValueForTemplateField(field, context) {
     return "";
 }
 
+function variableIndexes(text) {
+    const matches = [
+        ...String(text || "").matchAll(/\{\{(\d+)\}\}/g),
+    ];
+
+    return [
+        ...new Set(
+            matches
+                .map((match) => Number(match[1]))
+                .filter((index) => Number.isInteger(index) && index > 0),
+        ),
+    ].sort((a, b) => a - b);
+}
+
 function buildDynamicTemplateComponents(template, draft) {
-    const fields = Array.isArray(template?.fields) ? template.fields : [];
-    const grouped = fields.reduce((acc, f) => { const c = String(f.component || "body").toLowerCase(); if (!acc[c]) acc[c] = []; acc[c].push(f); return acc; }, {});
-    return Object.entries(grouped).map(([type, items]) => ({
-        type,
-        parameters: items.sort((a, b) => Number(a.index || 0) - Number(b.index || 0)).map(f => ({ type: "text", text: String(draft?.[f.key] || "").trim() })),
-    })).filter(c => c.parameters.length > 0);
+    const fields = getTemplateFields(template);
+    const components = [];
+
+    const headerMediaField = fields.find(
+        (field) => field.component === "header" && field.type === "media",
+    );
+
+    if (headerMediaField) {
+        const rawValue = draft?.[headerMediaField.key];
+        const mediaType = String(headerMediaField.media_type || "image").toLowerCase();
+        let media = null;
+
+        if (rawValue && typeof rawValue === "object") {
+            const id = String(rawValue.id || "").trim();
+            const link = String(rawValue.link || "").trim();
+            media = id ? { id } : link ? { link } : null;
+        } else {
+            const value = String(rawValue || "").trim();
+            media = value
+                ? value.startsWith("http://") || value.startsWith("https://")
+                    ? { link: value }
+                    : { id: value }
+                : null;
+        }
+
+        if (media) {
+            if (mediaType === "document" && headerMediaField.filename) {
+                media.filename = String(headerMediaField.filename);
+            }
+
+            components.push({
+                type: "header",
+                parameters: [{ type: mediaType, [mediaType]: media }],
+            });
+        }
+    } else {
+        const headerFields = fields
+            .filter((field) => field.component === "header" && field.type === "text")
+            .sort((a, b) => Number(a.index || 0) - Number(b.index || 0));
+
+        if (headerFields.length) {
+            components.push({
+                type: "header",
+                parameters: headerFields.map((field) => ({
+                    type: "text",
+                    text: String(draft?.[field.key] || "").trim(),
+                })),
+            });
+        }
+    }
+
+    const bodyFields = fields
+        .filter((field) => field.component === "body")
+        .sort((a, b) => Number(a.index || 0) - Number(b.index || 0));
+
+    if (bodyFields.length) {
+        components.push({
+            type: "body",
+            parameters: bodyFields.map((field) => ({
+                type: "text",
+                text: String(draft?.[field.key] || "").trim(),
+            })),
+        });
+    }
+
+    const buttonGroups = new Map();
+
+    for (const field of fields.filter((item) => item.component === "button")) {
+        const subType = String(field.sub_type || "url").toLowerCase();
+        const buttonIndex = Number(field.button_index || 0);
+        const groupKey = `${subType}:${buttonIndex}`;
+
+        if (!buttonGroups.has(groupKey)) {
+            buttonGroups.set(groupKey, {
+                type: "button",
+                sub_type: subType,
+                index: String(buttonIndex),
+                parameters: [],
+            });
+        }
+
+        const value = String(draft?.[field.key] || "").trim();
+        const parameterType = String(field.parameter_type || "text").toLowerCase();
+
+        if (parameterType === "coupon_code") {
+            buttonGroups.get(groupKey).parameters.push({
+                type: "coupon_code",
+                coupon_code: value,
+            });
+        } else if (parameterType === "payload") {
+            buttonGroups.get(groupKey).parameters.push({
+                type: "payload",
+                payload: value,
+            });
+        } else {
+            buttonGroups.get(groupKey).parameters.push({
+                type: "text",
+                text: value,
+            });
+        }
+    }
+
+    for (const component of buttonGroups.values()) {
+        if (component.parameters.length) components.push(component);
+    }
+
+    return components;
 }
 
 function WhatsAppWaveform({ progress = 0, mine = false, onSeek }) {
@@ -1874,12 +2098,7 @@ export default function DigitalesContacto() {
     const templatePreview = useMemo(() => tplSelected ? buildTemplatePreviewText(tplSelected, tplDraft) : "", [tplSelected, tplDraft]);
 
     const templatesParaEnviar = useMemo(() => {
-        const utility = (templatesDisponibles || []).filter((template) => {
-            const category = String(template?.category || "").trim().toUpperCase();
-            return !category || category === "UTILITY";
-        });
-
-        return utility.length ? utility : templatesDisponibles;
+        return templatesDisponibles || [];
     }, [templatesDisponibles]);
 
     const puedeGestionarIa = Boolean(
@@ -2099,13 +2318,24 @@ export default function DigitalesContacto() {
             const response = await api.digitalesPlantillas();
             const items = Array.isArray(response?.items) ? response.items : [];
 
-            // Guardamos todas para poder reconstruir mensajes históricos.
-            // En el dropdown de envío se priorizan las Utility con templatesParaEnviar.
-            setTemplatesDisponibles(items);
+            const normalizedItems = items.map((template) => ({
+                ...template,
+                key: template?.key || template?.name || template?.template_name || "",
+                language: template?.language || template?.idioma || "es_MX",
+                idioma: template?.idioma || template?.language || "es_MX",
+                components_meta: Array.isArray(template?.components_meta)
+                    ? template.components_meta
+                    : Array.isArray(template?.components)
+                        ? template.components
+                        : [],
+                fields: getTemplateFields(template),
+            }));
+
+            setTemplatesDisponibles(normalizedItems);
         } catch (error) {
             console.error(error);
             setTemplatesDisponibles([]);
-            setTemplatesError(error?.message || "No se pudieron cargar las plantillas.");
+            setTemplatesError(error?.message || "No se pudieron cargar las plantillas desde Meta.");
         } finally {
             setLoadingTemplates(false);
         }
@@ -2223,15 +2453,40 @@ export default function DigitalesContacto() {
     }
 
     function pickTemplate(template) {
-        setTplSelected(template);
         const currentAgencia = (prospecto?.agencia || activeChat?.agencia || "").trim();
-        const bestDealer = DEALERS.find(d => d.toLowerCase() === currentAgencia.toLowerCase()) || DEALERS.find(d => currentAgencia.toLowerCase().includes(d.toLowerCase())) || "";
-        const bestCanal = CANALES.find(c => c.toLowerCase() === (prospecto?.canal_contacto || "").trim().toLowerCase()) || "";
-        const asesorAuto = (prospecto?.asesor_digital || "").trim() || (prospecto?.asesor_ventas || "").trim() || (prospecto?.responsable || "").trim() || "";
-        const context = { nombre: (prospecto?.nombre || activeChat?.nombre || "").trim(), agencia: bestDealer, modelo: (prospecto?.auto_interes || "").trim(), canal: bestCanal, asesor: asesorAuto, tema: prospecto?.auto_interes ? "auto de interés" : "cita", dato: "horario" };
-        const draft = {};
-        for (const field of template.fields || []) { draft[field.key] = getDefaultValueForTemplateField(field, context); }
-        setTplDraft(draft);
+        const bestDealer = DEALERS.find((dealer) => dealer.toLowerCase() === currentAgencia.toLowerCase())
+            || DEALERS.find((dealer) => currentAgencia.toLowerCase().includes(dealer.toLowerCase()))
+            || currentAgencia;
+        const bestCanal = CANALES.find(
+            (canal) => canal.toLowerCase() === (prospecto?.canal_contacto || "").trim().toLowerCase(),
+        ) || (prospecto?.canal_contacto || "").trim();
+        const asesorAuto = (prospecto?.asesor_digital || "").trim()
+            || (prospecto?.asesor_ventas || "").trim()
+            || (prospecto?.responsable || "").trim()
+            || "";
+
+        const context = {
+            nombre: (prospecto?.nombre || activeChat?.nombre || "").trim(),
+            agencia: bestDealer,
+            modelo: (prospecto?.auto_interes || "").trim(),
+            canal: bestCanal,
+            asesor: asesorAuto,
+            tema: prospecto?.auto_interes ? "auto de interés" : "cita",
+            dato: "horario",
+        };
+
+        const normalizedTemplate = {
+            ...template,
+            fields: getTemplateFields(template),
+        };
+        const nextDraft = {};
+
+        for (const field of normalizedTemplate.fields) {
+            nextDraft[field.key] = getDefaultValueForTemplateField(field, context);
+        }
+
+        setTplSelected(normalizedTemplate);
+        setTplDraft(nextDraft);
     }
 
     function addQuickBubble() {
@@ -2390,25 +2645,57 @@ export default function DigitalesContacto() {
 
     async function enviarPlantilla() {
         if (!activeTel || !tplSelected) return;
-        const fields = Array.isArray(tplSelected.fields) ? tplSelected.fields : [];
-        if (fields.some(f => !String(tplDraft[f.key] || "").trim())) { alert("Completa todos los campos de la plantilla."); return; }
+
+        const fields = getTemplateFields(tplSelected);
+        const missingFields = fields.filter((field) => {
+            if (field.required === false) return false;
+            return !String(tplDraft?.[field.key] || "").trim();
+        });
+
+        if (missingFields.length) {
+            alert(`Completa los campos obligatorios:\n${missingFields.map((field) => `• ${field.label}`).join("\n")}`);
+            return;
+        }
+
         const idioma = tplSelected.idioma || tplSelected.language || "es_MX";
+        const templateName = tplSelected.key || tplSelected.name || tplSelected.template_name;
         const textoPreview = buildTemplatePreviewText(tplSelected, tplDraft);
         const components = buildDynamicTemplateComponents(tplSelected, tplDraft);
+
         shouldStickToBottomRef.current = true;
-        setMensajes(prev => [...prev, { id: crypto.randomUUID(), local_pending: true, local_created_at: new Date().toISOString(), mine: true, text: textoPreview || `Plantilla: ${tplSelected.key}`, time: "Ahora", status: "sent" }]);
+        setMensajes((prev) => [
+            ...prev,
+            {
+                id: crypto.randomUUID(),
+                local_pending: true,
+                local_created_at: new Date().toISOString(),
+                mine: true,
+                text: textoPreview || `Plantilla: ${templateName}`,
+                time: "Ahora",
+                status: "sent",
+                attachments: [],
+            },
+        ]);
+
         try {
             await api.digitalesEnviarPlantilla({
                 to: activeTel,
-                template_name: tplSelected.key,
+                template_name: templateName,
                 idioma,
-                components: components.length ? components : undefined,
-                params: components.length ? undefined : [],
+                values: tplDraft,
+                components,
+                params: [],
                 preview_text: textoPreview || "",
             });
-            setShowTemplatesDropdown(false); setTplSelected(null);
+
+            setShowTemplatesDropdown(false);
+            setTplSelected(null);
+            setTplDraft({});
             await refreshActiveChat(activeTel, { forceBottom: true });
-        } catch (error) { alert(`Falló plantilla: ${error.message}`); await refreshActiveChat(activeTel).catch(() => { }); }
+        } catch (error) {
+            alert(`Falló plantilla: ${error.message}`);
+            await refreshActiveChat(activeTel).catch(() => { });
+        }
     }
 
     function copyTel() {
@@ -2687,7 +2974,7 @@ export default function DigitalesContacto() {
             <div className="relative overflow-hidden rounded-lg border border-black/10 bg-white shadow-sm">
 
                 <div className={cls(
-                    "grid min-h-0 h-[calc(100dvh-64px)] overflow-hidden transition-[grid-template-columns] duration-500 ease-[cubic-bezier(0.22,1,0.36,1)]",
+                    "grid min-h-0 h-[calc(90dvh-64px)] overflow-hidden transition-[grid-template-columns] duration-500 ease-[cubic-bezier(0.22,1,0.36,1)]",
                     isDirectChatMode ? "grid-cols-1" : chatSidebarCollapsed ? "grid-cols-1 lg:grid-cols-[58px_minmax(0,1fr)]" : "grid-cols-1 lg:grid-cols-[310px_minmax(0,1fr)] xl:grid-cols-[340px_minmax(0,1fr)]"
                 )}>
 
@@ -3282,8 +3569,21 @@ export default function DigitalesContacto() {
                                                                     <button key={`${template.key}-${template.idioma || template.language || "x"}`} type="button" onClick={() => pickTemplate(template)}
                                                                         className="w-full border-b border-black/5 px-4 py-3 text-left last:border-0 hover:bg-neutral-50 transition">
                                                                         <div className="text-xs font-extrabold text-[#000000]">{template.title || template.key}</div>
-                                                                        <div className="mt-0.5 text-[11px] font-semibold text-slate-400">{template.key} · {template.idioma || template.language || "es_MX"} · {template.category || "Sin categoría"}</div>
-                                                                        {template.help ? <div className="mt-1 truncate text-[11px] text-slate-500">{template.help}</div> : null}
+                                                                        <div className="mt-1 flex flex-wrap items-center gap-1.5">
+                                                                            <span className="text-[11px] font-semibold text-slate-400">
+                                                                                {template.key} · {template.idioma || template.language || "es_MX"}
+                                                                            </span>
+                                                                            <span
+                                                                                className={cls(
+                                                                                    "rounded-full px-2 py-0.5 text-[10px] font-extrabold",
+                                                                                    String(template.category || "").toUpperCase() === "MARKETING"
+                                                                                        ? "bg-purple-100 text-purple-700"
+                                                                                        : "bg-blue-100 text-blue-700",
+                                                                                )}
+                                                                            >
+                                                                                {String(template.category || "UTILITY").toUpperCase()}
+                                                                            </span>
+                                                                        </div>                                                                        {template.help ? <div className="mt-1 truncate text-[11px] text-slate-500">{template.help}</div> : null}
                                                                     </button>
                                                                 ))
                                                             )
@@ -3293,7 +3593,7 @@ export default function DigitalesContacto() {
                                                                 <div className="whitespace-pre-wrap rounded-xl border border-black/10 bg-neutral-50 p-3 text-xs font-semibold text-[#000000]">
                                                                     {templatePreview || tplSelected.help || "Sin texto visible."}
                                                                 </div>
-                                                                {(tplSelected.fields || []).map((field) => {
+                                                                {getTemplateFields(tplSelected).map((field) => {
                                                                     const options = getFieldOptions(field);
                                                                     return (
                                                                         <div key={field.key}>
@@ -3305,13 +3605,22 @@ export default function DigitalesContacto() {
                                                                                     {options.map(o => <option key={o} value={o}>{o}</option>)}
                                                                                 </select>
                                                                             ) : (
-                                                                                <input value={tplDraft[field.key] || ""} onChange={(e) => setTplDraft(p => ({ ...p, [field.key]: e.target.value }))}
-                                                                                    className="w-full rounded-lg border border-black/10 bg-white px-3 py-2 text-xs font-semibold text-[#000000] outline-none" />
+                                                                                <>
+                                                                                    <input
+                                                                                        value={tplDraft[field.key] || ""}
+                                                                                        onChange={(e) => setTplDraft((prev) => ({ ...prev, [field.key]: e.target.value }))}
+                                                                                        placeholder={field.type === "media" ? "URL pública HTTPS o media ID de Meta" : field.placeholder || "Escribe el valor"}
+                                                                                        className="w-full rounded-lg border border-black/10 bg-white px-3 py-2 text-xs font-semibold text-[#000000] outline-none"
+                                                                                    />
+                                                                                    {field.help ? (
+                                                                                        <div className="mt-1 text-[10px] font-medium leading-relaxed text-slate-400">{field.help}</div>
+                                                                                    ) : null}
+                                                                                </>
                                                                             )}
                                                                         </div>
                                                                     );
                                                                 })}
-                                                                {!(tplSelected.fields || []).length ? (
+                                                                {!getTemplateFields(tplSelected).length ? (
                                                                     <div className="rounded-lg border border-emerald-200 bg-emerald-50 px-3 py-2 text-xs font-bold text-emerald-700">Esta plantilla no requiere parámetros.</div>
                                                                 ) : null}
                                                                 <button type="button" onClick={enviarPlantilla}

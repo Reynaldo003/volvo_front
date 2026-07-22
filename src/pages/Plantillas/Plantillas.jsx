@@ -87,29 +87,6 @@ function getUserPhone(user) {
     );
 }
 
-function isAdministrator(user) {
-    const role = normalizeText(
-        typeof user?.rol === "object"
-            ? user?.rol?.nombre || user?.rol?.name || ""
-            : user?.rol,
-    );
-
-    const permissions = (Array.isArray(user?.permisos) ? user.permisos : [])
-        .map((permission) => normalizeText(
-            typeof permission === "object"
-                ? permission?.codigo || permission?.nombre || permission?.name || ""
-                : permission,
-        ))
-        .filter(Boolean);
-
-    return (
-        role === "administrador" ||
-        role === "admin" ||
-        permissions.includes("all") ||
-        permissions.includes("usuarios_admin")
-    );
-}
-
 function emptyDraft() {
     return {
         id: "",
@@ -515,7 +492,6 @@ export default function Plantillas() {
     const headerInputRef = useRef(null);
     const bodyInputRef = useRef(null);
 
-    const admin = useMemo(() => isAdministrator(user), [user]);
     const userPhone = useMemo(() => getUserPhone(user), [user]);
 
     const [lineasIA, setLineasIA] = useState([]);
@@ -598,44 +574,29 @@ export default function Plantillas() {
             const response = await api.iaLineas();
             const allLines = Array.isArray(response?.items) ? response.items : [];
 
-            const allowedLines = admin
-                ? allLines
-                : userPhone
-                    ? allLines.filter(
-                        (line) => normalizePhone(line?.numero) === userPhone,
-                    )
-                    : allLines.length === 1
-                        ? allLines
-                        : [];
-
-            setLineasIA(allowedLines);
+            setLineasIA(allLines);
 
             setNumeroSeleccionado((current) => {
-                const currentExists = allowedLines.some(
+                const currentExists = allLines.some(
                     (line) => normalizePhone(line?.numero) === normalizePhone(current),
                 );
 
                 if (currentExists) return normalizePhone(current);
 
-                if (!admin && userPhone) {
-                    const assignedLine = allowedLines.find(
+                const assignedLine = userPhone
+                    ? allLines.find(
                         (line) => normalizePhone(line?.numero) === userPhone,
-                    );
+                    )
+                    : null;
 
-                    return normalizePhone(assignedLine?.numero || "");
-                }
-
-                return normalizePhone(allowedLines[0]?.numero || "");
+                return normalizePhone(
+                    assignedLine?.numero || allLines[0]?.numero || "",
+                );
             });
 
-            if (!admin && !userPhone && allLines.length !== 1) {
+            if (allLines.length === 0) {
                 showToast(
-                    "Tu usuario no tiene un número de WhatsApp asignado. Solicita que lo configuren en tu cuenta.",
-                    "error",
-                );
-            } else if (!admin && userPhone && allowedLines.length === 0) {
-                showToast(
-                    "El número asignado a tu usuario no coincide con ninguna línea de WhatsApp configurada.",
+                    "No hay líneas de WhatsApp configuradas.",
                     "error",
                 );
             }
@@ -649,7 +610,7 @@ export default function Plantillas() {
         } finally {
             setLoadingLines(false);
         }
-    }, [admin, ready, showToast, userPhone]);
+    }, [ready, showToast, userPhone]);
 
     const loadTemplates = useCallback(async () => {
         if (!numeroSeleccionado) {
@@ -693,22 +654,12 @@ export default function Plantillas() {
     }, [draft]);
 
     function openCreate() {
-        if (!admin) {
-            showToast("Solo un administrador puede crear plantillas.", "error");
-            return;
-        }
-
         setServerAnalysis(null);
         setDraft(emptyDraft());
         setModalOpen(true);
     }
 
     function openEdit(template) {
-        if (!admin) {
-            showToast("Solo un administrador puede editar plantillas.", "error");
-            return;
-        }
-
         const status = String(template?.status || "").toUpperCase();
         if (!["APPROVED", "REJECTED", "PAUSED"].includes(status)) {
             showToast("Meta solo permite editar plantillas aprobadas, rechazadas o pausadas.", "error");
@@ -951,11 +902,6 @@ export default function Plantillas() {
     }
 
     async function deleteTemplate(template) {
-        if (!admin) {
-            showToast("Solo un administrador puede eliminar plantillas.", "error");
-            return;
-        }
-
         if (!confirm(`¿Eliminar la plantilla ${template.name}? Esta acción también la eliminará en Meta.`)) return;
         try {
             await api.digitalesPlantillaEliminar(numeroSeleccionado, template.id, template.name);
@@ -1002,15 +948,15 @@ export default function Plantillas() {
                             <label className="text-[11px] font-bold uppercase tracking-widest text-[#8891AD]">
                                 Línea de WhatsApp
                             </label>
-                            <span className={`rounded-full px-2.5 py-1 text-[10px] font-bold ${admin ? "bg-[#131E5C]/10 text-[#131E5C]" : "bg-blue-50 text-blue-700"}`}>
-                                {admin ? "Administrador · todas las líneas" : "Línea asignada a tu usuario"}
+                            <span className="rounded-full bg-blue-50 px-2.5 py-1 text-[10px] font-bold text-blue-700">
+                                Gestión de plantillas habilitada
                             </span>
                         </div>
 
                         <select
                             value={numeroSeleccionado}
                             onChange={(event) => setNumeroSeleccionado(normalizePhone(event.target.value))}
-                            disabled={loadingLines || !admin || lineasIA.length === 0}
+                            disabled={loadingLines || lineasIA.length === 0}
                             className={`${inputCls} max-w-xl disabled:cursor-not-allowed disabled:bg-[#F7F8FC] disabled:text-[#8891AD]`}
                         >
                             {loadingLines ? (
@@ -1030,12 +976,6 @@ export default function Plantillas() {
                             Cuenta: {lineaActual?.agencia || "—"} · {lineaActual?.business || "—"}
                             {lineaActual?.phone_number_id ? ` · ID ${lineaActual.phone_number_id}` : ""}
                         </p>
-
-                        {!admin && (
-                            <p className="mt-1 text-[11px] font-medium text-blue-700">
-                                La línea se obtiene de tu sesión. En Volvo se usa automáticamente la única línea configurada cuando tu usuario todavía no tiene teléfono asignado.
-                            </p>
-                        )}
                     </div>
 
                     <div className="flex flex-wrap gap-2">
@@ -1048,25 +988,17 @@ export default function Plantillas() {
                             Sincronizar
                         </button>
 
-                        {admin && (
-                            <button
-                                onClick={openCreate}
-                                disabled={!numeroSeleccionado || loadingLines}
-                                className="inline-flex items-center gap-2 rounded-xl bg-[#131E5C] px-4 py-2.5 text-sm font-bold text-white hover:bg-[#0A1340] disabled:cursor-not-allowed disabled:opacity-50"
-                            >
-                                <Plus className="h-4 w-4" />
-                                Nueva plantilla
-                            </button>
-                        )}
+                        <button
+                            onClick={openCreate}
+                            disabled={!numeroSeleccionado || loadingLines}
+                            className="inline-flex items-center gap-2 rounded-xl bg-[#131E5C] px-4 py-2.5 text-sm font-bold text-white hover:bg-[#0A1340] disabled:cursor-not-allowed disabled:opacity-50"
+                        >
+                            <Plus className="h-4 w-4" />
+                            Nueva plantilla
+                        </button>
                     </div>
                 </div>
             </div>
-
-            {!admin && (
-                <div className="rounded-2xl border border-blue-200 bg-blue-50 p-4 text-sm font-semibold text-blue-800">
-                    Puedes consultar y sincronizar las plantillas. La creación, edición y eliminación están reservadas para administradores.
-                </div>
-            )}
 
             <div className="rounded-2xl border border-amber-200 bg-amber-50 p-5">
                 <div className="flex items-start gap-3">
@@ -1108,12 +1040,10 @@ export default function Plantillas() {
                                         <p className="mt-1 font-mono text-[11px] text-[#8891AD]">{template.name} · {template.language}</p>
                                         <p className="mt-3 whitespace-pre-wrap text-sm leading-relaxed text-[#515778]">{template.help || "Sin texto visible."}</p>
                                     </div>
-                                    {admin && (
-                                        <div className="flex gap-2">
-                                            <button onClick={() => openEdit(template)} className="inline-flex h-9 items-center gap-1.5 rounded-xl border border-[#E4E7F0] px-3 text-xs font-bold text-[#515778] hover:bg-white"><Edit3 className="h-3.5 w-3.5" /> Editar</button>
-                                            <button onClick={() => deleteTemplate(template)} className="inline-flex h-9 items-center gap-1.5 rounded-xl border border-red-200 px-3 text-xs font-bold text-red-700 hover:bg-red-50"><Trash2 className="h-3.5 w-3.5" /> Eliminar</button>
-                                        </div>
-                                    )}
+                                    <div className="flex gap-2">
+                                        <button onClick={() => openEdit(template)} className="inline-flex h-9 items-center gap-1.5 rounded-xl border border-[#E4E7F0] px-3 text-xs font-bold text-[#515778] hover:bg-white"><Edit3 className="h-3.5 w-3.5" /> Editar</button>
+                                        <button onClick={() => deleteTemplate(template)} className="inline-flex h-9 items-center gap-1.5 rounded-xl border border-red-200 px-3 text-xs font-bold text-red-700 hover:bg-red-50"><Trash2 className="h-3.5 w-3.5" /> Eliminar</button>
+                                    </div>
                                 </div>
                             </div>
                         ))}

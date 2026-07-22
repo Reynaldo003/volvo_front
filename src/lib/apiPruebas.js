@@ -312,8 +312,10 @@ export const api = {
     to,
     template_name,
     idioma = "es_MX",
-    params,
+    params = [],
     components,
+    values,
+    preview_text = "",
     numero_asesor,
   } = {}) =>
     http("/digitales/mensajes/enviar-plantilla/", {
@@ -325,6 +327,8 @@ export const api = {
           idioma,
           params,
           components,
+          values,
+          preview_text,
           numero_asesor,
         }),
       ),

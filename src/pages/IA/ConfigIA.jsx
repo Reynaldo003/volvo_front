@@ -1,4 +1,4 @@
-// src/pages/IA/ConfigAI.jsx 
+// src/pages/IA/ConfigIA.jsx 
 import { useEffect, useMemo, useRef, useState } from "react";
 import {
     Bot, Car, CheckCircle2, ChevronDown, ChevronUp,
@@ -9,19 +9,8 @@ import {
     BadgePercent,
 } from "lucide-react";
 import { api } from "../../lib/apiPruebas";
-import volvoLogo from "../../assets/volvo_sin_fondo.png";
+const BRAND_BLACK = "#0A0A0A";
 
-const C = {
-    navy: "#131E5C",
-    navyDk: "#0a1340",
-    navyLt: "#1e2f8a",
-    surface: "#F7F8FC",
-    border: "#E4E7F0",
-    borderMd: "#C8CEDF",
-    muted: "#8891AD",
-    text: "#1A1F3C",
-    textSub: "#515778",
-};
 function normalizaNumeroConfigIA(value) {
     const raw = String(value || "").trim();
 
@@ -78,10 +67,10 @@ const secciones = [
     },
     {
         id: "promociones_eventos",
-        titulo: "Promociones y Eventos",
+        titulo: "Promociones y eventos",
         icon: BadgePercent,
-        desc: "Configuracion especial para eventos activos.",
-        placeholder: "Ej: Si el cliente pide inscripcion a vocho fest, promociones actuales, etc.",
+        desc: "Información temporal sobre promociones y eventos activos.",
+        placeholder: "Ej: Registrar promociones vigentes, eventos Volvo, fechas, restricciones y el proceso correcto para solicitar información.",
     },
     {
         id: "personalidad",
@@ -153,7 +142,7 @@ function safeArray(v) { return Array.isArray(v) ? v : []; }
 function safeObject(v) { return v && typeof v === "object" && !Array.isArray(v) ? v : {}; }
 function tryJsonParse(value, fallback) { try { return JSON.parse(value); } catch { return fallback; } }
 
-const BACKEND_MEDIA_BASE = "https://crm.grupoautomotrizryr.com/media/";
+const BACKEND_MEDIA_BASE = "https://crmvolvo.grupoautomotrizryr.com/media/";
 
 function toMediaUrl(value) {
     const raw = String(value || "").trim();
@@ -209,7 +198,7 @@ function Toggle({ value, onChange, disabled = false, size = "md" }) {
     return (
         <button type="button" role="switch" aria-checked={value}
             onClick={() => !disabled && onChange(!value)} disabled={disabled}
-            className={`relative inline-flex ${w} items-center rounded-full transition-colors duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-1 ${disabled ? "cursor-not-allowed opacity-50" : "cursor-pointer"} ${value ? "bg-[#131E5C]" : "bg-gray-200"}`}>
+            className={`relative inline-flex ${w} items-center rounded-full transition-colors duration-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-1 ${disabled ? "cursor-not-allowed opacity-50" : "cursor-pointer"} ${value ? "bg-black" : "bg-gray-200"}`}>
             <span className={`inline-block ${dot} rounded-full bg-white shadow-sm transition-transform duration-200 ${tx}`} />
         </button>
     );
@@ -222,11 +211,11 @@ function Badge({ children, variant = "default", dot = false }) {
         danger: "bg-red-50 text-red-700 border border-red-200",
         warning: "bg-amber-50 text-amber-700 border border-amber-200",
         info: "bg-blue-50 text-blue-700 border border-blue-200",
-        navy: "bg-[#131E5C]/10 text-[#131E5C]",
+        navy: "bg-black/10 text-black",
     };
     const dotColors = {
         default: "bg-gray-400", success: "bg-emerald-500", danger: "bg-red-500",
-        warning: "bg-amber-500", info: "bg-blue-500", navy: "bg-[#131E5C]",
+        warning: "bg-amber-500", info: "bg-blue-500", navy: "bg-black",
     };
     return (
         <span className={`inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full text-[11px] font-semibold tracking-wide ${variants[variant]}`}>
@@ -246,9 +235,9 @@ function Tooltip({ content, children }) {
         <span className="relative inline-flex" onMouseEnter={() => setShow(true)} onMouseLeave={() => setShow(false)}>
             {children}
             {show && (
-                <span className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 z-50 whitespace-nowrap rounded-lg bg-[#1A1F3C] px-2.5 py-1.5 text-xs font-medium text-white shadow-xl">
+                <span className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 z-50 whitespace-nowrap rounded-lg bg-black px-2.5 py-1.5 text-xs font-medium text-white shadow-xl">
                     {content}
-                    <span className="absolute top-full left-1/2 -translate-x-1/2 border-4 border-transparent border-t-[#1A1F3C]" />
+                    <span className="absolute top-full left-1/2 -translate-x-1/2 border-4 border-transparent border-t-black" />
                 </span>
             )}
         </span>
@@ -261,7 +250,7 @@ function Toast({ msg, type = "success", onClose }) {
     const cfg = {
         success: { bg: "bg-emerald-600", icon: <CheckCircle2 className="h-4 w-4" /> },
         error: { bg: "bg-red-600", icon: <AlertCircle className="h-4 w-4" /> },
-        info: { bg: "bg-[#131E5C]", icon: <Info className="h-4 w-4" /> },
+        info: { bg: "bg-black", icon: <Info className="h-4 w-4" /> },
     }[type] || { bg: "bg-gray-800", icon: null };
     return (
         <div className={`fixed bottom-6 right-6 z-[200] flex items-center gap-3 rounded-xl px-4 py-3 text-sm font-semibold text-white shadow-2xl transition-all duration-300 ${cfg.bg}`}>
@@ -275,35 +264,53 @@ function Toast({ msg, type = "success", onClose }) {
 // ─── Modal enterprise ─────────────────────────────────────────────────────────
 function Modal({ open, title, subtitle, onClose, children, footer, size = "xl" }) {
     useEffect(() => {
-        if (open) document.body.style.overflow = "hidden";
-        else document.body.style.overflow = "";
+        document.body.style.overflow = open ? "hidden" : "";
         return () => { document.body.style.overflow = ""; };
     }, [open]);
 
     if (!open) return null;
-    const maxW = { lg: "max-w-2xl", xl: "max-w-4xl", "2xl": "max-w-6xl" }[size] || "max-w-4xl";
+
+    const maxW = {
+        lg: "max-w-2xl",
+        xl: "max-w-4xl",
+        "2xl": "max-w-6xl",
+    }[size] || "max-w-4xl";
 
     return (
-        <div className="fixed inset-0 z-[100] flex items-end sm:items-center justify-center p-0 sm:p-4">
-            <div className="absolute inset-0 bg-black/40 backdrop-blur-[2px]" onClick={onClose} />
-            <div className={`relative flex ${maxW} w-full max-h-[92vh] flex-col overflow-hidden rounded-t-2xl sm:rounded-2xl bg-white shadow-2xl`}
-                style={{ boxShadow: "0 25px 60px rgba(19,30,92,0.18), 0 4px 16px rgba(0,0,0,0.12)" }}>
-                <div className="flex items-center justify-between gap-4 px-6 py-5 border-b border-[#E4E7F0]">
-                    <div>
-                        <h2 className="text-base font-bold text-[#1A1F3C]">{title}</h2>
-                        {subtitle && <p className="text-xs text-[#8891AD] mt-0.5">{subtitle}</p>}
+        <div className="fixed inset-0 z-[100]">
+            <div className="absolute inset-0 bg-black/45" onClick={onClose} />
+
+            <div className="absolute inset-0 flex items-end justify-center p-2 sm:items-center sm:p-4">
+                <div className={`flex max-h-[92vh] w-full ${maxW} flex-col overflow-hidden rounded-lg border border-black/20 bg-neutral-100 shadow-2xl`}>
+                    <div
+                        className="flex shrink-0 items-center justify-between gap-4 px-5 py-4"
+                        style={{ backgroundColor: BRAND_BLACK }}
+                    >
+                        <div className="min-w-0">
+                            <h2 className="truncate text-base font-extrabold text-white">{title}</h2>
+                            {subtitle ? <p className="mt-0.5 truncate text-xs text-white/60">{subtitle}</p> : null}
+                        </div>
+
+                        <button
+                            type="button"
+                            onClick={onClose}
+                            className="inline-flex h-10 w-10 shrink-0 items-center justify-center rounded-2xl border border-white/20 bg-white/10 text-white transition hover:bg-white/15"
+                            aria-label="Cerrar"
+                        >
+                            <X className="h-5 w-5" />
+                        </button>
                     </div>
-                    <button onClick={onClose}
-                        className="flex h-8 w-8 items-center justify-center rounded-lg border border-[#E4E7F0] text-[#8891AD] hover:bg-[#F7F8FC] hover:text-[#1A1F3C] transition-colors">
-                        <X className="h-4 w-4" />
-                    </button>
+
+                    <div className="flex-1 overflow-y-auto overscroll-contain p-4 sm:p-5 [scrollbar-gutter:stable]">
+                        {children}
+                    </div>
+
+                    {footer ? (
+                        <div className="flex shrink-0 flex-col-reverse gap-2 border-t border-black/10 bg-white px-5 py-4 sm:flex-row sm:items-center sm:justify-end">
+                            {footer}
+                        </div>
+                    ) : null}
                 </div>
-                <div className="flex-1 overflow-y-auto px-6 py-5">{children}</div>
-                {footer && (
-                    <div className="flex flex-col-reverse gap-2 px-6 py-4 border-t border-[#E4E7F0] bg-[#F7F8FC] sm:flex-row sm:justify-end">
-                        {footer}
-                    </div>
-                )}
             </div>
         </div>
     );
@@ -312,17 +319,17 @@ function Modal({ open, title, subtitle, onClose, children, footer, size = "xl" }
 // ─── Stat Card ───────────────────────────────────────────────────────────────
 function StatCard({ label, value, sub, icon: Icon, variant = "default", loading = false, action, actionLabel }) {
     const variants = {
-        default: { bg: "bg-white", accent: "bg-[#131E5C]/8", iconColor: "text-[#131E5C]" },
+        default: { bg: "bg-white", accent: "bg-black/10", iconColor: "text-black" },
         success: { bg: "bg-white", accent: "bg-emerald-50", iconColor: "text-emerald-600" },
         danger: { bg: "bg-white", accent: "bg-red-50", iconColor: "text-red-600" },
         warning: { bg: "bg-white", accent: "bg-amber-50", iconColor: "text-amber-600" },
     };
     const v = variants[variant] || variants.default;
     return (
-        <div className={`relative rounded-2xl border border-[#E4E7F0] ${v.bg} p-5 transition-shadow hover:shadow-md`}>
+        <div className={`relative rounded-2xl border border-black/10 ${v.bg} p-5 transition-shadow hover:shadow-md`}>
             <div className="flex items-start justify-between gap-3">
                 <div className="flex-1 min-w-0">
-                    <p className="text-[11px] font-semibold uppercase tracking-widest text-[#8891AD]">{label}</p>
+                    <p className="text-[11px] font-semibold uppercase tracking-widest text-neutral-500">{label}</p>
                     {loading ? (
                         <div className="mt-2 space-y-2">
                             <Skeleton className="h-7 w-24" />
@@ -330,13 +337,13 @@ function StatCard({ label, value, sub, icon: Icon, variant = "default", loading 
                         </div>
                     ) : (
                         <>
-                            <p className="mt-1.5 text-2xl font-bold text-[#1A1F3C] leading-none tracking-tight">{value}</p>
-                            {sub && <p className="mt-1.5 text-xs text-[#8891AD] truncate">{sub}</p>}
+                            <p className="mt-1.5 text-2xl font-bold text-black leading-none tracking-tight">{value}</p>
+                            {sub && <p className="mt-1.5 text-xs text-neutral-500 truncate">{sub}</p>}
                         </>
                     )}
                     {action && (
                         <button onClick={action}
-                            className="mt-3 text-[11px] font-semibold text-[#131E5C] hover:underline inline-flex items-center gap-1">
+                            className="mt-3 text-[11px] font-semibold text-black hover:underline inline-flex items-center gap-1">
                             {actionLabel} <ChevronRight className="h-3 w-3" />
                         </button>
                     )}
@@ -368,15 +375,15 @@ function PromptField({ seccion, value, onChange, onSave, saving }) {
     function handleCancel() { setDraft(value); setEditing(false); }
 
     return (
-        <div className={`rounded-2xl border transition-all duration-200 ${editing ? "border-[#131E5C]/30 shadow-lg shadow-[#131E5C]/5" : "border-[#E4E7F0] hover:border-[#C8CEDF]"} bg-white overflow-hidden`}>
+        <div className={`rounded-2xl border transition-all duration-200 ${editing ? "border-black/30 shadow-lg shadow-black/5" : "border-black/10 hover:border-black/20"} bg-white overflow-hidden`}>
             <div className="flex items-center justify-between gap-3 px-5 py-4">
                 <div className="flex items-center gap-3 min-w-0">
-                    <div className="flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-xl bg-[#131E5C]/8">
-                        <Icon className="h-4.5 w-4.5 text-[#131E5C]" style={{ width: 18, height: 18 }} />
+                    <div className="flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-xl bg-black/10">
+                        <Icon className="h-4.5 w-4.5 text-black" style={{ width: 18, height: 18 }} />
                     </div>
                     <div className="min-w-0">
-                        <p className="text-sm font-bold text-[#1A1F3C]">{seccion.titulo}</p>
-                        <p className="text-xs text-[#8891AD] truncate">{seccion.desc}</p>
+                        <p className="text-sm font-bold text-black">{seccion.titulo}</p>
+                        <p className="text-xs text-neutral-500 truncate">{seccion.desc}</p>
                     </div>
                 </div>
                 <div className="flex items-center gap-2 flex-shrink-0">
@@ -384,17 +391,17 @@ function PromptField({ seccion, value, onChange, onSave, saving }) {
                     {hasContent && !editing && <Badge variant="success" dot>Configurado</Badge>}
                     {!editing ? (
                         <button onClick={() => setEditing(true)}
-                            className="inline-flex items-center gap-1.5 rounded-lg border border-[#E4E7F0] px-3 py-1.5 text-xs font-semibold text-[#515778] hover:bg-[#F7F8FC] hover:border-[#C8CEDF] transition-all">
+                            className="inline-flex items-center gap-1.5 rounded-lg border border-black/10 px-3 py-1.5 text-xs font-semibold text-neutral-600 hover:bg-neutral-50 hover:border-black/20 transition-all">
                             <Edit3 className="h-3.5 w-3.5" />Editar
                         </button>
                     ) : (
                         <div className="flex items-center gap-1.5">
                             <button onClick={handleCancel}
-                                className="inline-flex items-center gap-1.5 rounded-lg border border-[#E4E7F0] px-3 py-1.5 text-xs font-semibold text-[#515778] hover:bg-[#F7F8FC] transition-all">
+                                className="inline-flex items-center gap-1.5 rounded-lg border border-black/10 px-3 py-1.5 text-xs font-semibold text-neutral-600 hover:bg-neutral-50 transition-all">
                                 Cancelar
                             </button>
                             <button onClick={handleSave} disabled={saving}
-                                className="inline-flex items-center gap-1.5 rounded-lg bg-[#131E5C] px-3 py-1.5 text-xs font-semibold text-white hover:bg-[#0a1340] disabled:opacity-60 transition-all">
+                                className="inline-flex items-center gap-1.5 rounded-lg bg-black px-3 py-1.5 text-xs font-semibold text-white hover:bg-neutral-800 disabled:opacity-60 transition-all">
                                 {saving ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Save className="h-3.5 w-3.5" />}
                                 Aplicar
                             </button>
@@ -404,8 +411,8 @@ function PromptField({ seccion, value, onChange, onSave, saving }) {
             </div>
             <div className={`px-5 pb-5 transition-all duration-200 ${editing ? "" : "opacity-80"}`}>
                 {!editing && !hasContent ? (
-                    <div className="rounded-xl border-2 border-dashed border-[#E4E7F0] bg-[#F7F8FC] px-4 py-5 text-center">
-                        <p className="text-xs text-[#8891AD]">{seccion.placeholder}</p>
+                    <div className="rounded-xl border-2 border-dashed border-black/10 bg-neutral-50 px-4 py-5 text-center">
+                        <p className="text-xs text-neutral-500">{seccion.placeholder}</p>
                     </div>
                 ) : (
                     <textarea
@@ -414,8 +421,8 @@ function PromptField({ seccion, value, onChange, onSave, saving }) {
                         onChange={(e) => setDraft(e.target.value)}
                         placeholder={seccion.placeholder}
                         rows={4}
-                        className={`w-full resize-y rounded-xl text-sm text-[#1A1F3C] leading-relaxed outline-none transition-all duration-200 placeholder:text-[#C8CEDF] ${editing
-                            ? "border border-[#131E5C]/20 bg-white px-4 py-3 focus:ring-2 focus:ring-[#131E5C]/10"
+                        className={`w-full resize-y rounded-xl text-sm text-black leading-relaxed outline-none transition-all duration-200 placeholder:text-[#D4D4D4] ${editing
+                            ? "border border-black/20 bg-white px-4 py-3 focus:ring-2 focus:ring-black/10"
                             : "border-0 bg-transparent px-0 py-0 cursor-default"
                             }`}
                     />
@@ -432,33 +439,33 @@ function LineaSelector({ lineasIA, value, onChange }) {
     return (
         <div className="relative">
             <button onClick={() => setOpen((v) => !v)}
-                className="flex w-full items-center justify-between gap-3 rounded-xl border border-[#E4E7F0] bg-white px-4 py-3 text-left hover:border-[#C8CEDF] transition-colors focus:outline-none focus:ring-2 focus:ring-[#131E5C]/20">
+                className="flex w-full items-center justify-between gap-3 rounded-lg border border-black/15 bg-white px-4 py-3 text-left hover:border-black/20 transition-colors focus:outline-none focus:ring-2 focus:ring-black/10">
                 <div className="flex items-center gap-3 min-w-0">
-                    <div className="flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-lg bg-[#131E5C]/8">
-                        <Bot className="h-4 w-4 text-[#131E5C]" />
+                    <div className="flex h-8 w-8 flex-shrink-0 items-center justify-center rounded-lg bg-black/10">
+                        <Bot className="h-4 w-4 text-black" />
                     </div>
                     <div className="min-w-0">
-                        <p className="text-sm font-bold text-[#1A1F3C] truncate">{selected?.label || selected?.asesor_digital || "Seleccionar línea"}</p>
-                        <p className="text-[11px] text-[#8891AD] font-mono">{value || "—"}</p>
+                        <p className="text-sm font-bold text-black truncate">{selected?.label || selected?.asesor_digital || "Seleccionar línea"}</p>
+                        <p className="text-[11px] text-neutral-500 font-mono">{value || "—"}</p>
                     </div>
                 </div>
-                <ChevronDown className={`h-4 w-4 text-[#8891AD] flex-shrink-0 transition-transform ${open ? "rotate-180" : ""}`} />
+                <ChevronDown className={`h-4 w-4 text-neutral-500 flex-shrink-0 transition-transform ${open ? "rotate-180" : ""}`} />
             </button>
             {open && (
                 <>
                     <div className="fixed inset-0 z-10" onClick={() => setOpen(false)} />
-                    <div className="absolute top-full left-0 right-0 z-20 mt-1.5 overflow-hidden rounded-xl border border-[#E4E7F0] bg-white shadow-2xl">
+                    <div className="absolute top-full left-0 right-0 z-20 mt-1.5 overflow-hidden rounded-lg border border-black/15 bg-white shadow-2xl">
                         {lineasIA.map((linea) => (
                             <button key={linea.numero} onClick={() => { onChange(linea.numero); setOpen(false); }}
-                                className={`flex w-full items-center gap-3 px-4 py-3 text-left hover:bg-[#F7F8FC] transition-colors ${linea.numero === value ? "bg-[#131E5C]/5" : ""}`}>
-                                <div className={`flex h-7 w-7 flex-shrink-0 items-center justify-center rounded-lg ${linea.numero === value ? "bg-[#131E5C]" : "bg-[#131E5C]/8"}`}>
-                                    <Bot className={`h-3.5 w-3.5 ${linea.numero === value ? "text-white" : "text-[#131E5C]"}`} />
+                                className={`flex w-full items-center gap-3 px-4 py-3 text-left hover:bg-neutral-50 transition-colors ${linea.numero === value ? "bg-black/5" : ""}`}>
+                                <div className={`flex h-7 w-7 flex-shrink-0 items-center justify-center rounded-lg ${linea.numero === value ? "bg-black" : "bg-black/10"}`}>
+                                    <Bot className={`h-3.5 w-3.5 ${linea.numero === value ? "text-white" : "text-black"}`} />
                                 </div>
                                 <div className="min-w-0">
-                                    <p className="text-sm font-semibold text-[#1A1F3C] truncate">{linea.label || linea.asesor_digital}</p>
-                                    <p className="text-[11px] text-[#8891AD] font-mono">{linea.numero}</p>
+                                    <p className="text-sm font-semibold text-black truncate">{linea.label || linea.asesor_digital}</p>
+                                    <p className="text-[11px] text-neutral-500 font-mono">{linea.numero}</p>
                                 </div>
-                                {linea.numero === value && <CheckCircle2 className="h-4 w-4 text-[#131E5C] ml-auto flex-shrink-0" />}
+                                {linea.numero === value && <CheckCircle2 className="h-4 w-4 text-black ml-auto flex-shrink-0" />}
                             </button>
                         ))}
                     </div>
@@ -495,33 +502,33 @@ function TimeScrollPicker({ value, onChange }) {
     return (
         <div className="relative flex-1 min-w-0">
             <button type="button" onClick={() => setOpen((v) => !v)}
-                className="w-full flex items-center justify-between gap-1 rounded-lg border border-[#E4E7F0] bg-white px-2 py-2 text-[11px] font-mono font-bold text-[#1A1F3C] hover:border-[#131E5C]/40 focus:outline-none focus:ring-2 focus:ring-[#131E5C]/10 transition-all">
+                className="w-full flex items-center justify-between gap-1 rounded-lg border border-black/10 bg-white px-2 py-2 text-[11px] font-mono font-bold text-black hover:border-black/40 focus:outline-none focus:ring-2 focus:ring-black/10 transition-all">
                 <span className="truncate">{label}</span>
-                <Clock className="h-3 w-3 text-[#8891AD] flex-shrink-0" />
+                <Clock className="h-3 w-3 text-neutral-500 flex-shrink-0" />
             </button>
 
             {open && (
                 <>
                     <div className="fixed inset-0 z-[60]" onClick={() => setOpen(false)} />
-                    <div className="absolute top-full left-0 z-[70] mt-1.5 overflow-hidden rounded-xl border border-[#E4E7F0] bg-white shadow-2xl" style={{ width: 172 }}>
-                        <div className="bg-[#131E5C] px-3 py-2 text-center">
+                    <div className="absolute top-full left-0 z-[70] mt-1.5 overflow-hidden rounded-lg border border-black/15 bg-white shadow-2xl" style={{ width: 172 }}>
+                        <div className="bg-black px-3 py-2 text-center">
                             <p className="text-sm font-bold text-white font-mono tracking-wide">{label}</p>
                         </div>
                         <div className="flex" style={{ height: 152 }}>
                             {/* Horas */}
-                            <div className="flex-1 overflow-y-auto border-r border-[#E4E7F0]" style={{ scrollbarWidth: "none" }}>
+                            <div className="flex-1 overflow-y-auto border-r border-black/10" style={{ scrollbarWidth: "none" }}>
                                 {[12, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11].map((hv) => (
                                     <button key={hv} type="button" onClick={() => emit(hv, m, isPM)}
-                                        className={`w-full py-1.5 text-center text-sm font-mono leading-none transition-colors ${hv === h12 ? "bg-[#131E5C] text-white font-bold" : "text-[#1A1F3C] hover:bg-[#F7F8FC]"}`}>
+                                        className={`w-full py-1.5 text-center text-sm font-mono leading-none transition-colors ${hv === h12 ? "bg-black text-white font-bold" : "text-black hover:bg-neutral-50"}`}>
                                         {String(hv).padStart(2, "0")}
                                     </button>
                                 ))}
                             </div>
                             {/* Minutos */}
-                            <div className="flex-1 overflow-y-auto border-r border-[#E4E7F0]" style={{ scrollbarWidth: "none" }}>
+                            <div className="flex-1 overflow-y-auto border-r border-black/10" style={{ scrollbarWidth: "none" }}>
                                 {[0, 5, 10, 15, 20, 25, 30, 35, 40, 45, 50, 55].map((mv) => (
                                     <button key={mv} type="button" onClick={() => emit(h12, mv, isPM)}
-                                        className={`w-full py-1.5 text-center text-sm font-mono leading-none transition-colors ${mv === m ? "bg-[#131E5C] text-white font-bold" : "text-[#1A1F3C] hover:bg-[#F7F8FC]"}`}>
+                                        className={`w-full py-1.5 text-center text-sm font-mono leading-none transition-colors ${mv === m ? "bg-black text-white font-bold" : "text-black hover:bg-neutral-50"}`}>
                                         {String(mv).padStart(2, "0")}
                                     </button>
                                 ))}
@@ -530,14 +537,14 @@ function TimeScrollPicker({ value, onChange }) {
                             <div className="flex flex-col w-12">
                                 {[false, true].map((pm) => (
                                     <button key={String(pm)} type="button" onClick={() => emit(h12, m, pm)}
-                                        className={`flex-1 text-xs font-bold transition-colors ${isPM === pm ? "bg-[#131E5C] text-white" : "text-[#8891AD] hover:bg-[#F7F8FC]"}`}>
+                                        className={`flex-1 text-xs font-bold transition-colors ${isPM === pm ? "bg-black text-white" : "text-neutral-500 hover:bg-neutral-50"}`}>
                                         {pm ? "PM" : "AM"}
                                     </button>
                                 ))}
                             </div>
                         </div>
-                        <div className="border-t border-[#E4E7F0] px-3 py-2 flex justify-end">
-                            <button type="button" onClick={() => setOpen(false)} className="text-[11px] font-bold text-[#131E5C] hover:underline">
+                        <div className="border-t border-black/10 px-3 py-2 flex justify-end">
+                            <button type="button" onClick={() => setOpen(false)} className="text-[11px] font-bold text-black hover:underline">
                                 Listo ✓
                             </button>
                         </div>
@@ -561,7 +568,7 @@ function ClockDial({ franjas, onUpdate, totalIAMins }) {
     const STROKE = R_OUT - R_IN;
     const R_MID = (R_OUT + R_IN) / 2;
 
-    const COLORS = ["#131E5C", "#2d41a8", "#5a6fd6"];
+    const COLORS = ["#0A0A0A", "#404040", "#737373"];
 
     function minsFromTime(t) {
         const [hh, mm] = (t || "00:00").split(":").map(Number);
@@ -627,7 +634,7 @@ function ClockDial({ franjas, onUpdate, totalIAMins }) {
                 className="touch-none overflow-visible">
 
                 {/* Anillo base gris */}
-                <circle cx={CX} cy={CY} r={R_MID} fill="none" stroke="#E8ECFF" strokeWidth={STROKE} />
+                <circle cx={CX} cy={CY} r={R_MID} fill="none" stroke="#E5E5E5" strokeWidth={STROKE} />
 
                 {/* Ticks horarios */}
                 {Array.from({ length: 24 }, (_, i) => {
@@ -636,7 +643,7 @@ function ClockDial({ franjas, onUpdate, totalIAMins }) {
                     const p1 = polar(ang, R_OUT + 1);
                     const p2 = polar(ang, R_OUT + (big ? 7 : 4));
                     return <line key={i} x1={p1.x} y1={p1.y} x2={p2.x} y2={p2.y}
-                        stroke={big ? "#8891AD" : "#C8CEDF"} strokeWidth={big ? 1.5 : 0.8} />;
+                        stroke={big ? "#737373" : "#D4D4D4"} strokeWidth={big ? 1.5 : 0.8} />;
                 })}
 
                 {/* Etiquetas 00, 06, 12, 18 */}
@@ -644,7 +651,7 @@ function ClockDial({ franjas, onUpdate, totalIAMins }) {
                     const pt = polar((h / 24) * 360 - 90, R_OUT + 16);
                     return (
                         <text key={h} x={pt.x} y={pt.y} textAnchor="middle" dominantBaseline="middle"
-                            fontSize="8.5" fontWeight="600" fill="#8891AD" fontFamily="'Courier New', monospace">
+                            fontSize="8.5" fontWeight="600" fill="#737373" fontFamily="'Courier New', monospace">
                             {label}
                         </text>
                     );
@@ -680,25 +687,25 @@ function ClockDial({ franjas, onUpdate, totalIAMins }) {
 
                 {/* Icono robot SVG */}
                 <g transform={`translate(${CX - 9}, ${CY - 38})`}>
-                    <rect x="2" y="4" width="14" height="12" rx="3" fill="#131E5C" />
+                    <rect x="2" y="4" width="14" height="12" rx="3" fill="#0A0A0A" />
                     <rect x="5" y="7" width="3" height="2" rx="1" fill="white" />
                     <rect x="10" y="7" width="3" height="2" rx="1" fill="white" />
                     <rect x="6" y="11" width="6" height="1.5" rx="0.75" fill="white" />
-                    <rect x="7" y="1" width="4" height="3" rx="1" fill="#131E5C" />
-                    <rect x="0" y="8" width="2" height="5" rx="1" fill="#131E5C" />
-                    <rect x="16" y="8" width="2" height="5" rx="1" fill="#131E5C" />
+                    <rect x="7" y="1" width="4" height="3" rx="1" fill="#0A0A0A" />
+                    <rect x="0" y="8" width="2" height="5" rx="1" fill="#0A0A0A" />
+                    <rect x="16" y="8" width="2" height="5" rx="1" fill="#0A0A0A" />
                 </g>
 
                 <text x={CX} y={CY - 16} textAnchor="middle" dominantBaseline="middle"
-                    fontSize="9" fontWeight="800" fill="#131E5C" letterSpacing="0.08em">
+                    fontSize="9" fontWeight="800" fill="#0A0A0A" letterSpacing="0.08em">
                     IA ACTIVA
                 </text>
                 <text x={CX} y={CY + 2} textAnchor="middle" dominantBaseline="middle"
-                    fontSize="11.5" fontWeight="700" fill="#1A1F3C" fontFamily="'Courier New', monospace">
+                    fontSize="11.5" fontWeight="700" fill="#0A0A0A" fontFamily="'Courier New', monospace">
                     {f0.inicio} – {f0.fin}
                 </text>
                 <text x={CX} y={CY + 18} textAnchor="middle" dominantBaseline="middle"
-                    fontSize="7.5" fill="#8891AD">
+                    fontSize="7.5" fill="#737373">
                     Fuera del horario de asesores
                 </text>
                 <rect x={CX - 30} y={CY + 28} width={60} height={17} rx={8} fill="#dcfce7" />
@@ -708,7 +715,7 @@ function ClockDial({ franjas, onUpdate, totalIAMins }) {
                 </text>
             </svg>
 
-            <p className="text-[10px] text-[#8891AD] mt-1 flex items-center justify-center gap-1">
+            <p className="text-[10px] text-neutral-500 mt-1 flex items-center justify-center gap-1">
                 <span>⇔</span> Arrastra los controles para ajustar el horario
             </p>
         </div>
@@ -792,17 +799,17 @@ function HorariosBlock({ horarios, onChange, lineasIA = [], onSave, saving }) {
     }, { ia: 0, asesor: 0 }), [horarios]);
 
     return (
-        <div className="rounded-2xl border border-[#E4E7F0] bg-white overflow-hidden">
+        <div className="rounded-2xl border border-black/10 bg-white shadow-sm overflow-hidden">
 
             {/* Header */}
             <div className="flex items-center justify-between gap-3 px-5 py-4">
                 <div className="flex items-center gap-3">
-                    <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-[#131E5C]/8">
-                        <Clock className="h-[18px] w-[18px] text-[#131E5C]" />
+                    <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-black/10">
+                        <Clock className="h-[18px] w-[18px] text-black" />
                     </div>
                     <div>
-                        <p className="text-sm font-bold text-[#1A1F3C]">Ventana de atención</p>
-                        <p className="text-xs text-[#8891AD]">
+                        <p className="text-sm font-bold text-black">Ventana de atención</p>
+                        <p className="text-xs text-neutral-500">
                             {diasActivos.length > 0
                                 ? `${diasActivos.length} días activos · ${diasActivos.map((d) => d.short).join(" ")}`
                                 : "Sin días configurados"}
@@ -812,13 +819,13 @@ function HorariosBlock({ horarios, onChange, lineasIA = [], onSave, saving }) {
                 <div className="flex items-center gap-2">
                     {expanded && onSave && (
                         <button onClick={onSave} disabled={saving}
-                            className="inline-flex items-center gap-1.5 rounded-lg bg-[#131E5C] px-3 py-1.5 text-xs font-bold text-white hover:bg-[#0a1340] disabled:opacity-60 transition-all">
+                            className="inline-flex items-center gap-1.5 rounded-lg bg-black px-3 py-1.5 text-xs font-bold text-white hover:bg-neutral-800 disabled:opacity-60 transition-all">
                             {saving ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <Save className="h-3.5 w-3.5" />}
                             Guardar
                         </button>
                     )}
                     <button onClick={() => setExpanded((v) => !v)}
-                        className="inline-flex items-center gap-1.5 rounded-lg border border-[#E4E7F0] px-3 py-1.5 text-xs font-semibold text-[#515778] hover:bg-[#F7F8FC] transition-all">
+                        className="inline-flex items-center gap-1.5 rounded-lg border border-black/10 px-3 py-1.5 text-xs font-semibold text-neutral-600 hover:bg-neutral-50 transition-all">
                         {expanded ? <ChevronUp className="h-3.5 w-3.5" /> : <ChevronDown className="h-3.5 w-3.5" />}
                         {expanded ? "Cerrar" : "Configurar"}
                     </button>
@@ -833,7 +840,7 @@ function HorariosBlock({ horarios, onChange, lineasIA = [], onSave, saving }) {
                         const franjas = getFranjas(dia.id);
                         return (
                             <div key={dia.id}
-                                className={`rounded-lg px-2.5 py-1 text-[11px] font-semibold border transition-colors ${h.activo ? "bg-[#131E5C] text-white border-[#131E5C]" : "bg-[#F7F8FC] text-[#C8CEDF] border-[#E4E7F0]"
+                                className={`rounded-lg px-2.5 py-1 text-[11px] font-semibold border transition-colors ${h.activo ? "bg-black text-white border-black" : "bg-neutral-50 text-[#D4D4D4] border-black/10"
                                     }`}>
                                 {dia.short}
                                 {h.activo && franjas[0] && (
@@ -847,11 +854,11 @@ function HorariosBlock({ horarios, onChange, lineasIA = [], onSave, saving }) {
 
             {/* Panel expandido */}
             {expanded && (
-                <div className="border-t border-[#E4E7F0]">
+                <div className="border-t border-black/10">
 
                     {/* Selector días */}
                     <div className="px-4 pt-4 pb-2">
-                        <p className="text-[10px] font-semibold uppercase tracking-widest text-[#8891AD] mb-2.5">
+                        <p className="text-[10px] font-semibold uppercase tracking-widest text-neutral-500 mb-2.5">
                             Selecciona el día a configurar
                         </p>
                         <div className="flex gap-1.5 flex-wrap">
@@ -860,10 +867,10 @@ function HorariosBlock({ horarios, onChange, lineasIA = [], onSave, saving }) {
                                 return (
                                     <button key={dia.id} onClick={() => setDiaActivo(dia.id)}
                                         className={`rounded-full px-3 py-1.5 text-xs font-bold transition-all border ${diaActivo === dia.id
-                                            ? "bg-[#131E5C] text-white border-[#131E5C]"
+                                            ? "bg-black text-white border-black"
                                             : h.activo
-                                                ? "bg-white text-[#1A1F3C] border-[#C8CEDF] hover:border-[#131E5C]"
-                                                : "bg-[#F7F8FC] text-[#C8CEDF] border-[#E4E7F0]"
+                                                ? "bg-white text-black border-black/20 hover:border-black"
+                                                : "bg-neutral-50 text-[#D4D4D4] border-black/10"
                                             }`}>
                                         {dia.label.slice(0, 3)}
                                     </button>
@@ -874,9 +881,9 @@ function HorariosBlock({ horarios, onChange, lineasIA = [], onSave, saving }) {
 
                     {/* Toggle día activo */}
                     <div className="flex items-center justify-between px-5 py-2">
-                        <p className="text-sm font-bold text-[#1A1F3C]">{DIAS.find((d) => d.id === diaActivo)?.label}</p>
+                        <p className="text-sm font-bold text-black">{DIAS.find((d) => d.id === diaActivo)?.label}</p>
                         <div className="flex items-center gap-2">
-                            <span className="text-xs text-[#8891AD]">{diaData.activo ? "Activo" : "Inactivo"}</span>
+                            <span className="text-xs text-neutral-500">{diaData.activo ? "Activo" : "Inactivo"}</span>
                             <Toggle value={Boolean(diaData.activo)} onChange={() => toggleDia(diaActivo)} />
                         </div>
                     </div>
@@ -890,11 +897,11 @@ function HorariosBlock({ horarios, onChange, lineasIA = [], onSave, saving }) {
                                         const Icon = preset.icon;
                                         return (
                                             <button key={preset.id} onClick={() => aplicarPreset(preset)}
-                                                className="flex items-start gap-2 rounded-xl border border-[#E4E7F0] bg-[#F7F8FC] px-3 py-2.5 text-left hover:border-[#C8CEDF] hover:bg-white transition-all">
-                                                <Icon className="h-3.5 w-3.5 text-[#131E5C] mt-0.5 flex-shrink-0" />
+                                                className="flex items-start gap-2 rounded-xl border border-black/10 bg-neutral-50 px-3 py-2.5 text-left hover:border-black/20 hover:bg-white transition-all">
+                                                <Icon className="h-3.5 w-3.5 text-black mt-0.5 flex-shrink-0" />
                                                 <div className="min-w-0">
-                                                    <p className="text-[11px] font-bold text-[#1A1F3C] leading-tight">{preset.label}</p>
-                                                    <p className="text-[10px] text-[#8891AD] leading-tight mt-0.5">{preset.sub}</p>
+                                                    <p className="text-[11px] font-bold text-black leading-tight">{preset.label}</p>
+                                                    <p className="text-[10px] text-neutral-500 leading-tight mt-0.5">{preset.sub}</p>
                                                 </div>
                                             </button>
                                         );
@@ -914,11 +921,11 @@ function HorariosBlock({ horarios, onChange, lineasIA = [], onSave, saving }) {
                             {/* Franjas editables */}
                             <div className="px-5 pb-4 space-y-2">
                                 {franjasDia.map((franja, idx) => (
-                                    <div key={idx} className="rounded-xl border border-[#131E5C]/20 bg-[#131E5C]/[0.04] px-4 py-3">
+                                    <div key={idx} className="rounded-xl border border-black/20 bg-black/[0.04] px-4 py-3">
                                         <div className="flex items-center justify-between mb-2">
                                             <div className="flex items-center gap-2">
-                                                <div className="h-2 w-2 rounded-full bg-[#131E5C]" />
-                                                <p className="text-[11px] font-bold text-[#131E5C]">
+                                                <div className="h-2 w-2 rounded-full bg-black" />
+                                                <p className="text-[11px] font-bold text-black">
                                                     {franjasDia.length > 1 ? `Franja IA #${idx + 1}` : "Franja IA WhatsApp"}
                                                 </p>
                                             </div>
@@ -931,9 +938,9 @@ function HorariosBlock({ horarios, onChange, lineasIA = [], onSave, saving }) {
                                         </div>
                                         <div className="flex items-center gap-2">
                                             <TimeScrollPicker value={franja.inicio} onChange={(v) => updateFranja(diaActivo, idx, "inicio", v)} />
-                                            <span className="text-[#C8CEDF] text-xs flex-shrink-0">→</span>
+                                            <span className="text-[#D4D4D4] text-xs flex-shrink-0">→</span>
                                             <TimeScrollPicker value={franja.fin} onChange={(v) => updateFranja(diaActivo, idx, "fin", v)} />
-                                            <span className="text-[10px] text-[#8891AD] flex-shrink-0 ml-1 whitespace-nowrap">
+                                            <span className="text-[10px] text-neutral-500 flex-shrink-0 ml-1 whitespace-nowrap">
                                                 {horasLabel(franjaMins(franja.inicio, franja.fin))}
                                             </span>
                                         </div>
@@ -942,7 +949,7 @@ function HorariosBlock({ horarios, onChange, lineasIA = [], onSave, saving }) {
 
                                 {/* Agregar franja */}
                                 <button onClick={() => agregarFranja(diaActivo)}
-                                    className="w-full rounded-xl border-2 border-dashed border-[#E4E7F0] py-2.5 text-xs font-semibold text-[#8891AD] hover:border-[#131E5C]/30 hover:text-[#131E5C] hover:bg-[#131E5C]/[0.03] transition-all flex items-center justify-center gap-1.5">
+                                    className="w-full rounded-xl border-2 border-dashed border-black/10 py-2.5 text-xs font-semibold text-neutral-500 hover:border-black/30 hover:text-black hover:bg-black/[0.03] transition-all flex items-center justify-center gap-1.5">
                                     <Plus className="h-3.5 w-3.5" />
                                     Agregar otra franja horaria
                                 </button>
@@ -950,13 +957,13 @@ function HorariosBlock({ horarios, onChange, lineasIA = [], onSave, saving }) {
                                 {/* Stats del día */}
                                 <div className="grid grid-cols-3 gap-2 pt-1">
                                     {[
-                                        { label: "Cobertura IA", val: horasLabel(totalIADia), color: "text-[#131E5C]" },
+                                        { label: "Cobertura IA", val: horasLabel(totalIADia), color: "text-black" },
                                         { label: "Asesor humano", val: horasLabel(totalAsesor), color: "text-emerald-600" },
-                                        { label: "% con IA", val: `${pct(totalIADia, 1440)}%`, color: "text-[#1A1F3C]" },
+                                        { label: "% con IA", val: `${pct(totalIADia, 1440)}%`, color: "text-black" },
                                     ].map((s) => (
-                                        <div key={s.label} className="rounded-xl border border-[#E4E7F0] bg-[#F7F8FC] px-2 py-2.5 text-center">
+                                        <div key={s.label} className="rounded-xl border border-black/10 bg-neutral-50 px-2 py-2.5 text-center">
                                             <p className={`text-sm font-bold ${s.color}`}>{s.val}</p>
-                                            <p className="text-[10px] text-[#8891AD] mt-0.5 leading-tight">{s.label}</p>
+                                            <p className="text-[10px] text-neutral-500 mt-0.5 leading-tight">{s.label}</p>
                                         </div>
                                     ))}
                                 </div>
@@ -965,24 +972,24 @@ function HorariosBlock({ horarios, onChange, lineasIA = [], onSave, saving }) {
                     )}
 
                     {/* Barras por día */}
-                    <div className="border-t border-[#E4E7F0] px-5 py-4 space-y-2.5">
-                        <p className="text-[11px] font-semibold uppercase tracking-widest text-[#8891AD]">Horas por día</p>
+                    <div className="border-t border-black/10 px-5 py-4 space-y-2.5">
+                        <p className="text-[11px] font-semibold uppercase tracking-widest text-neutral-500">Horas por día</p>
                         {DIAS.map((dia) => {
                             const ia = calcHorasIA(dia.id);
                             const asesor = Math.max(0, 1440 - ia);
                             const h = horarios[dia.id] || {};
                             return (
                                 <div key={dia.id} className="flex items-center gap-2">
-                                    <span className="text-[11px] font-bold text-[#8891AD] w-5 flex-shrink-0">{dia.short}</span>
+                                    <span className="text-[11px] font-bold text-neutral-500 w-5 flex-shrink-0">{dia.short}</span>
                                     <div className="flex-1 flex flex-col gap-0.5">
                                         <div className="h-1.5 w-full rounded-full bg-[#F0F0F0] overflow-hidden">
-                                            <div className="h-full rounded-full bg-[#131E5C] transition-all duration-300" style={{ width: `${pct(ia, 1440)}%` }} />
+                                            <div className="h-full rounded-full bg-black transition-all duration-300" style={{ width: `${pct(ia, 1440)}%` }} />
                                         </div>
                                         <div className="h-1.5 w-full rounded-full bg-[#F0F0F0] overflow-hidden">
                                             <div className="h-full rounded-full bg-emerald-400 transition-all duration-300" style={{ width: `${pct(asesor, 1440)}%` }} />
                                         </div>
                                     </div>
-                                    <span className="text-[10px] text-[#8891AD] w-24 text-right flex-shrink-0">
+                                    <span className="text-[10px] text-neutral-500 w-24 text-right flex-shrink-0">
                                         {h.activo ? `${horasLabel(ia)} / ${horasLabel(asesor)}` : "Inactivo"}
                                     </span>
                                 </div>
@@ -990,12 +997,12 @@ function HorariosBlock({ horarios, onChange, lineasIA = [], onSave, saving }) {
                         })}
                         <div className="flex items-center gap-4 pt-1">
                             <div className="flex items-center gap-1.5">
-                                <div className="h-2 w-2 rounded-sm bg-[#131E5C]" />
-                                <span className="text-[10px] text-[#8891AD]">IA WhatsApp</span>
+                                <div className="h-2 w-2 rounded-sm bg-black" />
+                                <span className="text-[10px] text-neutral-500">IA WhatsApp</span>
                             </div>
                             <div className="flex items-center gap-1.5">
                                 <div className="h-2 w-2 rounded-sm bg-emerald-400" />
-                                <span className="text-[10px] text-[#8891AD]">Asesor humano</span>
+                                <span className="text-[10px] text-neutral-500">Asesor humano</span>
                             </div>
                         </div>
                     </div>
@@ -1009,7 +1016,7 @@ function HorariosBlock({ horarios, onChange, lineasIA = [], onSave, saving }) {
 function Field({ label, children, col, required }) {
     return (
         <div className={col === 2 ? "md:col-span-2" : ""}>
-            <label className="mb-1.5 block text-[11px] font-semibold uppercase tracking-widest text-[#8891AD]">
+            <label className="mb-1.5 block text-[11px] font-semibold uppercase tracking-widest text-neutral-500">
                 {label}{required && <span className="ml-0.5 text-red-500">*</span>}
             </label>
             {children}
@@ -1017,7 +1024,7 @@ function Field({ label, children, col, required }) {
     );
 }
 
-const inputCls = "w-full rounded-xl border border-[#E4E7F0] bg-white px-3.5 py-2.5 text-sm text-[#1A1F3C] placeholder:text-[#C8CEDF] outline-none transition focus:border-[#131E5C]/30 focus:ring-2 focus:ring-[#131E5C]/10";
+const inputCls = "w-full rounded-lg border border-black/15 bg-white px-3.5 py-2.5 text-sm text-black placeholder:text-[#D4D4D4] outline-none transition focus:border-black/30 focus:ring-2 focus:ring-black/10";
 const textareaCls = `${inputCls} resize-y`;
 
 // ─── MAIN COMPONENT ───────────────────────────────────────────────────────────
@@ -1308,7 +1315,7 @@ export default function ConfigIA() {
         const ficha = tryJsonParse(fichaTexto, null);
 
         if (!ficha || typeof ficha !== "object" || Array.isArray(ficha)) {
-            setErrorVehiculo('La ficha técnica debe ser un JSON válido. Ej: {"Motor":"1.4L TSI"}');
+            setErrorVehiculo('La ficha técnica debe ser un JSON válido. Ej: {"Autonomía":"476 km"}');
             return;
         }
 
@@ -1376,96 +1383,76 @@ export default function ConfigIA() {
     useEffect(() => { cargarLineasIA(); }, []);
 
     return (
-        <div className="min-h-screen" style={{ backgroundColor: C.surface }}>
+        <div className="w-full">
 
             {toast && <Toast key={toast.key} msg={toast.msg} type={toast.type} onClose={() => setToast(null)} />}
 
-            {/* Top bar */}
-            {/* Top bar */}
-            <header
-                className="sticky top-0 z-40 w-full border-b bg-white"
-                style={{ borderColor: "#131E5C22" }}
-            >
-                <div className="flex min-h-[76px] items-center gap-4 px-4 md:px-6 lg:px-8">
-                    <div className="flex shrink-0 items-center gap-3 md:gap-4">
-                        <img
-                            src={volvoLogo}
-                            alt="Volvo"
-                            className="h-16 w-16 object-contain md:h-20 md:w-20"
-                            loading="lazy"
-                        />
-                        <div
-                            className="text-[24px] font-extrabold tracking-[-0.04em] md:text-[30px]"
-                            style={{ color: "#131E5C" }}
-                        >
-                            Panel de Inteligencias Artificiales
-                        </div>
-                    </div>
+            {/* Encabezado uniforme con DigitalesProspectos */}
+            <div className="mb-5 flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+                <div className="min-w-0">
+                    <h1 className="truncate text-2xl font-extrabold text-black">Configuración de IA</h1>
+                    <p className="mt-0.5 text-sm text-neutral-500">
+                        Administra el asistente de WhatsApp, sus horarios y el catálogo Volvo.
+                    </p>
+                </div>
 
-                    <div
-                        className="hidden h-[2px] min-w-[60px] flex-1 rounded-full lg:block"
-                        style={{ background: "#131E5C" }}
-                    />
-
-                    <nav className="ml-auto flex max-w-full items-center gap-2 overflow-x-auto py-2">
+                <div className="flex flex-wrap items-center gap-2">
+                    <div className="flex items-center rounded-lg border border-black/15 bg-white p-1 shadow-sm">
                         {[
                             { id: "config", label: "Configuración", icon: Bot },
                             { id: "catalogo", label: "Catálogo", icon: Car },
                         ].map(({ id, label, icon: Icon }) => (
                             <button
                                 key={id}
+                                type="button"
                                 onClick={() => setTab(id)}
-                                className="inline-flex shrink-0 items-center justify-center gap-2 rounded-lg border px-4 py-2 text-sm font-bold transition"
-                                style={{
-                                    borderColor: "#131E5C",
-                                    backgroundColor: tab === id ? "#131E5C" : "#FFFFFF",
-                                    color: tab === id ? "#FFFFFF" : "#131E5C",
-                                }}
+                                className={[
+                                    "inline-flex items-center gap-1.5 rounded-md px-3 py-1.5 text-sm font-semibold transition active:scale-[0.95]",
+                                    tab === id ? "bg-black text-white shadow" : "text-black hover:bg-neutral-100",
+                                ].join(" ")}
                             >
                                 <Icon className="h-4 w-4" />
-                                <span className="hidden sm:inline">{label}</span>
+                                {label}
                             </button>
                         ))}
+                    </div>
 
-                        {tab === "config" && (
-                            <>
-                                <button
-                                    onClick={() => cargarConfig(numeroSeleccionado)}
-                                    disabled={cargandoConfig}
-                                    className="inline-flex shrink-0 items-center justify-center gap-2 rounded-lg border px-4 py-2 text-sm font-bold transition disabled:opacity-50"
-                                    style={{ borderColor: "#131E5C", backgroundColor: "#FFFFFF", color: "#131E5C" }}
-                                >
-                                    {cargandoConfig ? <Loader2 className="h-4 w-4 animate-spin" /> : <RefreshCw className="h-4 w-4" />}
-                                    <span className="hidden sm:inline">Sincronizar</span>
-                                </button>
-
-                                <button
-                                    onClick={publicarConfig}
-                                    disabled={guardandoConfig}
-                                    className="inline-flex shrink-0 items-center justify-center gap-2 rounded-lg border px-4 py-2 text-sm font-bold transition text-white disabled:opacity-50"
-                                    style={{ borderColor: "#131E5C", backgroundColor: "#131E5C" }}
-                                >
-                                    {guardandoConfig ? <Loader2 className="h-4 w-4 animate-spin" /> : <Zap className="h-4 w-4" />}
-                                    <span className="hidden sm:inline">Publicar IA</span>
-                                </button>
-                            </>
-                        )}
-
-                        {tab === "catalogo" && (
+                    {tab === "config" ? (
+                        <>
                             <button
-                                onClick={abrirNuevoVehiculo}
-                                className="inline-flex shrink-0 items-center justify-center gap-2 rounded-lg border px-4 py-2 text-sm font-bold transition text-white"
-                                style={{ borderColor: "#131E5C", backgroundColor: "#131E5C" }}
+                                type="button"
+                                onClick={() => cargarConfig(numeroSeleccionado)}
+                                disabled={cargandoConfig}
+                                className="inline-flex items-center justify-center gap-2 rounded-lg border border-black/15 bg-white px-4 py-2.5 text-sm font-semibold text-black shadow-sm transition hover:bg-neutral-50 active:scale-[0.97] disabled:cursor-not-allowed disabled:opacity-50"
                             >
-                                <Plus className="h-4 w-4" />
-                                <span className="hidden sm:inline">Nuevo vehículo</span>
+                                {cargandoConfig ? <Loader2 className="h-4 w-4 animate-spin" /> : <RefreshCw className="h-4 w-4" />}
+                                Sincronizar
                             </button>
-                        )}
-                    </nav>
-                </div>
-            </header>
 
-            <div className="mx-auto max-w-full px-4 py-6 sm:px-6 lg:px-8">
+                            <button
+                                type="button"
+                                onClick={publicarConfig}
+                                disabled={guardandoConfig || !numeroSeleccionado}
+                                className="inline-flex items-center justify-center gap-2 rounded-lg bg-black px-4 py-2.5 text-sm font-semibold text-white shadow-sm transition hover:bg-neutral-800 active:scale-[0.97] disabled:cursor-not-allowed disabled:opacity-50"
+                            >
+                                {guardandoConfig ? <Loader2 className="h-4 w-4 animate-spin" /> : <Zap className="h-4 w-4" />}
+                                Publicar IA
+                            </button>
+                        </>
+                    ) : (
+                        <button
+                            type="button"
+                            onClick={abrirNuevoVehiculo}
+                            className="inline-flex items-center justify-center gap-2 rounded-lg bg-black px-4 py-2.5 text-sm font-semibold text-white shadow-sm transition hover:bg-neutral-800 active:scale-[0.97]"
+                        >
+                            <Plus className="h-4 w-4" />
+                            Nuevo vehículo
+                        </button>
+                    )}
+                </div>
+            </div>
+
+            <div className="space-y-5">
 
                 {/* TAB: CONFIGURACIÓN */}
                 {tab === "config" && (
@@ -1490,29 +1477,29 @@ export default function ConfigIA() {
                         <div className="grid gap-5 xl:grid-cols-[340px_1fr]">
                             {/* Sidebar */}
                             <div className="space-y-4">
-                                <div className="rounded-2xl border border-[#E4E7F0] bg-white p-5">
-                                    <h3 className="mb-3 text-[11px] font-semibold uppercase tracking-widest text-[#8891AD]">Línea a configurar</h3>
+                                <div className="rounded-2xl border border-black/10 bg-white shadow-sm p-5">
+                                    <h3 className="mb-3 text-[11px] font-semibold uppercase tracking-widest text-neutral-500">Línea a configurar</h3>
                                     {cargandoConfig ? <Skeleton className="h-14 w-full" /> : (
                                         <LineaSelector lineasIA={lineasIA} value={numeroSeleccionado} onChange={setNumero} />
                                     )}
                                 </div>
 
-                                <div className="rounded-2xl border border-[#E4E7F0] bg-white p-5">
+                                <div className="rounded-2xl border border-black/10 bg-white shadow-sm p-5">
                                     <div className="flex items-center justify-between gap-4">
                                         <div>
-                                            <p className="text-[11px] font-semibold uppercase tracking-widest text-[#8891AD]">Asistente IA</p>
-                                            <p className={`mt-1 text-sm font-bold ${swiftActivo ? "text-emerald-600" : "text-[#8891AD]"}`}>
+                                            <p className="text-[11px] font-semibold uppercase tracking-widest text-neutral-500">Asistente IA</p>
+                                            <p className={`mt-1 text-sm font-bold ${swiftActivo ? "text-emerald-600" : "text-neutral-500"}`}>
                                                 {swiftActivo ? "Activo y atendiendo" : "Pausado"}
                                             </p>
-                                            <p className="mt-0.5 text-xs text-[#8891AD]">
+                                            <p className="mt-0.5 text-xs text-neutral-500">
                                                 {swiftActivo ? "El agente responderá mensajes dentro del horario configurado." : "No se procesarán mensajes entrantes."}
                                             </p>
                                         </div>
                                         <Toggle value={swiftActivo} onChange={setSwiftActivo} />
                                     </div>
-                                    <div className={`mt-4 rounded-xl px-4 py-3 flex items-center gap-2.5 ${swiftActivo ? "bg-emerald-50 border border-emerald-100" : "bg-[#F7F8FC] border border-[#E4E7F0]"}`}>
-                                        <div className={`h-2 w-2 rounded-full flex-shrink-0 ${swiftActivo ? "bg-emerald-500 animate-pulse" : "bg-[#C8CEDF]"}`} />
-                                        <p className={`text-xs font-semibold ${swiftActivo ? "text-emerald-700" : "text-[#8891AD]"}`}>
+                                    <div className={`mt-4 rounded-xl px-4 py-3 flex items-center gap-2.5 ${swiftActivo ? "bg-emerald-50 border border-emerald-100" : "bg-neutral-50 border border-black/10"}`}>
+                                        <div className={`h-2 w-2 rounded-full flex-shrink-0 ${swiftActivo ? "bg-emerald-500 animate-pulse" : "bg-[#D4D4D4]"}`} />
+                                        <p className={`text-xs font-semibold ${swiftActivo ? "text-emerald-700" : "text-neutral-500"}`}>
                                             {lineaPuedeResponder ? "Respondiendo mensajes" : bloqueosLinea[0] || "Sin actividad"}
                                         </p>
                                     </div>
@@ -1521,20 +1508,20 @@ export default function ConfigIA() {
                                 <HorariosBlock horarios={horarios} onChange={setHorarios} lineasIA={lineasIA}
                                     onSave={() => guardarConfig()} saving={guardandoConfig} />
 
-                                <div className="rounded-2xl border border-[#E4E7F0] bg-white overflow-hidden">
-                                    <div className="flex items-center gap-3 px-5 py-4 border-b border-[#E4E7F0]">
+                                <div className="rounded-2xl border border-black/10 bg-white shadow-sm overflow-hidden">
+                                    <div className="flex items-center gap-3 px-5 py-4 border-b border-black/10">
                                         <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-red-50">
                                             <Shield className="h-[18px] w-[18px] text-red-600" />
                                         </div>
                                         <div>
-                                            <p className="text-sm font-bold text-[#1A1F3C]">Condiciones fijas</p>
-                                            <p className="text-xs text-[#8891AD]">Reglas no negociables del agente</p>
+                                            <p className="text-sm font-bold text-black">Condiciones fijas</p>
+                                            <p className="text-xs text-neutral-500">Reglas no negociables del agente</p>
                                         </div>
                                     </div>
                                     <div className="px-5 py-4">
                                         <textarea value={condicionesFijas} onChange={(e) => setCondFijas(e.target.value)}
                                             rows={8} className={textareaCls} placeholder="Reglas que el agente debe respetar siempre..." />
-                                        <p className="mt-2 text-[11px] text-[#8891AD]">
+                                        <p className="mt-2 text-[11px] text-neutral-500">
                                             Estas condiciones tienen prioridad sobre cualquier otra instrucción del agente.
                                         </p>
                                     </div>
@@ -1545,8 +1532,8 @@ export default function ConfigIA() {
                             <div className="space-y-4">
                                 <div className="flex items-center justify-between">
                                     <div>
-                                        <h2 className="text-base font-bold text-[#1A1F3C]">Instrucciones del agente</h2>
-                                        <p className="text-xs text-[#8891AD] mt-0.5">Define el comportamiento y personalidad del asistente. Cada sección es independiente.</p>
+                                        <h2 className="text-base font-bold text-black">Instrucciones del agente</h2>
+                                        <p className="text-xs text-neutral-500 mt-0.5">Define el comportamiento y personalidad del asistente. Cada sección es independiente.</p>
                                     </div>
                                     <div className="flex items-center gap-1.5">
                                         {secciones.filter((s) => campos[s.id]?.trim()).length === secciones.length
@@ -1569,12 +1556,12 @@ export default function ConfigIA() {
                                 </div>
                                 <div className="flex flex-col-reverse gap-2 sm:flex-row sm:justify-end pt-2">
                                     <button onClick={() => cargarConfig()} disabled={cargandoConfig}
-                                        className="inline-flex items-center justify-center gap-2 rounded-xl border border-[#E4E7F0] bg-white px-5 py-2.5 text-sm font-semibold text-[#515778] hover:bg-[#F7F8FC] disabled:opacity-50 transition-all">
+                                        className="inline-flex items-center justify-center gap-2 rounded-lg border border-black/15 bg-white px-5 py-2.5 text-sm font-semibold text-neutral-600 hover:bg-neutral-50 disabled:opacity-50 transition-all">
                                         {cargandoConfig ? <Loader2 className="h-4 w-4 animate-spin" /> : <RefreshCw className="h-4 w-4" />}
                                         Descartar cambios
                                     </button>
                                     <button onClick={publicarConfig} disabled={guardandoConfig}
-                                        className="inline-flex items-center justify-center gap-2 rounded-xl bg-[#131E5C] px-6 py-2.5 text-sm font-bold text-white hover:bg-[#0a1340] disabled:opacity-50 transition-all shadow-md shadow-[#131E5C]/20">
+                                        className="inline-flex items-center justify-center gap-2 rounded-xl bg-black px-6 py-2.5 text-sm font-bold text-white hover:bg-neutral-800 disabled:opacity-50 transition-all shadow-md shadow-black/20">
                                         {guardandoConfig ? <Loader2 className="h-4 w-4 animate-spin" /> : <Zap className="h-4 w-4" />}
                                         Publicar y encender IA
                                     </button>
@@ -1589,8 +1576,8 @@ export default function ConfigIA() {
                     <div className="space-y-4">
                         <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
                             <div>
-                                <h2 className="text-lg font-bold text-[#1A1F3C]">Catálogo de vehículos</h2>
-                                <p className="text-xs text-[#8891AD] mt-0.5">
+                                <h2 className="text-lg font-bold text-black">Catálogo de vehículos</h2>
+                                <p className="text-xs text-neutral-500 mt-0.5">
                                     Fuente de precios, fichas, imágenes y videos para el asistente IA
                                     <span className="font-semibold"> {totalVehiculosActivos} activos</span>
                                     {" · "}
@@ -1599,37 +1586,37 @@ export default function ConfigIA() {
                             </div>
                             <div className="flex items-center gap-2">
                                 <div className="relative">
-                                    <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-[#8891AD]" />
+                                    <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-neutral-500" />
                                     <input value={qCatalogo} onChange={(e) => setQCatalogo(e.target.value)}
                                         placeholder="Buscar modelo, versión…"
-                                        className="h-9 w-64 rounded-xl border border-[#E4E7F0] bg-white pl-9 pr-3 text-sm text-[#1A1F3C] placeholder:text-[#C8CEDF] outline-none focus:border-[#131E5C]/30 focus:ring-2 focus:ring-[#131E5C]/10" />
+                                        className="h-9 w-64 rounded-lg border border-black/15 bg-white pl-9 pr-3 text-sm text-black placeholder:text-[#D4D4D4] outline-none focus:border-black/30 focus:ring-2 focus:ring-black/10" />
                                 </div>
                                 <button onClick={() => setSoloActivos((v) => !v)}
-                                    className={`inline-flex h-9 items-center gap-2 rounded-xl border px-3 text-xs font-semibold transition-all ${soloActivos ? "border-[#131E5C]/30 bg-[#131E5C]/8 text-[#131E5C]" : "border-[#E4E7F0] bg-white text-[#515778] hover:bg-[#F7F8FC]"}`}>
+                                    className={`inline-flex h-9 items-center gap-2 rounded-xl border px-3 text-xs font-semibold transition-all ${soloActivos ? "border-black/30 bg-black/10 text-black" : "border-black/10 bg-white text-neutral-600 hover:bg-neutral-50"}`}>
                                     <Toggle size="sm" value={soloActivos} onChange={setSoloActivos} />
                                     Solo activos
                                 </button>
                                 <button onClick={cargarCatalogo} disabled={cargandoCatalogo}
-                                    className="inline-flex h-9 items-center gap-2 rounded-xl border border-[#E4E7F0] bg-white px-3 text-xs font-semibold text-[#515778] hover:bg-[#F7F8FC] disabled:opacity-50 transition-all">
+                                    className="inline-flex h-9 items-center gap-2 rounded-lg border border-black/15 bg-white px-3 text-xs font-semibold text-neutral-600 hover:bg-neutral-50 disabled:opacity-50 transition-all">
                                     {cargandoCatalogo ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <RefreshCw className="h-3.5 w-3.5" />}
                                 </button>
                             </div>
                         </div>
 
-                        <div className="overflow-hidden rounded-2xl border border-[#E4E7F0] bg-white">
+                        <div className="overflow-hidden rounded-2xl border border-black/10 bg-white shadow-sm">
                             <div className="overflow-x-auto">
                                 <table className="min-w-full">
                                     <thead>
-                                        <tr className="border-b border-[#E4E7F0] bg-[#F7F8FC]">
+                                        <tr className="border-b border-white/10 bg-black">
                                             {["Vehículo", "Versión", "Precio lista", "Contado", "Financiado", "Media", "Estado", ""].map((h, i) => (
-                                                <th key={i} className={`px-4 py-3 text-[11px] font-semibold uppercase tracking-widest text-[#8891AD] ${i === 7 ? "text-right" : "text-left"}`}>{h}</th>
+                                                <th key={i} className={`px-4 py-3 text-[11px] font-semibold uppercase tracking-widest text-white/70 ${i === 7 ? "text-right" : "text-left"}`}>{h}</th>
                                             ))}
                                         </tr>
                                     </thead>
                                     <tbody>
                                         {cargandoCatalogo ? (
                                             Array.from({ length: 5 }).map((_, i) => (
-                                                <tr key={i} className="border-b border-[#E4E7F0]/60">
+                                                <tr key={i} className="border-b border-black/10/60">
                                                     <td className="px-4 py-3.5"><div className="space-y-1.5"><Skeleton className="h-4 w-32" /><Skeleton className="h-3 w-16" /></div></td>
                                                     <td className="px-4 py-3.5"><Skeleton className="h-4 w-24" /></td>
                                                     <td className="px-4 py-3.5"><Skeleton className="h-4 w-24" /></td>
@@ -1643,16 +1630,16 @@ export default function ConfigIA() {
                                         ) : vehiculosFiltrados.length === 0 ? (
                                             <tr>
                                                 <td colSpan={8} className="px-4 py-16 text-center">
-                                                    <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-2xl bg-[#F7F8FC] border border-[#E4E7F0]">
-                                                        <Car className="h-6 w-6 text-[#8891AD]" />
+                                                    <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-2xl bg-neutral-50 border border-black/10">
+                                                        <Car className="h-6 w-6 text-neutral-500" />
                                                     </div>
-                                                    <p className="mt-3 text-sm font-semibold text-[#1A1F3C]">Sin vehículos</p>
-                                                    <p className="mt-1 text-xs text-[#8891AD]">
+                                                    <p className="mt-3 text-sm font-semibold text-black">Sin vehículos</p>
+                                                    <p className="mt-1 text-xs text-neutral-500">
                                                         {qCatalogo ? "No hay resultados para tu búsqueda." : "Agrega el primer vehículo al catálogo."}
                                                     </p>
                                                     {!qCatalogo && (
                                                         <button onClick={abrirNuevoVehiculo}
-                                                            className="mt-4 inline-flex items-center gap-2 rounded-xl bg-[#131E5C] px-4 py-2 text-xs font-bold text-white hover:bg-[#0a1340] transition-all">
+                                                            className="mt-4 inline-flex items-center gap-2 rounded-xl bg-black px-4 py-2 text-xs font-bold text-white hover:bg-neutral-800 transition-all">
                                                             <Plus className="h-3.5 w-3.5" /> Nuevo vehículo
                                                         </button>
                                                     )}
@@ -1661,22 +1648,22 @@ export default function ConfigIA() {
                                         ) : (
                                             vehiculosFiltrados.map((item, idx) => (
                                                 <tr key={item.id}
-                                                    className={`group border-b border-[#E4E7F0]/60 transition-colors hover:bg-[#F7F8FC] ${idx % 2 === 1 ? "bg-[#FAFBFD]" : "bg-white"}`}>
+                                                    className={`group border-b border-black/10/60 transition-colors hover:bg-neutral-50 ${idx % 2 === 1 ? "bg-[#FAFBFD]" : "bg-white"}`}>
                                                     <td className="px-4 py-3.5">
                                                         <div className="flex items-center gap-3">
-                                                            <div className="flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-xl bg-[#131E5C]/6">
-                                                                <Car className="h-4 w-4 text-[#131E5C]" />
+                                                            <div className="flex h-9 w-9 flex-shrink-0 items-center justify-center rounded-xl bg-black/[0.06]">
+                                                                <Car className="h-4 w-4 text-black" />
                                                             </div>
                                                             <div>
-                                                                <p className="text-sm font-bold text-[#1A1F3C]">{item.marca || "Volvo"} {item.modelo}</p>
-                                                                <p className="text-[11px] text-[#8891AD]">Año {item.ano || "—"}</p>
+                                                                <p className="text-sm font-bold text-black">{item.marca || "Volvo"} {item.modelo}</p>
+                                                                <p className="text-[11px] text-neutral-500">Año {item.ano || "—"}</p>
                                                             </div>
                                                         </div>
                                                     </td>
-                                                    <td className="px-4 py-3.5 text-sm font-medium text-[#515778]">{item.version || <span className="text-[#C8CEDF]">General</span>}</td>
-                                                    <td className="px-4 py-3.5 text-sm font-bold text-[#1A1F3C]">{money(item.precio_lista)}</td>
-                                                    <td className="px-4 py-3.5 text-sm text-[#515778]">{money(item.precio_contado)}</td>
-                                                    <td className="px-4 py-3.5 text-sm text-[#515778]">{money(item.precio_financiado)}</td>
+                                                    <td className="px-4 py-3.5 text-sm font-medium text-neutral-600">{item.version || <span className="text-[#D4D4D4]">General</span>}</td>
+                                                    <td className="px-4 py-3.5 text-sm font-bold text-black">{money(item.precio_lista)}</td>
+                                                    <td className="px-4 py-3.5 text-sm text-neutral-600">{money(item.precio_contado)}</td>
+                                                    <td className="px-4 py-3.5 text-sm text-neutral-600">{money(item.precio_financiado)}</td>
                                                     <td className="px-4 py-3.5">
                                                         <div className="flex flex-col gap-1">
                                                             {item.url_ficha_tecnica ? (
@@ -1684,15 +1671,15 @@ export default function ConfigIA() {
                                                                     href={toMediaUrl(item.url_ficha_tecnica)}
                                                                     target="_blank"
                                                                     rel="noreferrer"
-                                                                    className="inline-flex items-center gap-1 text-xs font-semibold text-[#131E5C] hover:underline"
+                                                                    className="inline-flex items-center gap-1 text-xs font-semibold text-black hover:underline"
                                                                 >
                                                                     PDF <ExternalLink className="h-3 w-3" />
                                                                 </a>
                                                             ) : (
-                                                                <span className="text-xs text-[#C8CEDF]">Sin PDF</span>
+                                                                <span className="text-xs text-[#D4D4D4]">Sin PDF</span>
                                                             )}
 
-                                                            <span className="text-[11px] text-[#8891AD]">
+                                                            <span className="text-[11px] text-neutral-500">
                                                                 {safeArray(item.imagenes).length} img · {safeArray(item.videos).length} video
                                                             </span>
                                                         </div>
@@ -1706,7 +1693,7 @@ export default function ConfigIA() {
                                                         <div className="flex items-center justify-end gap-1.5 opacity-0 group-hover:opacity-100 transition-opacity">
                                                             <Tooltip content="Editar">
                                                                 <button onClick={() => abrirEditarVehiculo(item)}
-                                                                    className="flex h-8 w-8 items-center justify-center rounded-lg border border-[#E4E7F0] text-[#515778] hover:bg-[#F7F8FC] hover:text-[#1A1F3C] transition-all">
+                                                                    className="flex h-8 w-8 items-center justify-center rounded-lg border border-black/10 text-neutral-600 hover:bg-neutral-50 hover:text-black transition-all">
                                                                     <Edit3 className="h-3.5 w-3.5" />
                                                                 </button>
                                                             </Tooltip>
@@ -1734,9 +1721,9 @@ export default function ConfigIA() {
                                 </table>
                             </div>
                             {vehiculosFiltrados.length > 0 && !cargandoCatalogo && (
-                                <div className="flex items-center justify-between border-t border-[#E4E7F0] bg-[#F7F8FC] px-4 py-3">
-                                    <p className="text-xs text-[#8891AD]">
-                                        Mostrando <span className="font-semibold text-[#515778]">{vehiculosFiltrados.length}</span> de <span className="font-semibold text-[#515778]">{vehiculos.length}</span> vehículos
+                                <div className="flex items-center justify-between border-t border-black/10 bg-neutral-50 px-4 py-3">
+                                    <p className="text-xs text-neutral-500">
+                                        Mostrando <span className="font-semibold text-neutral-600">{vehiculosFiltrados.length}</span> de <span className="font-semibold text-neutral-600">{vehiculos.length}</span> vehículos
                                     </p>
                                     <Badge variant="navy">{totalVehiculosActivos} en catálogo IA</Badge>
                                 </div>
@@ -1755,18 +1742,18 @@ export default function ConfigIA() {
                 footer={
                     <>
                         <button onClick={cerrarModalVehiculo} disabled={guardandoVehiculo}
-                            className="rounded-xl border border-[#E4E7F0] bg-white px-5 py-2.5 text-sm font-semibold text-[#515778] hover:bg-[#F7F8FC] disabled:opacity-50 transition-all">
+                            className="rounded-lg border border-black/15 bg-white px-5 py-2.5 text-sm font-semibold text-neutral-600 hover:bg-neutral-50 disabled:opacity-50 transition-all">
                             Cancelar
                         </button>
                         <button onClick={guardarVehiculo} disabled={guardandoVehiculo}
-                            className="inline-flex items-center gap-2 rounded-xl bg-[#131E5C] px-6 py-2.5 text-sm font-bold text-white hover:bg-[#0a1340] disabled:opacity-50 transition-all shadow-md shadow-[#131E5C]/20">
+                            className="inline-flex items-center gap-2 rounded-xl bg-black px-6 py-2.5 text-sm font-bold text-white hover:bg-neutral-800 disabled:opacity-50 transition-all shadow-md shadow-black/20">
                             {guardandoVehiculo ? <Loader2 className="h-4 w-4 animate-spin" /> : <Save className="h-4 w-4" />}
                             {vehiculoDraft.id ? "Guardar cambios" : "Agregar al catálogo"}
                         </button>
                     </>
                 }
             >
-                <div className="mb-5 flex gap-1 rounded-xl border border-[#E4E7F0] bg-[#F7F8FC] p-1">
+                <div className="mb-5 flex gap-1 rounded-xl border border-black/10 bg-neutral-50 p-1">
                     {[
                         { id: "info", label: "Información", icon: Car },
                         { id: "precios", label: "Precios", icon: Tag },
@@ -1774,7 +1761,7 @@ export default function ConfigIA() {
                         { id: "media", label: "Media & Links", icon: ExternalLink },
                     ].map(({ id, label, icon: Icon }) => (
                         <button key={id} onClick={() => setActiveModalTab(id)}
-                            className={`flex flex-1 items-center justify-center gap-1.5 rounded-lg py-2 text-xs font-semibold transition-all ${activeModalTab === id ? "bg-white text-[#1A1F3C] shadow-sm border border-[#E4E7F0]" : "text-[#8891AD] hover:text-[#515778]"}`}>
+                            className={`flex flex-1 items-center justify-center gap-1.5 rounded-lg py-2 text-xs font-semibold transition-all ${activeModalTab === id ? "bg-white text-black shadow-sm border border-black/10" : "text-neutral-500 hover:text-neutral-600"}`}>
                             <Icon className="h-3.5 w-3.5" />
                             <span className="hidden sm:inline">{label}</span>
                         </button>
@@ -1793,19 +1780,19 @@ export default function ConfigIA() {
                             <input type="number" value={vehiculoDraft.ano} onChange={(e) => patchDraft("ano", Number(e.target.value || 0))} className={inputCls} />
                         </Field>
                         <Field label="Versión">
-                            <input value={vehiculoDraft.version} onChange={(e) => patchDraft("version", e.target.value)} className={inputCls} placeholder="Trendline, Comfortline, Highline…" />
+                            <input value={vehiculoDraft.version} onChange={(e) => patchDraft("version", e.target.value)} className={inputCls} placeholder="Core, Plus, Ultra, Black Edition…" />
                         </Field>
                         <Field label="Última actualización">
                             <input type="date" value={vehiculoDraft.ultima_actualizacion || ""} onChange={(e) => patchDraft("ultima_actualizacion", e.target.value)} className={inputCls} />
                         </Field>
                         <Field label="Estado">
-                            <div className={`flex items-center gap-4 rounded-xl border px-4 py-3 transition-colors ${vehiculoDraft.activo ? "border-emerald-200 bg-emerald-50" : "border-[#E4E7F0] bg-[#F7F8FC]"}`}>
+                            <div className={`flex items-center gap-4 rounded-xl border px-4 py-3 transition-colors ${vehiculoDraft.activo ? "border-emerald-200 bg-emerald-50" : "border-black/10 bg-neutral-50"}`}>
                                 <Toggle value={Boolean(vehiculoDraft.activo)} onChange={(v) => patchDraft("activo", v)} />
                                 <div>
-                                    <p className={`text-sm font-bold ${vehiculoDraft.activo ? "text-emerald-700" : "text-[#8891AD]"}`}>
+                                    <p className={`text-sm font-bold ${vehiculoDraft.activo ? "text-emerald-700" : "text-neutral-500"}`}>
                                         {vehiculoDraft.activo ? "Activo en catálogo" : "Inactivo"}
                                     </p>
-                                    <p className="text-xs text-[#8891AD]">{vehiculoDraft.activo ? "La IA podrá usar este vehículo." : "La IA no usará este vehículo."}</p>
+                                    <p className="text-xs text-neutral-500">{vehiculoDraft.activo ? "La IA podrá usar este vehículo." : "La IA no usará este vehículo."}</p>
                                 </div>
                             </div>
                         </Field>
@@ -1831,12 +1818,12 @@ export default function ConfigIA() {
                         ].map(({ id, label }) => (
                             <Field key={id} label={label}>
                                 <div className="relative">
-                                    <span className="pointer-events-none absolute left-3.5 top-1/2 -translate-y-1/2 text-sm font-semibold text-[#8891AD]">$</span>
+                                    <span className="pointer-events-none absolute left-3.5 top-1/2 -translate-y-1/2 text-sm font-semibold text-neutral-500">$</span>
                                     <input inputMode="numeric" value={vehiculoDraft[id]}
                                         onChange={(e) => patchDraft(id, parseNumberInput(e.target.value))}
                                         className={`${inputCls} pl-7`} placeholder="0" />
                                 </div>
-                                {vehiculoDraft[id] ? <p className="mt-1 text-xs font-semibold text-[#131E5C]">{money(vehiculoDraft[id])}</p> : null}
+                                {vehiculoDraft[id] ? <p className="mt-1 text-xs font-semibold text-black">{money(vehiculoDraft[id])}</p> : null}
                             </Field>
                         ))}
                     </div>
@@ -1844,29 +1831,29 @@ export default function ConfigIA() {
 
                 {activeModalTab === "tecnica" && (
                     <div className="space-y-4">
-                        <div className="rounded-xl border border-[#E4E7F0] bg-[#F7F8FC] px-4 py-3 flex items-start gap-2.5">
-                            <Info className="h-4 w-4 text-[#515778] flex-shrink-0 mt-0.5" />
-                            <p className="text-xs font-medium text-[#515778]">Ingresa la ficha técnica en formato JSON. Cada clave es una característica del vehículo.</p>
+                        <div className="rounded-xl border border-black/10 bg-neutral-50 px-4 py-3 flex items-start gap-2.5">
+                            <Info className="h-4 w-4 text-neutral-600 flex-shrink-0 mt-0.5" />
+                            <p className="text-xs font-medium text-neutral-600">Ingresa la ficha técnica en formato JSON. Cada clave es una característica del vehículo.</p>
                         </div>
                         <Field label="Ficha técnica (JSON)">
                             <textarea value={fichaTexto} onChange={(e) => setFichaTexto(e.target.value)} rows={12}
                                 className={`${textareaCls} font-mono text-xs`}
-                                placeholder={'{\n  "Motor": "1.4L TSI",\n  "Potencia": "150 hp",\n  "Transmisión": "Tiptronic 8"\n}'} />
+                                placeholder={'{\n  "Motorización": "Eléctrica",\n  "Autonomía": "476 km",\n  "Tracción": "AWD"\n}'} />
                         </Field>
                         {fichaTexto && fichaTexto !== "{}" && (() => {
                             const parsed = tryJsonParse(fichaTexto, null);
                             if (parsed && typeof parsed === "object" && !Array.isArray(parsed)) {
                                 const entries = Object.entries(parsed);
                                 if (entries.length > 0) return (
-                                    <div className="rounded-xl border border-[#E4E7F0] overflow-hidden">
-                                        <div className="bg-[#F7F8FC] px-4 py-2.5 border-b border-[#E4E7F0]">
-                                            <p className="text-[11px] font-semibold uppercase tracking-widest text-[#8891AD]">Vista previa — {entries.length} especificaciones</p>
+                                    <div className="rounded-xl border border-black/10 overflow-hidden">
+                                        <div className="bg-neutral-50 px-4 py-2.5 border-b border-black/10">
+                                            <p className="text-[11px] font-semibold uppercase tracking-widest text-neutral-500">Vista previa — {entries.length} especificaciones</p>
                                         </div>
-                                        <div className="grid grid-cols-2 divide-x divide-y divide-[#E4E7F0]">
+                                        <div className="grid grid-cols-2 divide-x divide-y divide-[#E5E5E5]">
                                             {entries.map(([k, v]) => (
                                                 <div key={k} className="px-4 py-2.5">
-                                                    <p className="text-[11px] text-[#8891AD]">{k}</p>
-                                                    <p className="text-sm font-semibold text-[#1A1F3C]">{String(v)}</p>
+                                                    <p className="text-[11px] text-neutral-500">{k}</p>
+                                                    <p className="text-sm font-semibold text-black">{String(v)}</p>
                                                 </div>
                                             ))}
                                         </div>
@@ -1894,7 +1881,7 @@ export default function ConfigIA() {
 
                         <Field label="Ficha técnica / PDF">
                             <div className="relative">
-                                <ExternalLink className="pointer-events-none absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-[#8891AD]" />
+                                <ExternalLink className="pointer-events-none absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-neutral-500" />
                                 <input
                                     value={vehiculoDraft.url_ficha_tecnica}
                                     onChange={(e) => patchDraft("url_ficha_tecnica", e.target.value)}
@@ -1908,7 +1895,7 @@ export default function ConfigIA() {
                                     href={toMediaUrl(vehiculoDraft.url_ficha_tecnica)}
                                     target="_blank"
                                     rel="noreferrer"
-                                    className="mt-1.5 inline-flex items-center gap-1 text-xs font-semibold text-[#131E5C] hover:underline"
+                                    className="mt-1.5 inline-flex items-center gap-1 text-xs font-semibold text-black hover:underline"
                                 >
                                     Verificar PDF <ExternalLink className="h-3 w-3" />
                                 </a>
@@ -1928,7 +1915,7 @@ export default function ConfigIA() {
                             />
 
                             {imagenesTexto && (
-                                <p className="mt-1.5 text-xs text-[#8891AD]">
+                                <p className="mt-1.5 text-xs text-neutral-500">
                                     {splitLineasTexto(imagenesTexto).length} imágenes registradas
                                 </p>
                             )}
@@ -1942,7 +1929,7 @@ export default function ConfigIA() {
                                         href={toMediaUrl(url)}
                                         target="_blank"
                                         rel="noreferrer"
-                                        className="group aspect-video overflow-hidden rounded-xl border border-[#E4E7F0] bg-[#F7F8FC] relative"
+                                        className="group aspect-video overflow-hidden rounded-xl border border-black/10 bg-neutral-50 relative"
                                     >
                                         <img
                                             src={toMediaUrl(url)}
@@ -1973,7 +1960,7 @@ export default function ConfigIA() {
                             />
 
                             {videosTexto && (
-                                <p className="mt-1.5 text-xs text-[#8891AD]">
+                                <p className="mt-1.5 text-xs text-neutral-500">
                                     {splitLineasTexto(videosTexto).length} videos registrados
                                 </p>
                             )}
@@ -1984,7 +1971,7 @@ export default function ConfigIA() {
                                 {splitLineasTexto(videosTexto).slice(0, 4).map((url, i) => (
                                     <div
                                         key={i}
-                                        className="overflow-hidden rounded-xl border border-[#E4E7F0] bg-[#F7F8FC]"
+                                        className="overflow-hidden rounded-xl border border-black/10 bg-neutral-50"
                                     >
                                         <video
                                             src={toMediaUrl(url)}
@@ -1994,7 +1981,7 @@ export default function ConfigIA() {
                                         />
 
                                         <div className="flex items-center justify-between gap-2 px-3 py-2">
-                                            <p className="truncate text-[11px] font-medium text-[#515778]">
+                                            <p className="truncate text-[11px] font-medium text-neutral-600">
                                                 {url}
                                             </p>
 
@@ -2002,7 +1989,7 @@ export default function ConfigIA() {
                                                 href={toMediaUrl(url)}
                                                 target="_blank"
                                                 rel="noreferrer"
-                                                className="inline-flex items-center gap-1 text-[11px] font-bold text-[#131E5C] hover:underline"
+                                                className="inline-flex items-center gap-1 text-[11px] font-bold text-black hover:underline"
                                             >
                                                 Abrir <ExternalLink className="h-3 w-3" />
                                             </a>
