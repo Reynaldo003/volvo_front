@@ -9,6 +9,14 @@ import LoginRegistro from "./pages/LoginRegistro/LoginRegistro";
 import Home from "./pages/Home";
 import NotFound from "./pages/NotFound";
 
+// ===== Gestión de Negocio =====
+import GestionNegocioLayout from "./pages/GestionNegocio/GestionNegocioLayout";
+import GestionNegocioIndex from "./pages/GestionNegocio/GestionNegocioIndex";
+import LeadsCRM from "./pages/GestionNegocio/LeadsCRM";
+import PrimeraVisita from "./pages/GestionNegocio/PrimeraVisita";
+import CitasTestDrive from "./pages/GestionNegocio/CitasTestDrive";
+import Estocastico from "./pages/GestionNegocio/Estocastico";
+
 // ===== Gestión comercial =====
 import ComercialLayout from "./pages/Comercial/ComercialLayout";
 import ComercialIndex from "./pages/Comercial/ComercialIndex";
@@ -171,6 +179,33 @@ export const router = createBrowserRouter(
                                 {
                                     path: "checklist_general",
                                     element: <CheckListGeneral />,
+                                },
+                            ],
+                        },
+                        // ===== Gestión de Negocio =====
+                        {
+                            path: "gestion-negocio",
+                            element: <GestionNegocioLayout />,
+                            children: [
+                                {
+                                    index: true,
+                                    element: <GestionNegocioIndex />,
+                                },
+                                {
+                                    path: "leads-crm",
+                                    element: <LeadsCRM />,
+                                },
+                                {
+                                    path: "primera-visita",
+                                    element: <PrimeraVisita />,
+                                },
+                                {
+                                    path: "citas-test-drive",
+                                    element: <CitasTestDrive />,
+                                },
+                                {
+                                    path: "estocastico",
+                                    element: <Estocastico />,
                                 },
                             ],
                         },

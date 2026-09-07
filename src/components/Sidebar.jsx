@@ -11,6 +11,7 @@ import {
     ChevronRight,
     X,
     BrainCircuit,
+    ChartNoAxesCombined,
 } from "lucide-react";
 import { useAuth } from "../auth/AuthContext";
 
@@ -57,6 +58,12 @@ const managementItems = [
         label: "Gestión Calidad",
         to: "/calidad/checklist_recepcion",
         icon: BadgeCheck,
+        end: false,
+    },
+    {
+        label: "Gestión de Negocio",
+        to: "/gestion-negocio/leads-crm",
+        icon: ChartNoAxesCombined,
         end: false,
     },
     {

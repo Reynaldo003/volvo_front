@@ -79,6 +79,30 @@ const gestionComercialTabs = [
     },
 ];
 
+const gestionNegocioTabs = [
+    {
+        label: "Leads CRM",
+        to: "/gestion-negocio/leads-crm",
+        icon: UserRoundSearch,
+        end: true,
+    },
+    {
+        label: "Primera Visita",
+        to: "/gestion-negocio/primera-visita",
+        icon: ClipboardList,
+    },
+    {
+        label: "Citas y Test Drive",
+        to: "/gestion-negocio/citas-test-drive",
+        icon: Car,
+    },
+    {
+        label: "Estocástico",
+        to: "/gestion-negocio/estocastico",
+        icon: ChartNoAxesColumn,
+    },
+];
+
 function TabItem({ label, to, icon: Icon, end = false }) {
     return (
         <NavLink to={to} end={end}>
@@ -126,12 +150,18 @@ export default function Topbar({ onOpenSidebar }) {
 
     const mostrarTopnavGestion = location.pathname.startsWith("/comercial");
     const mostrarTopnavCalidad = location.pathname.startsWith("/calidad");
+    const mostrarTopnavNegocio = location.pathname.startsWith("/gestion-negocio");
 
-    const mostrarTabs = mostrarTopnavGestion || mostrarTopnavCalidad;
+    const mostrarTabs =
+        mostrarTopnavGestion ||
+        mostrarTopnavCalidad ||
+        mostrarTopnavNegocio;
 
     const tabs = mostrarTopnavGestion
         ? gestionComercialTabs
-        : gestionCalidadTabs;
+        : mostrarTopnavCalidad
+            ? gestionCalidadTabs
+            : gestionNegocioTabs;
 
     return (
         <header className="sticky top-0 z-30 bg-white border-b border-slate-200 shadow-sm">
