@@ -177,6 +177,146 @@ function RankingCard({
   );
 }
 
+function MotivosDescalificacionCard({
+  items,
+  total,
+}) {
+  const colores = [
+    "#001E50",
+    "#244A73",
+    "#4D6D8D",
+    "#718BA4",
+    "#91A5B8",
+    "#B0BFCC",
+    "#D2DAE2",
+  ];
+
+  let acumulado = 0;
+
+  const segmentos = items.map((item, index) => {
+    const inicio =
+      total > 0
+        ? (acumulado / total) * 100
+        : 0;
+
+    acumulado += item.value;
+
+    const fin =
+      total > 0
+        ? (acumulado / total) * 100
+        : 0;
+
+    return {
+      ...item,
+      inicio,
+      fin,
+      color: colores[index % colores.length],
+    };
+  });
+
+  const fondo =
+    segmentos.length > 0
+      ? `conic-gradient(${segmentos
+          .map(
+            (item) =>
+              `${item.color} ${item.inicio}% ${item.fin}%`,
+          )
+          .join(", ")})`
+      : "#e2e8f0";
+
+  return (
+    <article className="flex min-h-[360px] flex-col rounded-xl border border-slate-200 bg-white p-5 shadow-sm">
+
+      {/* ENCABEZADO */}
+      <div className="border-b border-slate-100 pb-3">
+        <div className="flex items-start justify-between gap-3">
+          <div>
+            <h2 className="text-sm font-bold text-[#001E50]">
+              Motivos de descalificación
+            </h2>
+
+            <p className="mt-0.5 text-xs text-slate-400">
+              Distribución de causas de descarte comercial
+            </p>
+          </div>
+
+          <span className="rounded-md border border-slate-200 bg-slate-50 px-2.5 py-1 text-xs font-bold text-[#001E50]">
+            Total: {total}
+          </span>
+        </div>
+      </div>
+
+      {total === 0 ? (
+        <div className="flex flex-1 items-center justify-center text-sm text-slate-400">
+          Sin prospectos descalificados en el periodo seleccionado
+        </div>
+      ) : (
+        <>
+          {/* DONA CENTRADA */}
+          <div className="flex justify-center py-5">
+            <div
+              className="relative flex h-44 w-44 items-center justify-center rounded-full shadow-sm"
+              style={{
+                background: fondo,
+              }}
+            >
+              <div className="flex h-[108px] w-[108px] flex-col items-center justify-center rounded-full bg-white">
+                <span className="text-3xl font-bold leading-none text-[#001E50]">
+                  {total}
+                </span>
+
+                <span className="mt-1 text-[9px] font-bold uppercase tracking-[0.08em] text-slate-400">
+                  Descalificados
+                </span>
+              </div>
+            </div>
+          </div>
+
+          {/* LEYENDA ABAJO */}
+          <div className="mt-auto grid grid-cols-1 gap-x-5 gap-y-2 border-t border-slate-100 pt-4 sm:grid-cols-2 xl:grid-cols-1 2xl:grid-cols-2">
+            {segmentos.map((item) => {
+              const porcentaje =
+                total > 0
+                  ? (item.value / total) * 100
+                  : 0;
+
+              return (
+                <div
+                  key={item.label}
+                  className="flex min-w-0 items-center justify-between gap-3"
+                >
+                  <div className="flex min-w-0 items-center gap-2">
+                    <span
+                      className="h-2.5 w-2.5 shrink-0 rounded-sm"
+                      style={{
+                        backgroundColor: item.color,
+                      }}
+                    />
+
+                    <span
+                      className="truncate text-[11px] font-semibold text-slate-600"
+                      title={item.label}
+                    >
+                      {item.label}
+                    </span>
+                  </div>
+
+                  <span className="shrink-0 text-[11px] font-bold text-[#001E50]">
+                    {item.value}
+                    <span className="ml-1 font-normal text-slate-400">
+                      {porcentaje.toFixed(1)}%
+                    </span>
+                  </span>
+                </div>
+              );
+            })}
+          </div>
+        </>
+      )}
+    </article>
+  );
+}
+
 function formatearFecha(valor) {
   const fecha = fechaValida(valor);
 
@@ -264,18 +404,20 @@ export default function LeadsCRM() {
             });
 
             const totalProspectos = prospectosFiltrados.length;
-            const totalDescalificados = prospectosFiltrados.filter((prospecto) => {
+
+            const prospectosDescalificados = prospectosFiltrados.filter((prospecto) => {
             const estado = normalizarTexto(prospecto.estado);
 
             return (
                 estado.includes("descalific") ||
                 tieneValor(prospecto.motivo_descalificacion)
             );
-            }).length;
+            });
 
+            const totalDescalificados = prospectosDescalificados.length;
             const totalAsignados = prospectosFiltrados.filter((prospecto) =>
-            tieneValor(prospecto.asesor_ventas),
-            ).length;
+                tieneValor(prospecto.asesor_ventas),
+                ).length;
 
             const totalCitas = prospectosFiltrados.filter(
                 (prospecto) => tieneValor(prospecto.ultima_cita),
@@ -424,19 +566,14 @@ export default function LeadsCRM() {
                         6,
                         );
 
-                        const prospectosConMotivoDescalificacion =
-                        prospectosFiltrados.filter((prospecto) =>
-                            tieneValor(prospecto.motivo_descalificacion),
-                        );
-
                         const motivosDescalificacion = topNConOtros(
-                        agruparPorCampo(
-                            prospectosConMotivoDescalificacion,
-                            "motivo_descalificacion",
-                            "Sin motivo",
-                        ),
-                        6,
-                        );  
+                            agruparPorCampo(
+                                prospectosDescalificados,
+                                "motivo_descalificacion",
+                                "Sin motivo registrado",
+                            ),
+                            6,
+                            );
                         const prospectosConAsesor = prospectosFiltrados.filter(
                             (prospecto) => tieneValor(prospecto.asesor_ventas),
                             );
@@ -457,7 +594,7 @@ export default function LeadsCRM() {
 
                             return (
 
-        <div className="w-full space-y-6">
+        <div className="mx-auto w-full max-w-[1280px] space-y-6 px-4 pb-8">
             {/* ENCABEZADO */}
             <div className="flex flex-col gap-1">
             <h1 className="text-2xl font-bold text-slate-900">
@@ -900,12 +1037,10 @@ export default function LeadsCRM() {
                 total={totalProspectos}
             />
 
-            <RankingCard
-                title="Motivos de descalificación"
-                subtitle="Principales causas de descarte"
+            <MotivosDescalificacionCard
                 items={motivosDescalificacion}
                 total={totalDescalificados}
-            />
+                />
 
             </section>
             {/* TERCERA FILA DE ANALÍTICA */}

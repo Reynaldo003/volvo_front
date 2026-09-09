@@ -437,7 +437,7 @@ export default function PrimeraVisita() {
         });
 
   return (
-    <div className="w-full space-y-6">
+    <div className="mx-auto w-full max-w-[1280px] space-y-6 px-4 pb-8">
       {/* ENCABEZADO */}
       <div>
         <h1 className="text-2xl font-bold text-slate-900">
