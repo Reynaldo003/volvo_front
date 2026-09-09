@@ -41,6 +41,7 @@ import {
 import EmojiPicker from "emoji-picker-react";
 import { api } from "../../lib/apiPruebas";
 import { apiCitas } from "../../lib/apiCitas";
+import NuevoProspectoModal from "./NuevoProspectoModal";
 
 const BRAND_BLUE = "#000000";
 const QUICK_BUBBLES_KEY = "volvo_digitales_quick_bubbles_global";
@@ -1496,7 +1497,18 @@ function MessageStatusTicks({ status, pending }) {
     }
     const v = String(status || "").toLowerCase();
     if (v === "failed") {
-        return <AlertCircle className="h-3.5 w-3.5 text-red-300" title="Falló el envío" />;
+        return (
+            <span
+                className="inline-flex items-center gap-1 text-red-600"
+                title="Error de envío"
+            >
+                <span className="text-[11px] font-bold">
+                    Error de envío
+                </span>
+
+                <AlertCircle className="h-3.5 w-3.5 shrink-0" />
+            </span>
+        );
     }
     if (v === "read") {
         return <CheckCheck className="h-3.5 w-3.5" style={{ color: "#53BDEB" }} title="Leído" />;
@@ -2127,6 +2139,7 @@ export default function DigitalesContacto() {
     const [showProspectoPanel, setShowProspectoPanel] = useState(false);
     // Modal para agendar cita desde Contacto
     const [showCitaModal, setShowCitaModal] = useState(false);
+    const [showNuevoProspectoModal, setShowNuevoProspectoModal] = useState(false);
     const [savingCita, setSavingCita] = useState(false);
     const [citaToast, setCitaToast] = useState(null);
     const citaToastTimerRef = useRef(null);
@@ -2610,6 +2623,72 @@ export default function DigitalesContacto() {
         navigate({ pathname: location.pathname, search: "" }, { replace: true });
     }
 
+    function handleNuevoProspectoCreado(prospectoCreado) {
+        const telefonoNuevo = normalizaTelefonoMx(
+            prospectoCreado?.telefono ||
+            prospectoCreado?.telefono_out ||
+            prospectoCreado?.cliente?.telefono ||
+            ""
+        );
+
+        if (!telefonoNuevo) {
+            console.error(
+                "El prospecto se creó, pero no se recibió un teléfono válido.",
+                prospectoCreado
+            );
+            return;
+        }
+
+        const chatNuevo = {
+            id:
+                prospectoCreado?.id ||
+                prospectoCreado?.cliente_id ||
+                telefonoNuevo,
+            telefono: telefonoNuevo,
+            nombre:
+                prospectoCreado?.nombre ||
+                prospectoCreado?.nombre_out ||
+                "Prospecto",
+            agencia: prospectoCreado?.agencia || "",
+            linea: prospectoCreado?.business || "",
+            estado: prospectoCreado?.estado || "Nuevo",
+            ia_estado: null,
+            ia_pausada: false,
+            ia_bloqueos: [],
+            whatsapp_bloqueado: false,
+            whatsapp_bloqueado_motivo: "",
+            unread: 0,
+            last: {
+                text: "Prospecto nuevo · inicia la conversación",
+                time: "",
+            },
+        };
+
+        setChats((prev) => [
+            chatNuevo,
+            ...prev.filter(
+                (chat) => chat.telefono !== telefonoNuevo
+            ),
+        ]);
+
+        setChatFilter("todos");
+        setQ("");
+        setShowNuevoProspectoModal(false);
+
+        openChatByTel(telefonoNuevo);
+
+        mensajesCacheRef.current.delete(telefonoNuevo);
+
+        setTimeout(() => {
+            refreshActiveChat(telefonoNuevo).catch((error) => {
+                console.error(
+                    "No se pudo cargar el prospecto recién creado:",
+                    error
+                );
+            });
+        }, 50);
+    }
+
     async function openChatByTel(tel52) {
         const normalized = normalizaTelefonoMx(tel52);
         if (!normalized) return;
@@ -2845,8 +2924,19 @@ export default function DigitalesContacto() {
 
             await refreshActiveChat(activeTel, { forceBottom: true });
         } catch (error) {
-            alert(`Falló: ${error.message}`);
-            await refreshActiveChat(activeTel).catch(() => { });
+            console.error("Error enviando mensaje:", error);
+
+            setMensajes((prev) =>
+                prev.map((message) =>
+                    message.id === optimisticId
+                        ? {
+                            ...message,
+                            local_pending: false,
+                            status: "failed",
+                        }
+                        : message
+                )
+            );
         } finally {
             cleanupPreviews(optimisticAttachments);
         }
@@ -3448,11 +3538,26 @@ function mostrarCitaToast({
                                             title="Volver" type="button">
                                             <ArrowLeft className="h-4 w-4" />Volver
                                         </button>
-                                        <button onClick={() => setChatSidebarCollapsed(true)}
-                                            className="hidden h-8 w-8 items-center justify-center rounded-lg border border-black/10 bg-white text-[#000000] transition hover:bg-neutral-50 lg:inline-flex"
-                                            title="Contraer" type="button">
-                                            <ChevronLeft className="h-4 w-4" />
-                                        </button>
+                                        <div className="flex items-center gap-2">
+                                            <button
+                                                type="button"
+                                                onClick={() => setShowNuevoProspectoModal(true)}
+                                                className="inline-flex h-8 w-8 items-center justify-center rounded-lg bg-[#DBE7FF] text-[#1746D1] transition hover:bg-[#c9dcff]"
+                                                title="Nuevo prospecto"
+                                                aria-label="Nuevo prospecto"
+                                            >
+                                                <UserRoundPlus className="h-4 w-4" />
+                                            </button>
+
+                                            <button
+                                                onClick={() => setChatSidebarCollapsed(true)}
+                                                className="hidden h-8 w-8 items-center justify-center rounded-lg border border-black/10 bg-white text-[#000000] transition hover:bg-neutral-50 lg:inline-flex"
+                                                title="Contraer"
+                                                type="button"
+                                            >
+                                                <ChevronLeft className="h-4 w-4" />
+                                            </button>
+                                        </div>
                                     </div>
 
                                     {/* Búsqueda */}
@@ -4652,6 +4757,14 @@ function mostrarCitaToast({
         </div>
     </div>
 ) : null}
+                <NuevoProspectoModal
+                    open={showNuevoProspectoModal}
+                    onClose={() => setShowNuevoProspectoModal(false)}
+                    onCreado={handleNuevoProspectoCreado}
+                    agencias={DEALERS}
+                    vehiculos={VEHICULOS}
+                    canales={CANALES}
+                />
                 <AgendarCitaModal
                     open={showCitaModal}
                     onClose={() => setShowCitaModal(false)}
