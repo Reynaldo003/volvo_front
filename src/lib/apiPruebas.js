@@ -215,6 +215,37 @@ export const api = {
     });
   },
 
+  digitalesBloquearContacto: (input = {}) => {
+  const { tel, telefono, numero_asesor } = readTelArg(input);
+
+  return http("/digitales/chats/bloquear/", {
+    method: "POST",
+    ...jsonBody(
+      withNumeroAsesor({
+        tel: tel || telefono,
+        motivo: String(
+          input?.motivo ||
+          "Cliente bloqueado manualmente desde el CRM Volvo"
+        ).trim(),
+        numero_asesor,
+      }),
+    ),
+  });
+},
+
+digitalesDesbloquearContacto: (input = {}) => {
+  const { tel, telefono, numero_asesor } = readTelArg(input);
+
+  return http("/digitales/chats/desbloquear/", {
+    method: "POST",
+    ...jsonBody(
+      withNumeroAsesor({
+        tel: tel || telefono,
+        numero_asesor,
+      }),
+    ),
+  });
+},
   // Plantillas disponibles para enviar desde el chat.
   digitalesPlantillas: (params = {}) =>
     http(`/digitales/mensajes/plantillas/${toQuery(withNumeroAsesor(params))}`),

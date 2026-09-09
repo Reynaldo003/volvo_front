@@ -29,18 +29,24 @@ import {
     Activity,
     Zap,
     ZapOff,
+    UserRound,
+    Ban,
+    Phone,
+    CalendarPlus,
+    Loader2,
+    UserRoundPlus,
+    Mic,
+    Square,
 } from "lucide-react";
 import EmojiPicker from "emoji-picker-react";
 import { api } from "../../lib/apiPruebas";
-import { Phone } from "lucide-react";
+import { apiCitas } from "../../lib/apiCitas";
 
 const BRAND_BLUE = "#000000";
 const QUICK_BUBBLES_KEY = "volvo_digitales_quick_bubbles_global";
 const CHAT_PAGE_SIZE = 24;
 const CHAT_UPDATES_LIMIT = 80;
 const CHAT_CACHE_LIMIT = 80;
-const PREFETCH_CHAT_LIMIT = 12;
-
 const DEALERS = [
     "Volvo",
 ];
@@ -1903,6 +1909,192 @@ function ComposerDropdown({ open, onClose, dropdownRef, children, title, headerR
     );
 }
 
+function AgendarCitaModal({
+    open,
+    onClose,
+    nombreCliente,
+    telefono,
+    vehiculo,
+    agencia,
+    onGuardar,
+    saving,
+}) {
+    const [fecha, setFecha] = useState("");
+    const [hora, setHora] = useState("10:00");
+
+    useEffect(() => {
+        if (!open) return;
+
+        const hoy = new Date();
+
+        const yyyy = hoy.getFullYear();
+        const mm = String(hoy.getMonth() + 1).padStart(2, "0");
+        const dd = String(hoy.getDate()).padStart(2, "0");
+
+        setFecha(`${yyyy}-${mm}-${dd}`);
+        setHora("10:00");
+    }, [open]);
+
+    if (!open) return null;
+
+    function handleSubmit(e) {
+        e.preventDefault();
+
+        if (!fecha || !hora || saving) return;
+
+        onGuardar({
+            fecha,
+            hora,
+        });
+    }
+
+    return (
+        <div
+            className="fixed inset-0 z-[100] flex items-center justify-center bg-black/40 px-4"
+            onMouseDown={onClose}
+        >
+            <div
+                className="w-full max-w-md overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-2xl"
+                onMouseDown={(e) => e.stopPropagation()}
+            >
+                {/* HEADER */}
+                <div className="bg-[#001E50] px-5 py-4">
+                    <div className="flex items-center justify-between gap-3">
+                        <div className="flex items-center gap-3">
+                            <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-white/10">
+                                <CalendarPlus className="h-5 w-5 text-white" />
+                            </div>
+
+                            <div>
+                                <div className="text-sm font-extrabold text-white">
+                                    Agendar cita
+                                </div>
+
+                                <div className="text-[11px] font-semibold text-white/70">
+                                    Programa la visita del prospecto
+                                </div>
+                            </div>
+                        </div>
+
+                        <button
+                            type="button"
+                            onClick={onClose}
+                            className="inline-flex h-8 w-8 items-center justify-center rounded-xl bg-white/10 text-white transition hover:bg-white/20"
+                            title="Cerrar"
+                        >
+                            <X className="h-4 w-4" />
+                        </button>
+                    </div>
+                </div>
+
+                <form
+                    onSubmit={handleSubmit}
+                    className="space-y-4 bg-[#F8F9FB] p-5"
+                >
+                    {/* PROSPECTO */}
+                    <div className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm">
+                        <div className="flex items-center gap-3">
+                            <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-[#001E50] text-white">
+                                <UserRound className="h-4 w-4" />
+                            </div>
+
+                            <div className="min-w-0">
+                                <div className="truncate text-sm font-extrabold text-[#001E50]">
+                                    {nombreCliente || "Prospecto"}
+                                </div>
+
+                                <div className="mt-0.5 text-xs font-semibold text-slate-400">
+                                    {telefono || "Sin teléfono"}
+                                </div>
+                            </div>
+                        </div>
+
+                        <div className="mt-4 grid grid-cols-2 gap-3 border-t border-slate-100 pt-3">
+                            <div>
+                                <div className="text-[10px] font-extrabold uppercase text-slate-400">
+                                    Vehículo
+                                </div>
+
+                                <div className="mt-1 truncate text-xs font-bold text-[#001E50]">
+                                    {vehiculo || "Sin vehículo"}
+                                </div>
+                            </div>
+
+                            <div>
+                                <div className="text-[10px] font-extrabold uppercase text-slate-400">
+                                    Agencia
+                                </div>
+
+                                <div className="mt-1 truncate text-xs font-bold text-[#001E50]">
+                                    {agencia || "Volvo"}
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    {/* FECHA / HORA */}
+                    <div className="grid grid-cols-2 gap-3">
+                        <label>
+                            <span className="mb-1.5 flex items-center gap-1.5 text-[11px] font-extrabold uppercase text-slate-500">
+                                <CalendarPlus className="h-3.5 w-3.5 text-[#001E50]" />
+                                Fecha
+                            </span>
+
+                            <input
+                                type="date"
+                                value={fecha}
+                                onChange={(e) => setFecha(e.target.value)}
+                                required
+                                className="h-11 w-full rounded-xl border border-slate-200 bg-white px-3 text-sm font-bold text-[#001E50] outline-none transition focus:border-[#001E50]/40 focus:ring-2 focus:ring-[#001E50]/10"
+                            />
+                        </label>
+
+                        <label>
+                            <span className="mb-1.5 flex items-center gap-1.5 text-[11px] font-extrabold uppercase text-slate-500">
+                                <Clock className="h-3.5 w-3.5 text-[#001E50]" />
+                                Hora
+                            </span>
+
+                            <input
+                                type="time"
+                                value={hora}
+                                onChange={(e) => setHora(e.target.value)}
+                                required
+                                className="h-11 w-full rounded-xl border border-slate-200 bg-white px-3 text-sm font-bold text-[#001E50] outline-none transition focus:border-[#001E50]/40 focus:ring-2 focus:ring-[#001E50]/10"
+                            />
+                        </label>
+                    </div>
+
+                    <div className="flex justify-end gap-2 border-t border-slate-200 pt-4">
+                        <button
+                            type="button"
+                            onClick={onClose}
+                            disabled={saving}
+                            className="h-10 rounded-xl border border-slate-200 bg-white px-4 text-xs font-extrabold text-slate-600 transition hover:bg-slate-50 disabled:opacity-50"
+                        >
+                            Cancelar
+                        </button>
+
+                        <button
+                            type="submit"
+                            disabled={saving || !fecha || !hora}
+                            className="inline-flex h-10 items-center justify-center gap-2 rounded-xl bg-[#001E50] px-5 text-xs font-extrabold text-white shadow-sm transition hover:bg-[#001640] disabled:cursor-not-allowed disabled:opacity-50"
+                        >
+                            {saving ? (
+                                <Loader2 className="h-4 w-4 animate-spin" />
+                            ) : (
+                                <CalendarPlus className="h-4 w-4" />
+                            )}
+
+                            {saving ? "Guardando..." : "Agendar cita"}
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    );
+}
+
 // ─── MAIN COMPONENT ──────────────────────────────────────────────────────────
 
 export default function DigitalesContacto() {
@@ -1932,6 +2124,12 @@ export default function DigitalesContacto() {
     const [mobileView, setMobileView] = useState("list");
     const [chatSidebarCollapsed, setChatSidebarCollapsed] = useState(false);
     const [headerEstado, setHeaderEstado] = useState("");
+    const [showProspectoPanel, setShowProspectoPanel] = useState(false);
+    // Modal para agendar cita desde Contacto
+    const [showCitaModal, setShowCitaModal] = useState(false);
+    const [savingCita, setSavingCita] = useState(false);
+    const [citaToast, setCitaToast] = useState(null);
+    const citaToastTimerRef = useRef(null);
 
     // Resaltado temporal al saltar a un mensaje citado
     const [highlightedMsgId, setHighlightedMsgId] = useState("");
@@ -1973,13 +2171,13 @@ export default function DigitalesContacto() {
 
     const [copiedTel, setCopiedTel] = useState(false);
     const [markingUnreadTel, setMarkingUnreadTel] = useState("");
+    const [blockingTel, setBlockingTel] = useState("");
     const [chatMenu, setChatMenu] = useState(null);
 
     const endRef = useRef(null);
     const messagesScrollRef = useRef(null);
     const activeTelRef = useRef("");
     const mensajesRef = useRef([]);
-    const didInitFromQuery = useRef(false);
     const emojiRef = useRef(null);
     const fileInputRef = useRef(null);
     const inputRef = useRef(null);
@@ -1988,7 +2186,6 @@ export default function DigitalesContacto() {
     const chatRequestRef = useRef(0);
     const loadingOlderRef = useRef(false);
     const mensajesCacheRef = useRef(new Map());
-    const prefetchedChatsRef = useRef(new Set());
 
     const templateMap = useMemo(() => {
         const map = new Map();
@@ -2008,6 +2205,13 @@ export default function DigitalesContacto() {
         if (fromList) return fromList;
         return { id: activeTel, telefono: activeTel, nombre: prospecto?.nombre || "Prospecto", agencia: prospecto?.agencia || "", linea: prospecto?.business || "", estado: prospecto?.estado || "", unread: 0, last: { text: "", time: "" } };
     }, [activeTel, chats, prospecto]);
+
+    const clienteBloqueado = useMemo(() => {
+        return Boolean(
+            prospecto?.whatsapp_bloqueado ||
+            activeChat?.whatsapp_bloqueado
+        );
+    }, [prospecto, activeChat]);
 
     const campanaMetaProspecto = useMemo(() => {
         return getCampanaMetaProspecto(prospecto);
@@ -2093,8 +2297,17 @@ export default function DigitalesContacto() {
         });
     }, [chats, prospectosIndex, deferredQ, chatFilter]);
 
-    const composerHint = useMemo(() => activeTel ? "Escribe tu mensaje…" : "Selecciona un chat para escribir…", [activeTel]);
+    const composerHint = useMemo(() => {
+        if (!activeTel) {
+            return "Selecciona un chat para escribir…";
+        }
 
+        if (clienteBloqueado) {
+            return "Contacto bloqueado. Desbloquéalo para responder…";
+        }
+
+        return "Escribe tu mensaje…";
+    }, [activeTel, clienteBloqueado]);
     const templatePreview = useMemo(() => tplSelected ? buildTemplatePreviewText(tplSelected, tplDraft) : "", [tplSelected, tplDraft]);
 
     const templatesParaEnviar = useMemo(() => {
@@ -2182,18 +2395,6 @@ export default function DigitalesContacto() {
         return true;
     }
 
-    async function prefetchChat(tel52) {
-        const target = normalizaTelefonoMx(tel52);
-        if (!target || target === activeTelRef.current) return;
-        if (mensajesCacheRef.current.has(target)) return;
-        if (prefetchedChatsRef.current.has(target)) return;
-        prefetchedChatsRef.current.add(target);
-        try {
-            const data = await api.digitalesContacto(target, { limit: PREFETCH_CHAT_LIMIT, mark_read: 0 });
-            guardarChatEnCache(target, data);
-        } catch { prefetchedChatsRef.current.delete(target); }
-    }
-
     async function refreshChats() {
         const data = await api.digitalesChats();
         const normalized = (Array.isArray(data) ? data : []).map(chat => ({
@@ -2203,9 +2404,17 @@ export default function DigitalesContacto() {
             agencia: chat.agencia || "",
             linea: chat.linea || "",
             estado: chat.estado || "",
+
+            whatsapp_bloqueado: Boolean(chat.whatsapp_bloqueado),
+            whatsapp_bloqueado_motivo:
+                chat.whatsapp_bloqueado_motivo || "",
+
             ia_estado: chat.ia_estado || null,
             ia_pausada: Boolean(chat.ia_pausada),
-            ia_bloqueos: Array.isArray(chat.ia_bloqueos) ? chat.ia_bloqueos : [],
+            ia_bloqueos: Array.isArray(chat.ia_bloqueos)
+                ? chat.ia_bloqueos
+                : [],
+
             unread: Number(chat.unread || 0),
             last: { text: chat.last_text || "", time: chat.last_time || "" },
         }));
@@ -2445,7 +2654,7 @@ export default function DigitalesContacto() {
     }
 
     function abrirPlantillasDropdown() {
-        if (!activeTel) return;
+        if (!activeTel || clienteBloqueado) return;
         setTplSelected(null); setTplDraft({});
         setShowTemplatesDropdown(prev => !prev);
         setShowQuickBubblesDropdown(false);
@@ -2722,6 +2931,124 @@ export default function DigitalesContacto() {
         finally { setMarkingUnreadTel(""); }
     }
 
+    async function bloquearContactoActivo() {
+        if (!activeTel || blockingTel) return;
+
+        const confirmar = window.confirm(
+            `¿Seguro que quieres bloquear a ${formateaTelUi(activeTel)}?\n\n` +
+            "Este contacto quedará bloqueado en WhatsApp y la IA se pausará."
+        );
+
+        if (!confirmar) return;
+
+        setBlockingTel(activeTel);
+
+        try {
+            await api.digitalesBloquearContacto({
+                tel: activeTel,
+                motivo:
+                    "Cliente bloqueado manualmente desde el CRM Volvo",
+                numero_asesor: numeroAsesorActivo,
+            });
+
+            setProspecto((prev) =>
+                prev
+                    ? {
+                        ...prev,
+                        whatsapp_bloqueado: true,
+                        whatsapp_bloqueado_motivo:
+                            "Cliente bloqueado manualmente desde el CRM Volvo",
+                        ia_pausada: true,
+                        ia_pausada_motivo: "cliente_bloqueado",
+                    }
+                    : prev
+            );
+
+            setChats((prev) =>
+                prev.map((chat) =>
+                    chat.telefono === activeTel
+                        ? {
+                            ...chat,
+                            whatsapp_bloqueado: true,
+                            whatsapp_bloqueado_motivo:
+                                "Cliente bloqueado manualmente desde el CRM Volvo",
+                        }
+                        : chat
+                )
+            );
+
+            mensajesCacheRef.current.delete(activeTel);
+
+            await refreshActiveChat(activeTel).catch(() => {});
+            await refreshChats().catch(() => {});
+
+        } catch (error) {
+            alert(
+                `No se pudo bloquear el contacto: ${
+                    error?.message || "Error desconocido"
+                }`
+            );
+        } finally {
+            setBlockingTel("");
+        }
+    }
+
+
+    async function desbloquearContactoActivo() {
+        if (!activeTel || blockingTel) return;
+
+        const confirmar = window.confirm(
+            `¿Deseas desbloquear a ${formateaTelUi(activeTel)}?`
+        );
+
+        if (!confirmar) return;
+
+        setBlockingTel(activeTel);
+
+        try {
+            await api.digitalesDesbloquearContacto({
+                tel: activeTel,
+                numero_asesor: numeroAsesorActivo,
+            });
+
+            setProspecto((prev) =>
+                prev
+                    ? {
+                        ...prev,
+                        whatsapp_bloqueado: false,
+                        whatsapp_bloqueado_motivo: "",
+                    }
+                    : prev
+            );
+
+            setChats((prev) =>
+                prev.map((chat) =>
+                    chat.telefono === activeTel
+                        ? {
+                            ...chat,
+                            whatsapp_bloqueado: false,
+                            whatsapp_bloqueado_motivo: "",
+                        }
+                        : chat
+                )
+            );
+
+            mensajesCacheRef.current.delete(activeTel);
+
+            await refreshActiveChat(activeTel).catch(() => {});
+            await refreshChats().catch(() => {});
+
+        } catch (error) {
+            alert(
+                `No se pudo desbloquear el contacto: ${
+                    error?.message || "Error desconocido"
+                }`
+            );
+        } finally {
+            setBlockingTel("");
+        }
+    }
+
     function abrirMenuChat(e, chat) {
         e.preventDefault(); e.stopPropagation();
         if (!chat?.telefono) return;
@@ -2907,18 +3234,14 @@ export default function DigitalesContacto() {
     }, [isDirectChatMode]);
 
     useEffect(() => {
-        if (tel && !didInitFromQuery.current) {
-            didInitFromQuery.current = true; setActiveTel(tel); setMobileView("chat");
-            const last = localStorage.getItem("last_active_chat");
-            if (last && last !== tel) localStorage.setItem("last_active_chat", tel);
-            return;
-        }
-        if (!tel && !activeTel && chats.length) {
-            const last = localStorage.getItem("last_active_chat");
-            if (last && chats.some(c => c.telefono === last)) setActiveTel(last);
-            else setActiveTel(chats[0].telefono);
-        }
-    }, [tel, chats, activeTel]);
+        // Solo abrir automáticamente cuando el módulo recibe
+        // explícitamente un teléfono por URL.
+        if (!tel) return;
+
+        setActiveTel(tel);
+        setMobileView("chat");
+        localStorage.setItem("last_active_chat", tel);
+    }, [tel]);
 
     useEffect(() => {
         if (!activeTel) { setProspecto(null); setMensajes([]); setChatHasMore(false); setOldestMessageId(null); return; }
@@ -2962,6 +3285,109 @@ export default function DigitalesContacto() {
         return () => { alive = false; if (timer) clearTimeout(timer); };
     }, [isDirectChatMode]);
 
+function mostrarCitaToast({
+    tipo = "success",
+    titulo,
+    mensaje,
+}) {
+    if (citaToastTimerRef.current) {
+        clearTimeout(citaToastTimerRef.current);
+    }
+
+    setCitaToast({
+        tipo,
+        titulo,
+        mensaje,
+    });
+
+    citaToastTimerRef.current = setTimeout(() => {
+        setCitaToast(null);
+        citaToastTimerRef.current = null;
+    }, 4500);
+}
+
+    async function guardarCita({ fecha, hora }) {
+        if (!activeTel || savingCita) return;
+
+        setSavingCita(true);
+
+        try {
+            if (!fecha || !hora) {
+                throw new Error("Selecciona fecha y hora.");
+            }
+
+            const fechaHoraCita = `${fecha}T${hora}:00`;
+
+            const nombre =
+                prospecto?.nombre ||
+                activeChat?.nombre ||
+                "Prospecto";
+
+            const agencia =
+                prospecto?.agencia ||
+                activeChat?.agencia ||
+                "Volvo";
+
+            const autoInteres =
+                quickEditDraft.auto_interes ||
+                prospecto?.auto_interes ||
+                "";
+
+            await apiCitas.create({
+                agencia,
+                nombre,
+                telefono: activeTel,
+                auto_interes: autoInteres,
+                fecha_hora_cita: fechaHoraCita,
+                asistencia: false,
+
+                // La cita se genera desde Contacto/Digitales
+                tipo_cita: "Digital",
+
+                // Conservamos información actual del prospecto Volvo
+                fuente_prospeccion:
+                    prospecto?.canal_contacto ||
+                    quickEditDraft.canal_contacto ||
+                    "",
+
+                asesor_digital:
+                    prospecto?.asesor_digital ||
+                    "",
+
+                asesor_piso:
+                    prospecto?.asesor_ventas ||
+                    "",
+
+                comentarios:
+                    prospecto?.comentarios ||
+                    prospecto?.comentario ||
+                    "",
+            });
+
+            setShowCitaModal(false);
+
+            await refreshActiveChat(activeTel).catch(() => {});
+
+            mostrarCitaToast({
+                tipo: "success",
+                titulo: "Cita agendada",
+                mensaje: `${nombre} · ${fecha} · ${hora}`,
+            });
+        } catch (error) {
+            console.error("Error creando cita:", error);
+
+            mostrarCitaToast({
+                tipo: "error",
+                titulo: "No se pudo agendar la cita",
+                mensaje:
+                    error?.message ||
+                    "Ocurrió un error al registrar la cita.",
+            });
+        } finally {
+            setSavingCita(false);
+        }
+    }
+
     const llamarProspecto = () => {
         if (!activeTel) { alert("Selecciona un chat primero"); return; }
         window.open(`https://wa.me/${activeTel}`, "_blank");
@@ -2975,7 +3401,26 @@ export default function DigitalesContacto() {
 
                 <div className={cls(
                     "grid min-h-0 h-[calc(90dvh-64px)] overflow-hidden transition-[grid-template-columns] duration-500 ease-[cubic-bezier(0.22,1,0.36,1)]",
-                    isDirectChatMode ? "grid-cols-1" : chatSidebarCollapsed ? "grid-cols-1 lg:grid-cols-[58px_minmax(0,1fr)]" : "grid-cols-1 lg:grid-cols-[310px_minmax(0,1fr)] xl:grid-cols-[340px_minmax(0,1fr)]"
+
+                    isDirectChatMode
+                        ? activeTel
+                            ? showProspectoPanel
+                                ? "grid-cols-1 lg:grid-cols-[minmax(0,1fr)_380px]"
+                                : "grid-cols-1 lg:grid-cols-[minmax(0,1fr)_52px]"
+                            : "grid-cols-1"
+
+                        : chatSidebarCollapsed
+                            ? activeTel
+                                ? showProspectoPanel
+                                    ? "grid-cols-1 lg:grid-cols-[58px_minmax(0,1fr)_360px]"
+                                    : "grid-cols-1 lg:grid-cols-[58px_minmax(0,1fr)_52px]"
+                                : "grid-cols-1 lg:grid-cols-[58px_minmax(0,1fr)]"
+
+                            : activeTel
+                                ? showProspectoPanel
+                                    ? "grid-cols-1 lg:grid-cols-[310px_minmax(0,1fr)_360px] xl:grid-cols-[340px_minmax(0,1fr)_380px]"
+                                    : "grid-cols-1 lg:grid-cols-[310px_minmax(0,1fr)_52px] xl:grid-cols-[340px_minmax(0,1fr)_52px]"
+                                : "grid-cols-1 lg:grid-cols-[310px_minmax(0,1fr)] xl:grid-cols-[340px_minmax(0,1fr)]"
                 )}>
 
                     {/* ── SIDEBAR DE CHATS ──────────────────────────────────── */}
@@ -3041,8 +3486,6 @@ export default function DigitalesContacto() {
                                             const isActive = chat.telefono === activeTel;
                                             return (
                                                 <button key={chat.id}
-                                                    onMouseEnter={() => prefetchChat(chat.telefono)}
-                                                    onFocus={() => prefetchChat(chat.telefono)}
                                                     onClick={() => openChatByTel(chat.telefono)}
                                                     onContextMenu={(e) => abrirMenuChat(e, chat)}
                                                     className={cls(
@@ -3150,39 +3593,7 @@ export default function DigitalesContacto() {
                                             {copiedTel ? <Check className="h-3 w-3 text-emerald-500" /> : <Copy className="h-3 w-3" />}
                                             <span className={copiedTel ? "text-emerald-500 font-bold" : ""}>{activeTel ? formateaTelUi(activeTel) : "—"}</span>
                                         </button>
-                                        {/* Estado prospecto */}
-                                        {activeTel ? (
-                                            <select value={headerEstado} onChange={(e) => saveHeaderEstado(e.target.value)}
-                                                className="shrink-0 h-6 rounded-md border border-black/10 bg-white px-1.5 text-[11px] font-semibold text-[#000000] outline-none focus:border-[#000000]/40"
-                                                title="Estado del prospecto">
-                                                {renderOptionsConValorActual(ESTADOS_HEADER, headerEstado, "Sin estado")}
-                                            </select>
-                                        ) : null}
-                                        {activeTel ? (
-                                            <select
-                                                value={pautaActual}
-                                                onChange={(e) => saveHeaderPauta(e.target.value)}
-                                                disabled={loadingPautas || savingHeaderPauta || !prospecto?.id}
-                                                className={cls(
-                                                    "shrink-0 h-6 max-w-[280px] rounded-md border px-1.5 text-[11px] font-extrabold outline-none transition",
-                                                    pautaActual
-                                                        ? "border-emerald-200 bg-emerald-50 text-emerald-700"
-                                                        : "border-amber-200 bg-amber-50 text-amber-700",
-                                                    loadingPautas || savingHeaderPauta || !prospecto?.id
-                                                        ? "cursor-not-allowed opacity-70"
-                                                        : "cursor-pointer hover:opacity-90"
-                                                )}
-                                                title={pautaActual || "Sin campaña detectada"}
-                                            >
-                                                {loadingPautas ? (
-                                                    <option value={pautaActual}>{pautaActual || "Cargando campañas..."}</option>
-                                                ) : (
-                                                    renderPautasMetaOptions(pautasOptions, pautaActual, "Sin campaña detectada")
-                                                )}
-                                            </select>
-                                        ) : null}
                                     </div>
-
                                     {/* Fila 2: fechas */}
                                     {activeTel && !isDirectChatMode ? (
                                         <div className="mt-0.5 text-[10px] font-semibold text-slate-400 truncate">
@@ -3193,158 +3604,9 @@ export default function DigitalesContacto() {
 
                                 {/* Derecha: botones de acción — siempre en la misma fila */}
                                 <div className="flex shrink-0 items-center gap-1">
-                                    {/* Marcar no leído */}
-                                    {!isDirectChatMode ? (
-                                        <button type="button" onClick={() => marcarChatComoNoLeido(activeTel)}
-                                            disabled={!activeTel || markingUnreadTel === activeTel}
-                                            className="inline-flex h-7 items-center gap-1 rounded-lg border border-black/10 bg-white px-2 text-[11px] font-semibold text-slate-500 hover:bg-neutral-50 disabled:opacity-50 transition"
-                                            title="Marcar como no leído">
-                                            <MailOpen className="h-3.5 w-3.5" />
-                                            <span className="hidden sm:inline">{markingUnreadTel === activeTel ? "..." : "No leído"}</span>
-                                        </button>
-                                    ) : null}
-
-                                    {/* Pausar / Reactivar IA */}
-                                    {puedeGestionarIa ? (
-                                        iaEstado?.puede_responder ? (
-                                            <button type="button" onClick={pausarIaActiva} disabled={loadingIaAction}
-                                                className="inline-flex h-7 items-center gap-1 rounded-lg border border-amber-200 bg-amber-50 px-2 text-[11px] font-extrabold text-amber-700 hover:bg-amber-100 disabled:opacity-50 transition"
-                                                title="Pausar IA">
-                                                <ZapOff className="h-3.5 w-3.5" />
-                                                <span className="hidden sm:inline">Pausar IA</span>
-                                            </button>
-                                        ) : (
-                                            <button type="button" onClick={reactivarIaActiva} disabled={loadingIaAction}
-                                                className="inline-flex h-7 items-center gap-1 rounded-lg border border-emerald-200 bg-emerald-50 px-2 text-[11px] font-extrabold text-emerald-700 hover:bg-emerald-100 disabled:opacity-50 transition"
-                                                title="Reactivar IA">
-                                                <Zap className="h-3.5 w-3.5" />
-                                                <span className="hidden sm:inline">Reactivar IA</span>
-                                            </button>
-                                        )
-                                    ) : null}
                                 </div>
                             </div>
                         </div>
-
-                        {/* ── BANNER DATOS DEL PROSPECTO (desplegable) ─────────── */}
-                        {activeTel ? (
-                            <details className="group shrink-0 border-b border-[#000000]/10 bg-[#000000]/[0.03]">
-                                <summary className="flex cursor-pointer list-none items-center justify-between gap-3 px-4 py-2">
-                                    <div className="flex min-w-0 flex-1 items-center gap-2">
-                                        <Pencil className="h-3.5 w-3.5 shrink-0 text-[#000000]/60" />
-                                        <span className="text-xs font-extrabold text-[#000000]">Datos del prospecto</span>
-                                        <span className="hidden truncate text-[11px] font-semibold text-[#000000]/60 sm:inline">
-                                            — {[quickEditDraft.auto_interes || prospecto?.auto_interes, quickEditDraft.estado || prospecto?.estado].filter(Boolean).join(" · ") || "Sin datos aún"}
-                                        </span>
-                                    </div>
-                                    <ChevronDown className="h-4 w-4 shrink-0 text-[#000000]/40 transition-transform duration-200 group-open:rotate-180" />
-                                </summary>
-
-                                <div className="border-t border-[#000000]/10 px-4 py-4">
-                                    <div className="mx-auto max-w-5xl">
-                                        <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-5">
-                                            <div>
-                                                <div className="mb-1 text-[11px] font-extrabold uppercase tracking-wide text-[#000000]/60">Vehículo</div>
-                                                <select value={quickEditDraft.auto_interes || ""} onChange={(e) => setQuickEditDraft(p => ({ ...p, auto_interes: e.target.value }))} className="h-9 w-full rounded-lg border border-black/10 bg-white px-3 text-sm font-semibold text-[#000000] outline-none focus:border-[#000000]/40 focus:ring-1 focus:ring-[#000000]/20">{renderOptionsConValorActual(VEHICULOS, quickEditDraft.auto_interes)}</select>
-                                            </div>
-                                            <div>
-                                                <div className="mb-1 text-[11px] font-extrabold uppercase tracking-wide text-[#000000]/60">Estado</div>
-                                                <select value={quickEditDraft.estado || ""} onChange={(e) => setQuickEditDraft(p => ({ ...p, estado: e.target.value }))} className="h-9 w-full rounded-lg border border-black/10 bg-white px-3 text-sm font-semibold text-[#000000] outline-none focus:border-[#000000]/40 focus:ring-1 focus:ring-[#000000]/20">{renderOptionsConValorActual(ESTADOS_PROSPECTO, quickEditDraft.estado)}</select>
-                                            </div>
-                                            <div>
-                                                <div className="mb-1 text-[11px] font-extrabold uppercase tracking-wide text-[#000000]/60">Canal</div>
-                                                <select value={quickEditDraft.canal_contacto || ""} onChange={(e) => setQuickEditDraft(p => ({ ...p, canal_contacto: e.target.value }))} className="h-9 w-full rounded-lg border border-black/10 bg-white px-3 text-sm font-semibold text-[#000000] outline-none focus:border-[#000000]/40 focus:ring-1 focus:ring-[#000000]/20">{renderOptionsConValorActual(CANALES, quickEditDraft.canal_contacto)}</select>
-                                            </div>
-                                            <div>
-                                                <div className="mb-1 flex items-center justify-between gap-2">
-                                                    <div className="text-[11px] font-extrabold uppercase tracking-wide text-[#000000]/60">Campaña Meta</div>
-                                                    <button
-                                                        type="button"
-                                                        onClick={cargarPautasMetaContacto}
-                                                        disabled={loadingPautas}
-                                                        className="inline-flex h-5 items-center rounded-md border border-black/10 bg-white px-1.5 text-[10px] font-extrabold text-[#000000]/60 transition hover:bg-neutral-50 disabled:cursor-not-allowed disabled:opacity-50"
-                                                        title="Recargar campañas"
-                                                    >
-                                                        {loadingPautas ? "..." : "Recargar"}
-                                                    </button>
-                                                </div>
-
-                                                <select
-                                                    value={quickEditDraft.pauta || pautaActual}
-                                                    onChange={(e) =>
-                                                        setQuickEditDraft((prev) => ({
-                                                            ...prev,
-                                                            pauta: e.target.value,
-                                                        }))
-                                                    }
-                                                    disabled={loadingPautas}
-                                                    className={cls(
-                                                        "h-9 w-full rounded-lg border px-3 text-xs font-extrabold outline-none focus:border-[#000000]/40 focus:ring-1 focus:ring-[#000000]/20",
-                                                        quickEditDraft.pauta || pautaActual
-                                                            ? "border-emerald-200 bg-emerald-50 text-emerald-700"
-                                                            : "border-amber-200 bg-amber-50 text-amber-700",
-                                                        loadingPautas ? "cursor-not-allowed opacity-70" : ""
-                                                    )}
-                                                    title={quickEditDraft.pauta || pautaActual || "Sin campaña detectada"}
-                                                >
-                                                    {loadingPautas ? (
-                                                        <option value={quickEditDraft.pauta || pautaActual}>
-                                                            {(quickEditDraft.pauta || pautaActual) || "Cargando campañas..."}
-                                                        </option>
-                                                    ) : (
-                                                        renderPautasMetaOptions(
-                                                            pautasOptions,
-                                                            quickEditDraft.pauta || pautaActual,
-                                                            "Sin campaña detectada"
-                                                        )
-                                                    )}
-                                                </select>
-
-                                                {campanaMetaProspecto.id_campana ? (
-                                                    <div className="mt-1 truncate text-[10px] font-semibold text-[#000000]/40">
-                                                        Detectada por Meta · ID: {campanaMetaProspecto.id_campana}
-                                                    </div>
-                                                ) : (
-                                                    <div className="mt-1 truncate text-[10px] font-semibold text-[#000000]/40">
-                                                        Puedes corregirla manualmente si la atribución vino equivocada.
-                                                    </div>
-                                                )}
-                                            </div>
-                                            <div>
-                                                <div className="mb-1 text-[11px] font-extrabold uppercase tracking-wide text-[#000000]/60">Comentarios</div>
-                                                <textarea value={quickEditDraft.comentarios || ""} onChange={(e) => setQuickEditDraft(p => ({ ...p, comentarios: e.target.value }))} rows={2} className="w-full resize-none rounded-lg border border-black/10 bg-white px-3 py-2 text-sm font-semibold text-[#000000] outline-none focus:border-[#000000]/40 focus:ring-1 focus:ring-[#000000]/20" />
-                                            </div>
-                                        </div>
-
-                                        <div className="mt-4 rounded-xl border border-[#000000]/10 bg-white p-4">
-                                            <div className="mb-3 flex items-center gap-2 text-xs font-extrabold uppercase tracking-wide text-[#000000]/60">
-                                                <Activity className="h-3.5 w-3.5" />Perfil comercial y financiero
-                                            </div>
-                                            <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
-                                                <div><div className="mb-1 text-[11px] font-extrabold uppercase tracking-wide text-[#000000]/60">Enganche</div><input type="number" min="0" inputMode="numeric" value={quickEditDraft.enganche_monto || ""} onChange={(e) => setQuickEditDraft(p => ({ ...p, enganche_monto: e.target.value.replace(/\D/g, "") }))} placeholder="Ej. 80000" className="h-9 w-full rounded-lg border border-black/10 bg-white px-3 text-sm font-semibold text-[#000000] outline-none focus:border-[#000000]/40 focus:ring-1 focus:ring-[#000000]/20" /></div>
-                                                <div><div className="mb-1 text-[11px] font-extrabold uppercase tracking-wide text-[#000000]/60">Presupuesto mensual</div><input type="number" min="0" inputMode="numeric" value={quickEditDraft.presupuesto_mensual || ""} onChange={(e) => setQuickEditDraft(p => ({ ...p, presupuesto_mensual: e.target.value.replace(/\D/g, "") }))} placeholder="Ej. 9000" className="h-9 w-full rounded-lg border border-black/10 bg-white px-3 text-sm font-semibold text-[#000000] outline-none focus:border-[#000000]/40 focus:ring-1 focus:ring-[#000000]/20" /></div>
-                                                <div><div className="mb-1 text-[11px] font-extrabold uppercase tracking-wide text-[#000000]/60">Buró</div><select value={quickEditDraft.buro_estado || ""} onChange={(e) => setQuickEditDraft(p => ({ ...p, buro_estado: e.target.value }))} className="h-9 w-full rounded-lg border border-black/10 bg-white px-3 text-sm font-semibold text-[#000000] outline-none focus:border-[#000000]/40 focus:ring-1 focus:ring-[#000000]/20">{BURO_OPTIONS.map(i => <option key={i.value} value={i.value}>{i.label}</option>)}</select></div>
-                                                <div><div className="mb-1 text-[11px] font-extrabold uppercase tracking-wide text-[#000000]/60">Forma de pago</div><select value={quickEditDraft.forma_pago || ""} onChange={(e) => setQuickEditDraft(p => ({ ...p, forma_pago: e.target.value }))} className="h-9 w-full rounded-lg border border-black/10 bg-white px-3 text-sm font-semibold text-[#000000] outline-none focus:border-[#000000]/40 focus:ring-1 focus:ring-[#000000]/20">{FORMA_PAGO_OPTIONS.map(i => <option key={i.value} value={i.value}>{i.label}</option>)}</select></div>
-                                                <div><div className="mb-1 text-[11px] font-extrabold uppercase tracking-wide text-[#000000]/60">Tipo cliente</div><select value={quickEditDraft.tipo_cliente || ""} onChange={(e) => setQuickEditDraft(p => ({ ...p, tipo_cliente: e.target.value }))} className="h-9 w-full rounded-lg border border-black/10 bg-white px-3 text-sm font-semibold text-[#000000] outline-none focus:border-[#000000]/40 focus:ring-1 focus:ring-[#000000]/20">{TIPO_CLIENTE_OPTIONS.map(i => <option key={i.value} value={i.value}>{i.label}</option>)}</select></div>
-                                                <div><div className="mb-1 text-[11px] font-extrabold uppercase tracking-wide text-[#000000]/60">Plazo de compra</div><select value={quickEditDraft.plazo_compra || ""} onChange={(e) => setQuickEditDraft(p => ({ ...p, plazo_compra: e.target.value }))} className="h-9 w-full rounded-lg border border-black/10 bg-white px-3 text-sm font-semibold text-[#000000] outline-none focus:border-[#000000]/40 focus:ring-1 focus:ring-[#000000]/20">{PLAZO_COMPRA_OPTIONS.map(i => <option key={i || "empty"} value={i}>{i || "— Selecciona —"}</option>)}</select></div>
-                                                <div><div className="mb-1 text-[11px] font-extrabold uppercase tracking-wide text-[#000000]/60">Uso del vehículo</div><input value={quickEditDraft.uso_vehiculo || ""} onChange={(e) => setQuickEditDraft(p => ({ ...p, uso_vehiculo: e.target.value }))} placeholder="Personal, familiar…" className="h-9 w-full rounded-lg border border-black/10 bg-white px-3 text-sm font-semibold text-[#000000] outline-none focus:border-[#000000]/40 focus:ring-1 focus:ring-[#000000]/20" /></div>
-                                                <div><div className="mb-1 text-[11px] font-extrabold uppercase tracking-wide text-[#000000]/60">Comprobación ingresos</div><input value={quickEditDraft.comprobacion_ingresos || ""} onChange={(e) => setQuickEditDraft(p => ({ ...p, comprobacion_ingresos: e.target.value }))} placeholder="Nómina, estados…" className="h-9 w-full rounded-lg border border-black/10 bg-white px-3 text-sm font-semibold text-[#000000] outline-none focus:border-[#000000]/40 focus:ring-1 focus:ring-[#000000]/20" /></div>
-                                            </div>
-                                        </div>
-
-                                        <div className="mt-4 flex justify-end">
-                                            <button onClick={saveQuickEdit} disabled={savingQuickEdit || !prospecto?.id}
-                                                className="inline-flex items-center gap-2 rounded-xl px-5 py-2.5 text-sm font-extrabold text-white shadow-sm transition hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-60"
-                                                style={{ backgroundColor: BRAND_BLUE }} type="button">
-                                                <Save className="h-4 w-4" />
-                                                {savingQuickEdit ? "Guardando..." : "Guardar cambios"}
-                                            </button>
-                                        </div>
-                                    </div>
-                                </div>
-                            </details>
-                        ) : null}
-
                         {/* ── ÁREA DE MENSAJES ──────────────────────────────────── */}
                         <div
                             ref={messagesScrollRef}
@@ -3498,7 +3760,7 @@ export default function DigitalesContacto() {
                                 <div className="rounded-2xl border border-black/10 bg-white shadow-sm">
                                     <div className="px-2 pt-2">
                                         <WhatsAppComposerInput value={draftMsg} onChange={setDraftMsg} onSend={enviarMensaje}
-                                            disabled={!activeTel} placeholder={composerHint} inputRef={inputRef} onPaste={onPasteInComposer} />
+                                            disabled={!activeTel || clienteBloqueado} placeholder={composerHint} inputRef={inputRef} onPaste={onPasteInComposer} />
                                     </div>
 
                                     {/* Barra de botones */}
@@ -3732,21 +3994,699 @@ export default function DigitalesContacto() {
                             </div>
                         </div>
                     </section>
-                </div>
-            </div>
+                    {/* ── PANEL DERECHO DEL PROSPECTO ─────────────────────────────── */}
+                        {activeTel ? (
+                            showProspectoPanel ? (
+                                <aside className="hidden min-h-0 flex-col border-l border-black/10 bg-[#F8F9FB] lg:flex">
 
-            {/* ── MENÚ CONTEXTUAL ───────────────────────────────────────────── */}
-            {chatMenu ? (
-                <div className="fixed z-[90] min-w-[210px] overflow-hidden rounded-xl border border-black/10 bg-white py-1 shadow-2xl"
-                    style={{ left: Math.min(chatMenu.x, window.innerWidth - 230), top: Math.min(chatMenu.y, window.innerHeight - 90) }}
-                    onMouseDown={(e) => e.stopPropagation()}>
-                    <button type="button" onClick={() => marcarChatComoNoLeido(chatMenu.tel)} disabled={markingUnreadTel === chatMenu.tel}
-                        className="flex w-full items-center gap-2 px-3 py-2 text-left text-xs font-extrabold text-[#000000] hover:bg-neutral-50 disabled:cursor-not-allowed disabled:opacity-60">
-                        <MailOpen className="h-4 w-4" />
-                        {markingUnreadTel === chatMenu.tel ? "Marcando..." : "Marcar como no leído"}
-                    </button>
+                                    {/* HEADER PERFIL */}
+                                    <div className="flex shrink-0 items-center justify-between border-b border-black/10 bg-white px-4 py-3">
+                                        <div className="flex min-w-0 items-center gap-2.5">
+                                            <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-neutral-100">
+                                                <UserRound className="h-4 w-4 text-[#000000]" />
+                                            </div>
+
+                                            <div className="min-w-0">
+                                                <div className="text-sm font-extrabold text-[#000000]">
+                                                    Perfil del prospecto
+                                                </div>
+
+                                                <div className="truncate text-[10px] font-semibold text-slate-400">
+                                                    {[
+                                                        quickEditDraft.auto_interes || prospecto?.auto_interes,
+                                                        quickEditDraft.canal_contacto || prospecto?.canal_contacto,
+                                                        quickEditDraft.estado || prospecto?.estado,
+                                                    ]
+                                                        .filter(Boolean)
+                                                        .join(" · ") || "Datos comerciales Volvo"}
+                                                </div>
+                                            </div>
+                                        </div>
+
+                                        <button
+                                            type="button"
+                                            onClick={() => setShowProspectoPanel(false)}
+                                            className="inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-neutral-100 text-slate-400 transition hover:bg-neutral-200 hover:text-[#000000]"
+                                            title="Ocultar perfil del prospecto"
+                                        >
+                                            <X className="h-4 w-4" />
+                                        </button>
+                                    </div>
+
+                                    {/* SCROLL DEL PERFIL */}
+                                    <div className="min-h-0 flex-1 overflow-y-auto p-3">
+
+                                        {/* IDENTIDAD + ESTADO + CAMPAÑA */}
+                                        <div className="rounded-2xl border border-black/10 bg-white p-4 shadow-sm">
+
+                                            <div className="flex items-start gap-3">
+                                                <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-[#001E50] text-sm font-extrabold text-white">
+                                                    {String(
+                                                        prospecto?.nombre ||
+                                                        activeChat?.nombre ||
+                                                        "P"
+                                                    )
+                                                        .trim()
+                                                        .charAt(0)
+                                                        .toUpperCase()}
+                                                </div>
+
+                                                <div className="min-w-0 flex-1">
+                                                    <div className="truncate text-sm font-extrabold text-[#000000]">
+                                                        {prospecto?.nombre || activeChat?.nombre || "Prospecto"}
+                                                    </div>
+
+                                                    <div className="mt-1 text-[10px] font-bold uppercase tracking-wide text-slate-400">
+                                                        Número
+                                                    </div>
+
+                                                    <button
+                                                        type="button"
+                                                        onClick={copyTel}
+                                                        className="mt-0.5 inline-flex items-center gap-1 text-xs font-bold text-slate-500 transition hover:text-[#000000]"
+                                                        title="Copiar número"
+                                                    >
+                                                        {copiedTel ? (
+                                                            <Check className="h-3.5 w-3.5 text-emerald-500" />
+                                                        ) : (
+                                                            <Copy className="h-3.5 w-3.5" />
+                                                        )}
+
+                                                        <span className={copiedTel ? "text-emerald-600" : ""}>
+                                                            {formateaTelUi(activeTel)}
+                                                        </span>
+                                                    </button>
+                                                </div>
+                                            </div>
+
+                                            {/* ESTADO */}
+                                            <div className="mt-5">
+                                                <div className="mb-1.5 text-[10px] font-extrabold uppercase tracking-wide text-slate-500">
+                                                    Estado
+                                                </div>
+
+                                                <select
+                                                    value={quickEditDraft.estado || ""}
+                                                    onChange={(e) =>
+                                                        setQuickEditDraft((prev) => ({
+                                                            ...prev,
+                                                            estado: e.target.value,
+                                                        }))
+                                                    }
+                                                    className="h-10 w-full rounded-xl border border-black/10 bg-white px-3 text-sm font-semibold text-[#000000] outline-none transition focus:border-[#000000]/40 focus:ring-1 focus:ring-[#000000]/20"
+                                                >
+                                                    {renderOptionsConValorActual(
+                                                        ESTADOS_PROSPECTO,
+                                                        quickEditDraft.estado
+                                                    )}
+                                                </select>
+                                            </div>
+
+                                            {/* CAMPAÑA */}
+                                            <div className="mt-4">
+                                                <div className="mb-1.5 flex items-center justify-between gap-2">
+                                                    <div className="text-[10px] font-extrabold uppercase tracking-wide text-slate-500">
+                                                        Campaña
+                                                    </div>
+
+                                                    <button
+                                                        type="button"
+                                                        onClick={cargarPautasMetaContacto}
+                                                        disabled={loadingPautas}
+                                                        className="text-[10px] font-bold text-slate-400 hover:text-[#000000] disabled:opacity-50"
+                                                    >
+                                                        {loadingPautas ? "Cargando..." : "Actualizar"}
+                                                    </button>
+                                                </div>
+
+                                                <select
+                                                    value={quickEditDraft.pauta || pautaActual}
+                                                    onChange={(e) =>
+                                                        setQuickEditDraft((prev) => ({
+                                                            ...prev,
+                                                            pauta: e.target.value,
+                                                        }))
+                                                    }
+                                                    disabled={loadingPautas}
+                                                    className="h-10 w-full rounded-xl border border-black/10 bg-white px-3 text-xs font-semibold text-[#000000] outline-none transition focus:border-[#000000]/40 focus:ring-1 focus:ring-[#000000]/20 disabled:opacity-60"
+                                                >
+                                                    {loadingPautas ? (
+                                                        <option value={quickEditDraft.pauta || pautaActual}>
+                                                            {(quickEditDraft.pauta || pautaActual) ||
+                                                                "Cargando campañas..."}
+                                                        </option>
+                                                    ) : (
+                                                        renderPautasMetaOptions(
+                                                            pautasOptions,
+                                                            quickEditDraft.pauta || pautaActual,
+                                                            "Sin campaña"
+                                                        )
+                                                    )}
+                                                </select>
+                                            </div>
+
+                                            {/* ASESOR ACTUAL */}
+                                            <div className="mt-4">
+                                                <div className="mb-1.5 text-[10px] font-extrabold uppercase tracking-wide text-slate-500">
+                                                    Asesor
+                                                </div>
+
+                                                <div className="rounded-xl border border-black/10 bg-neutral-50 px-3 py-2.5 text-xs font-semibold text-slate-600">
+                                                    {prospecto?.asesor_ventas ||
+                                                        prospecto?.asesor_digital ||
+                                                        "Sin asesor asignado"}
+                                                </div>
+                                            </div>
+                                            <button
+                                                type="button"
+                                                onClick={() => setShowCitaModal(true)}
+                                                disabled={!activeTel}
+                                                className="mt-4 inline-flex h-11 w-full items-center justify-center gap-2 rounded-xl bg-[#001E50] px-4 text-sm font-extrabold text-white shadow-sm transition hover:bg-[#001640] disabled:cursor-not-allowed disabled:opacity-50"
+                                            >
+                                                <CalendarPlus className="h-4 w-4" />
+                                                Agendar cita
+                                            </button>
+                                            {/* ACCIONES RÁPIDAS DEL PROSPECTO */}
+                                                <div className="mt-3 grid grid-cols-4 gap-2">
+
+                                                    {/* MARCAR NO LEÍDO */}
+                                                    <button
+                                                        type="button"
+                                                        onClick={() => marcarChatComoNoLeido(activeTel)}
+                                                        disabled={!activeTel || markingUnreadTel === activeTel}
+                                                        className="inline-flex h-10 items-center justify-center rounded-xl border border-blue-100 bg-blue-50 text-blue-700 transition hover:bg-blue-100 disabled:cursor-not-allowed disabled:opacity-50"
+                                                        title="Marcar como no leído"
+                                                    >
+                                                        {markingUnreadTel === activeTel ? (
+                                                            <Loader2 className="h-4 w-4 animate-spin" />
+                                                        ) : (
+                                                            <MailOpen className="h-4 w-4" />
+                                                        )}
+                                                    </button>
+
+                                                    {/* PAUSAR / REACTIVAR IA */}
+                                                    {puedeGestionarIa ? (
+                                                        iaEstado?.puede_responder ? (
+                                                            <button
+                                                                type="button"
+                                                                onClick={pausarIaActiva}
+                                                                disabled={loadingIaAction}
+                                                                className="inline-flex h-10 items-center justify-center rounded-xl border border-amber-100 bg-amber-50 text-amber-700 transition hover:bg-amber-100 disabled:cursor-not-allowed disabled:opacity-50"
+                                                                title="Pausar IA"
+                                                            >
+                                                                {loadingIaAction ? (
+                                                                    <Loader2 className="h-4 w-4 animate-spin" />
+                                                                ) : (
+                                                                    <ZapOff className="h-4 w-4" />
+                                                                )}
+                                                            </button>
+                                                        ) : (
+                                                            <button
+                                                                type="button"
+                                                                onClick={reactivarIaActiva}
+                                                                disabled={loadingIaAction}
+                                                                className="inline-flex h-10 items-center justify-center rounded-xl border border-emerald-100 bg-emerald-50 text-emerald-700 transition hover:bg-emerald-100 disabled:cursor-not-allowed disabled:opacity-50"
+                                                                title="Reactivar IA"
+                                                            >
+                                                                {loadingIaAction ? (
+                                                                    <Loader2 className="h-4 w-4 animate-spin" />
+                                                                ) : (
+                                                                    <Zap className="h-4 w-4" />
+                                                                )}
+                                                            </button>
+                                                        )
+                                                    ) : (
+                                                        <button
+                                                            type="button"
+                                                            disabled
+                                                            className="inline-flex h-10 items-center justify-center rounded-xl border border-slate-200 bg-slate-50 text-slate-300"
+                                                            title="IA no disponible"
+                                                        >
+                                                            <Zap className="h-4 w-4" />
+                                                        </button>
+                                                    )}
+                                                    {/* BLOQUEAR / DESBLOQUEAR WHATSAPP */}
+                                                    <button
+                                                        type="button"
+                                                        onClick={
+                                                            clienteBloqueado
+                                                                ? desbloquearContactoActivo
+                                                                : bloquearContactoActivo
+                                                        }
+                                                        disabled={!activeTel || blockingTel === activeTel}
+                                                        className={cls(
+                                                            "inline-flex h-10 items-center justify-center rounded-xl border transition disabled:cursor-not-allowed disabled:opacity-50",
+                                                            clienteBloqueado
+                                                                ? "border-slate-200 bg-slate-50 text-slate-600 hover:bg-slate-100"
+                                                                : "border-red-100 bg-red-50 text-red-600 hover:bg-red-100"
+                                                        )}
+                                                        title={
+                                                            clienteBloqueado
+                                                                ? "Desbloquear contacto"
+                                                                : "Bloquear contacto"
+                                                        }
+                                                    >
+                                                        {blockingTel === activeTel ? (
+                                                            <Loader2 className="h-4 w-4 animate-spin" />
+                                                        ) : (
+                                                            <Ban className="h-4 w-4" />
+                                                        )}
+                                                    </button>
+                                                    {/* LLAMAR */}
+                                                    <button
+                                                        type="button"
+                                                        onClick={llamarProspecto}
+                                                        disabled={!activeTel}
+                                                        className="inline-flex h-10 items-center justify-center rounded-xl border border-emerald-100 bg-emerald-50 text-emerald-600 transition hover:bg-emerald-100 disabled:cursor-not-allowed disabled:opacity-50"
+                                                        title="Llamar por WhatsApp"
+                                                    >
+                                                        <Phone className="h-4 w-4" />
+                                                    </button>
+
+                                                </div>
+                                        </div>
+
+                                        {/* DATOS PRINCIPALES */}
+                                        <div className="mt-3 rounded-2xl border border-black/10 bg-white p-4 shadow-sm">
+                                            <div className="mb-1 text-xs font-extrabold uppercase tracking-wide text-[#000000]">
+                                                Datos principales
+                                            </div>
+
+                                            <div className="mb-4 text-[10px] font-semibold text-slate-400">
+                                                Información comercial actual del prospecto.
+                                            </div>
+
+                                            {/* VEHÍCULO */}
+                                            <div>
+                                                <div className="mb-1 text-[10px] font-extrabold uppercase tracking-wide text-slate-500">
+                                                    Vehículo
+                                                </div>
+
+                                                <select
+                                                    value={quickEditDraft.auto_interes || ""}
+                                                    onChange={(e) =>
+                                                        setQuickEditDraft((prev) => ({
+                                                            ...prev,
+                                                            auto_interes: e.target.value,
+                                                        }))
+                                                    }
+                                                    className="h-10 w-full rounded-xl border border-black/10 bg-white px-3 text-sm font-semibold text-[#000000] outline-none focus:border-[#000000]/40 focus:ring-1 focus:ring-[#000000]/20"
+                                                >
+                                                    {renderOptionsConValorActual(
+                                                        VEHICULOS,
+                                                        quickEditDraft.auto_interes
+                                                    )}
+                                                </select>
+                                            </div>
+
+                                            {/* CANAL */}
+                                            <div className="mt-4">
+                                                <div className="mb-1 text-[10px] font-extrabold uppercase tracking-wide text-slate-500">
+                                                    Canal
+                                                </div>
+
+                                                <select
+                                                    value={quickEditDraft.canal_contacto || ""}
+                                                    onChange={(e) =>
+                                                        setQuickEditDraft((prev) => ({
+                                                            ...prev,
+                                                            canal_contacto: e.target.value,
+                                                        }))
+                                                    }
+                                                    className="h-10 w-full rounded-xl border border-black/10 bg-white px-3 text-sm font-semibold text-[#000000] outline-none focus:border-[#000000]/40 focus:ring-1 focus:ring-[#000000]/20"
+                                                >
+                                                    {renderOptionsConValorActual(
+                                                        CANALES,
+                                                        quickEditDraft.canal_contacto
+                                                    )}
+                                                </select>
+                                            </div>
+
+                                            {/* COMENTARIOS */}
+                                            <div className="mt-4">
+                                                <div className="mb-1 text-[10px] font-extrabold uppercase tracking-wide text-slate-500">
+                                                    Comentarios
+                                                </div>
+
+                                                <textarea
+                                                    value={quickEditDraft.comentarios || ""}
+                                                    onChange={(e) =>
+                                                        setQuickEditDraft((prev) => ({
+                                                            ...prev,
+                                                            comentarios: e.target.value,
+                                                        }))
+                                                    }
+                                                    rows={3}
+                                                    placeholder="Comentarios del prospecto..."
+                                                    className="w-full resize-none rounded-xl border border-black/10 bg-white px-3 py-2.5 text-sm font-semibold text-[#000000] outline-none focus:border-[#000000]/40 focus:ring-1 focus:ring-[#000000]/20"
+                                                />
+                                            </div>
+                                        </div>
+
+                                        {/* PERFIL COMERCIAL Y FINANCIERO */}
+                                        <div className="mt-3 rounded-2xl border border-black/10 bg-white p-4 shadow-sm">
+
+                                            <div className="mb-1 flex items-center gap-2">
+                                                <Activity className="h-4 w-4 text-[#001E50]" />
+
+                                                <div className="text-xs font-extrabold uppercase tracking-wide text-[#000000]">
+                                                    Perfil comercial y financiero
+                                                </div>
+                                            </div>
+
+                                            <div className="mb-4 text-[10px] font-semibold text-slate-400">
+                                                Información para perfilar la viabilidad comercial.
+                                            </div>
+
+                                            {/* ENGANCHE */}
+                                            <div>
+                                                <div className="mb-1 text-[10px] font-extrabold uppercase tracking-wide text-slate-500">
+                                                    Enganche
+                                                </div>
+
+                                                <input
+                                                    type="number"
+                                                    min="0"
+                                                    inputMode="numeric"
+                                                    value={quickEditDraft.enganche_monto || ""}
+                                                    onChange={(e) =>
+                                                        setQuickEditDraft((prev) => ({
+                                                            ...prev,
+                                                            enganche_monto: e.target.value.replace(/\D/g, ""),
+                                                        }))
+                                                    }
+                                                    placeholder="Ej. 80000"
+                                                    className="h-10 w-full rounded-xl border border-black/10 bg-white px-3 text-sm font-semibold text-[#000000] outline-none focus:border-[#000000]/40 focus:ring-1 focus:ring-[#000000]/20"
+                                                />
+                                            </div>
+
+                                            {/* PRESUPUESTO */}
+                                            <div className="mt-4">
+                                                <div className="mb-1 text-[10px] font-extrabold uppercase tracking-wide text-slate-500">
+                                                    Presupuesto mensual
+                                                </div>
+
+                                                <input
+                                                    type="number"
+                                                    min="0"
+                                                    inputMode="numeric"
+                                                    value={quickEditDraft.presupuesto_mensual || ""}
+                                                    onChange={(e) =>
+                                                        setQuickEditDraft((prev) => ({
+                                                            ...prev,
+                                                            presupuesto_mensual: e.target.value.replace(/\D/g, ""),
+                                                        }))
+                                                    }
+                                                    placeholder="Ej. 9000"
+                                                    className="h-10 w-full rounded-xl border border-black/10 bg-white px-3 text-sm font-semibold text-[#000000] outline-none focus:border-[#000000]/40 focus:ring-1 focus:ring-[#000000]/20"
+                                                />
+                                            </div>
+
+                                            {/* BURÓ */}
+                                            <div className="mt-4">
+                                                <div className="mb-1 text-[10px] font-extrabold uppercase tracking-wide text-slate-500">
+                                                    Buró
+                                                </div>
+
+                                                <select
+                                                    value={quickEditDraft.buro_estado || ""}
+                                                    onChange={(e) =>
+                                                        setQuickEditDraft((prev) => ({
+                                                            ...prev,
+                                                            buro_estado: e.target.value,
+                                                        }))
+                                                    }
+                                                    className="h-10 w-full rounded-xl border border-black/10 bg-white px-3 text-sm font-semibold text-[#000000] outline-none focus:border-[#000000]/40 focus:ring-1 focus:ring-[#000000]/20"
+                                                >
+                                                    {BURO_OPTIONS.map((item) => (
+                                                        <option key={item.value} value={item.value}>
+                                                            {item.label}
+                                                        </option>
+                                                    ))}
+                                                </select>
+                                            </div>
+
+                                            {/* FORMA PAGO */}
+                                            <div className="mt-4">
+                                                <div className="mb-1 text-[10px] font-extrabold uppercase tracking-wide text-slate-500">
+                                                    Forma de pago
+                                                </div>
+
+                                                <select
+                                                    value={quickEditDraft.forma_pago || ""}
+                                                    onChange={(e) =>
+                                                        setQuickEditDraft((prev) => ({
+                                                            ...prev,
+                                                            forma_pago: e.target.value,
+                                                        }))
+                                                    }
+                                                    className="h-10 w-full rounded-xl border border-black/10 bg-white px-3 text-sm font-semibold text-[#000000] outline-none focus:border-[#000000]/40 focus:ring-1 focus:ring-[#000000]/20"
+                                                >
+                                                    {FORMA_PAGO_OPTIONS.map((item) => (
+                                                        <option key={item.value} value={item.value}>
+                                                            {item.label}
+                                                        </option>
+                                                    ))}
+                                                </select>
+                                            </div>
+
+                                            {/* TIPO CLIENTE */}
+                                            <div className="mt-4">
+                                                <div className="mb-1 text-[10px] font-extrabold uppercase tracking-wide text-slate-500">
+                                                    Tipo cliente
+                                                </div>
+
+                                                <select
+                                                    value={quickEditDraft.tipo_cliente || ""}
+                                                    onChange={(e) =>
+                                                        setQuickEditDraft((prev) => ({
+                                                            ...prev,
+                                                            tipo_cliente: e.target.value,
+                                                        }))
+                                                    }
+                                                    className="h-10 w-full rounded-xl border border-black/10 bg-white px-3 text-sm font-semibold text-[#000000] outline-none focus:border-[#000000]/40 focus:ring-1 focus:ring-[#000000]/20"
+                                                >
+                                                    {TIPO_CLIENTE_OPTIONS.map((item) => (
+                                                        <option key={item.value} value={item.value}>
+                                                            {item.label}
+                                                        </option>
+                                                    ))}
+                                                </select>
+                                            </div>
+
+                                            {/* PLAZO */}
+                                            <div className="mt-4">
+                                                <div className="mb-1 text-[10px] font-extrabold uppercase tracking-wide text-slate-500">
+                                                    Plazo de compra
+                                                </div>
+
+                                                <select
+                                                    value={quickEditDraft.plazo_compra || ""}
+                                                    onChange={(e) =>
+                                                        setQuickEditDraft((prev) => ({
+                                                            ...prev,
+                                                            plazo_compra: e.target.value,
+                                                        }))
+                                                    }
+                                                    className="h-10 w-full rounded-xl border border-black/10 bg-white px-3 text-sm font-semibold text-[#000000] outline-none focus:border-[#000000]/40 focus:ring-1 focus:ring-[#000000]/20"
+                                                >
+                                                    {PLAZO_COMPRA_OPTIONS.map((item) => (
+                                                        <option key={item || "empty"} value={item}>
+                                                            {item || "— Selecciona —"}
+                                                        </option>
+                                                    ))}
+                                                </select>
+                                            </div>
+
+                                            {/* USO */}
+                                            <div className="mt-4">
+                                                <div className="mb-1 text-[10px] font-extrabold uppercase tracking-wide text-slate-500">
+                                                    Uso del vehículo
+                                                </div>
+
+                                                <input
+                                                    value={quickEditDraft.uso_vehiculo || ""}
+                                                    onChange={(e) =>
+                                                        setQuickEditDraft((prev) => ({
+                                                            ...prev,
+                                                            uso_vehiculo: e.target.value,
+                                                        }))
+                                                    }
+                                                    placeholder="Personal, familiar..."
+                                                    className="h-10 w-full rounded-xl border border-black/10 bg-white px-3 text-sm font-semibold text-[#000000] outline-none focus:border-[#000000]/40 focus:ring-1 focus:ring-[#000000]/20"
+                                                />
+                                            </div>
+
+                                            {/* COMPROBACIÓN */}
+                                            <div className="mt-4">
+                                                <div className="mb-1 text-[10px] font-extrabold uppercase tracking-wide text-slate-500">
+                                                    Comprobación ingresos
+                                                </div>
+
+                                                <input
+                                                    value={quickEditDraft.comprobacion_ingresos || ""}
+                                                    onChange={(e) =>
+                                                        setQuickEditDraft((prev) => ({
+                                                            ...prev,
+                                                            comprobacion_ingresos: e.target.value,
+                                                        }))
+                                                    }
+                                                    placeholder="Nómina, estados..."
+                                                    className="h-10 w-full rounded-xl border border-black/10 bg-white px-3 text-sm font-semibold text-[#000000] outline-none focus:border-[#000000]/40 focus:ring-1 focus:ring-[#000000]/20"
+                                                />
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    {/* GUARDAR STICKY */}
+                                    <div className="shrink-0 border-t border-black/10 bg-white p-3 shadow-[0_-6px_18px_rgba(15,23,42,0.06)]">
+                                        <div className="mb-2 flex items-center gap-1.5 text-[10px] font-semibold text-emerald-600">
+                                            <Check className="h-3.5 w-3.5" />
+                                            Revisa los datos antes de guardar los cambios.
+                                        </div>
+
+                                        <button
+                                            onClick={saveQuickEdit}
+                                            disabled={savingQuickEdit || !prospecto?.id}
+                                            type="button"
+                                            className="inline-flex h-11 w-full items-center justify-center gap-2 rounded-xl bg-[#001E50] px-5 text-sm font-extrabold text-white shadow-sm transition hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-50"
+                                        >
+                                            <Save className="h-4 w-4" />
+
+                                            {savingQuickEdit
+                                                ? "Guardando..."
+                                                : "Guardar cambios"}
+                                        </button>
+                                    </div>
+                                </aside>
+                            ) : (
+                                /* PANEL CERRADO TIPO VW */
+                                <aside className="hidden min-h-0 flex-col items-center border-l border-black/10 bg-[#F8F9FB] lg:flex">
+                                    <button
+                                        type="button"
+                                        onClick={() => setShowProspectoPanel(true)}
+                                        className="flex h-full w-full flex-col items-center gap-3 py-3 text-slate-400 transition hover:bg-white hover:text-[#000000]"
+                                        title="Desplegar perfil del prospecto"
+                                    >
+                                        <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-white shadow-sm">
+                                            <ChevronLeft className="h-4 w-4" />
+                                        </div>
+
+                                        <UserRound className="h-4 w-4" />
+
+                                        <span
+                                            className="text-[10px] font-extrabold uppercase tracking-[0.18em]"
+                                            style={{
+                                                writingMode: "vertical-rl",
+                                                transform: "rotate(180deg)",
+                                            }}
+                                        >
+                                            Perfil
+                                        </span>
+                                    </button>
+                                </aside>
+                            )
+                                             ) : null}
+
                 </div>
-            ) : null}
+
+{/* ── NOTIFICACIÓN DE CITA ─────────────────────────────────────── */}
+{citaToast ? (
+    <div className="fixed right-6 top-6 z-[140] w-[360px] max-w-[calc(100vw-32px)]">
+        <div className="overflow-hidden rounded-2xl border border-slate-200 bg-white shadow-[0_18px_50px_rgba(15,23,42,0.18)]">
+
+            {/* Línea superior Volvo */}
+            <div
+                className={
+                    citaToast.tipo === "success"
+                        ? "h-1 bg-[#001E50]"
+                        : "h-1 bg-red-500"
+                }
+            />
+
+            <div className="flex items-start gap-3 p-4">
+
+                {/* Icono */}
+                <div
+                    className={
+                        citaToast.tipo === "success"
+                            ? "flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-emerald-50 text-emerald-600"
+                            : "flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-red-50 text-red-600"
+                    }
+                >
+                    {citaToast.tipo === "success" ? (
+                        <Check className="h-5 w-5" />
+                    ) : (
+                        <AlertCircle className="h-5 w-5" />
+                    )}
+                </div>
+
+                {/* Texto */}
+                <div className="min-w-0 flex-1">
+                    <div className="text-sm font-extrabold text-[#001E50]">
+                        {citaToast.titulo}
+                    </div>
+
+                    <div className="mt-1 text-xs font-semibold leading-5 text-slate-500">
+                        {citaToast.mensaje}
+                    </div>
+
+                    {citaToast.tipo === "success" ? (
+                        <div className="mt-2 inline-flex items-center gap-1 text-[10px] font-bold uppercase tracking-wide text-emerald-600">
+                            <CalendarPlus className="h-3 w-3" />
+                            Registrada en Citas
+                        </div>
+                    ) : null}
+                </div>
+
+                {/* Cerrar */}
+                <button
+                    type="button"
+                    onClick={() => setCitaToast(null)}
+                    className="inline-flex h-7 w-7 shrink-0 items-center justify-center rounded-lg text-slate-400 transition hover:bg-slate-100 hover:text-[#001E50]"
+                    title="Cerrar"
+                >
+                    <X className="h-4 w-4" />
+                </button>
+            </div>
+        </div>
+    </div>
+) : null}
+                <AgendarCitaModal
+                    open={showCitaModal}
+                    onClose={() => setShowCitaModal(false)}
+                    nombreCliente={prospecto?.nombre || activeChat?.nombre}
+                    telefono={activeTel ? formateaTelUi(activeTel) : ""}
+                    vehiculo={quickEditDraft.auto_interes || prospecto?.auto_interes || ""}
+                    agencia={prospecto?.agencia || activeChat?.agencia || "Volvo"}
+                    onGuardar={guardarCita}
+                    saving={savingCita}
+                />
+                {/* ── MENÚ CONTEXTUAL ───────────────────────────────────────────── */}
+                {chatMenu ? (
+                    <div
+                        className="fixed z-[90] min-w-[210px] overflow-hidden rounded-xl border border-black/10 bg-white py-1 shadow-2xl"
+                        style={{
+                            left: Math.min(chatMenu.x, window.innerWidth - 230),
+                            top: Math.min(chatMenu.y, window.innerHeight - 90),
+                        }}
+                        onMouseDown={(e) => e.stopPropagation()}
+                    >
+                        <button
+                            type="button"
+                            onClick={() => marcarChatComoNoLeido(chatMenu.tel)}
+                            disabled={markingUnreadTel === chatMenu.tel}
+                            className="flex w-full items-center gap-2 px-3 py-2 text-left text-xs font-extrabold text-[#000000] hover:bg-neutral-50 disabled:cursor-not-allowed disabled:opacity-60"
+                        >
+                            <MailOpen className="h-4 w-4" />
+                            {markingUnreadTel === chatMenu.tel
+                                ? "Marcando..."
+                                : "Marcar como no leído"}
+                        </button>
+                    </div>
+                ) : null}
+
+            </div>
         </div>
     );
 }
