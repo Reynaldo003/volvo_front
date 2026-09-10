@@ -31,7 +31,6 @@ import {
     ZapOff,
     UserRound,
     Ban,
-    Phone,
     CalendarPlus,
     Loader2,
     UserRoundPlus,
@@ -3490,12 +3489,6 @@ function mostrarCitaToast({
             setSavingCita(false);
         }
     }
-
-    const llamarProspecto = () => {
-        if (!activeTel) { alert("Selecciona un chat primero"); return; }
-        window.open(`https://wa.me/${activeTel}`, "_blank");
-    };
-
     // ── RENDER ────────────────────────────────────────────────────────────────
 
     return (
@@ -4285,7 +4278,7 @@ function mostrarCitaToast({
                                                 Agendar cita
                                             </button>
                                             {/* ACCIONES RÁPIDAS DEL PROSPECTO */}
-                                                <div className="mt-3 grid grid-cols-4 gap-2">
+                                                <div className="mt-3 grid grid-cols-3 gap-2">
 
                                                     {/* MARCAR NO LEÍDO */}
                                                     <button
@@ -4370,17 +4363,6 @@ function mostrarCitaToast({
                                                             <Ban className="h-4 w-4" />
                                                         )}
                                                     </button>
-                                                    {/* LLAMAR */}
-                                                    <button
-                                                        type="button"
-                                                        onClick={llamarProspecto}
-                                                        disabled={!activeTel}
-                                                        className="inline-flex h-10 items-center justify-center rounded-xl border border-emerald-100 bg-emerald-50 text-emerald-600 transition hover:bg-emerald-100 disabled:cursor-not-allowed disabled:opacity-50"
-                                                        title="Llamar por WhatsApp"
-                                                    >
-                                                        <Phone className="h-4 w-4" />
-                                                    </button>
-
                                                 </div>
                                         </div>
 
