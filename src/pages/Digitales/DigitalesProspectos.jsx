@@ -48,6 +48,7 @@ import { createPortal } from "react-dom";
 import { apiCitas } from "../../lib/apiCitas";
 import { useAuth } from "../../auth/AuthContext";
 import * as XLSX from "xlsx";
+import NuevoProspectoModal from "./NuevoProspectoModal";
 
 const BRAND_BLACK = "#0A0A0A";
 const PAGE_SIZE = 200;
@@ -1499,7 +1500,6 @@ export default function DigitalesProspectos() {
 
     const [ctxMenu, setCtxMenu] = useState({ open: false, x: 0, y: 0, row: null });
 
-    const [pautasMeta, setPautasMeta] = useState([]);
     const [loadingPautas, setLoadingPautas] = useState(false);
 
     const [updatingEstado, setUpdatingEstado] = useState({});
@@ -1586,113 +1586,13 @@ export default function DigitalesProspectos() {
     const [openModal, setOpenModal] = useState(false);
     const [mode, setMode] = useState("create");
     const [draft, setDraft] = useState(null);
+    const [estadoInicialModal, setEstadoInicialModal] = useState("");
 
     const [loadingCases, setLoadingCases] = useState(false);
-    const [loadingDetail, setLoadingDetail] = useState(false);
     const [saving, setSaving] = useState(false);
-
-    const pautasOptions = useMemo(() => {
-        const rawItems = Array.isArray(pautasMeta)
-            ? pautasMeta
-            : Array.isArray(pautasMeta?.items)
-                ? pautasMeta.items
-                : Array.isArray(pautasMeta?.results)
-                    ? pautasMeta.results
-                    : Array.isArray(pautasMeta?.data)
-                        ? pautasMeta.data
-                        : [];
-
-        const vistos = new Set();
-        const opciones = [];
-
-        for (const item of rawItems) {
-            const value = String(
-                item?.value ||
-                item?.label ||
-                item?.pauta ||
-                item?.nombre_campana ||
-                item?.nombre ||
-                item?.name ||
-                ""
-            ).trim();
-
-            const label = String(item?.label || value).trim();
-
-            if (!value) continue;
-
-            const key = normalizeText(value);
-
-            if (vistos.has(key)) continue;
-
-            vistos.add(key);
-
-            opciones.push({
-                value,
-                label,
-                id_campana: item?.id_campana || "",
-                sucursal: item?.sucursal || "",
-                nombre_campana: item?.nombre_campana || "",
-            });
-        }
-
-        return opciones.sort((a, b) =>
-            a.label.localeCompare(b.label, "es", { sensitivity: "base" })
-        );
-    }, [pautasMeta]);
-
-    const REQUIRED = useMemo(
-        () => ({
-            telefono: "Teléfono",
-            motivo_descalificacion: "Motivo de descalificación",
-        }),
-        []
-    );
-
-    const [touchedSave, setTouchedSave] = useState(false);
-
-    const missing = useMemo(() => {
-        if (!draft) return [];
-        const m = [];
-
-        const telefono = draft.telefono;
-        if (telefono === null || telefono === undefined || String(telefono).trim() === "") {
-            m.push("telefono");
-        }
-
-        if (
-            normalizeText(draft.estado) === "descalificado" &&
-            !String(draft.motivo_descalificacion || "").trim()
-        ) {
-            m.push("motivo_descalificacion");
-        }
-
-        return m;
-    }, [draft, REQUIRED]);
-
-    const isInvalid = (key) => touchedSave && missing.includes(key);
-
-    const telDigits = useMemo(() => String(draft?.telefono || "").replace(/\D/g, ""), [draft?.telefono]);
-    const telIsOk = useMemo(() => /^(?:\d{10}|52\d{10})$/.test(telDigits), [telDigits]);
-    const telIsNormalized = useMemo(() => /^52\d{10}$/.test(telDigits), [telDigits]);
-
-    const telError = useMemo(() => {
-        if (!openModal) return "";
-        if (!draft) return "";
-        if (!telDigits) return "";
-        if (/^\d{10}$/.test(telDigits)) return "";
-        if (/^52\d{10}$/.test(telDigits)) return "";
-        if (telDigits.length < 10) return "Número incompleto (mínimo 10 dígitos)";
-        if (telDigits.length === 11) return "Número incorrecto (11 dígitos no válido)";
-        if (telDigits.length === 12 && !telDigits.startsWith("52")) return "Número inválido: si tiene 12 dígitos debe iniciar con 52";
-        if (telDigits.length > 12) return "Número incorrecto (máximo 12 dígitos)";
-        return "Número inválido";
-    }, [openModal, draft, telDigits]);
-
-    const telInvalid = !!telError;
 
     const inputBase = "w-full rounded-lg border px-3 py-2.5 text-sm text-black font-semibold outline-none transition";
     const inputOk = "border-black/10 bg-neutral-100";
-    const inputBad = "border-red-500 bg-red-50";
 
     const filterLabelCls = "mb-1.5 block text-xs font-bold text-black";
     const filterControlCls =
@@ -1700,7 +1600,6 @@ export default function DigitalesProspectos() {
 
     useEffect(() => {
         (async () => {
-            setLoadingCases(true);
             try {
                 const data = await api.digitalesListProspectos();
                 setCases((Array.isArray(data) ? data : []).map(normalizeProspecto));
@@ -1708,40 +1607,9 @@ export default function DigitalesProspectos() {
                 console.error(e);
                 setCases([]);
             } finally {
-                setLoadingCases(false);
             }
         })();
     }, []);
-
-    const cargarPautasMeta = useCallback(async () => {
-        setLoadingPautas(true);
-
-        try {
-            const res = await api.digitalesCampanasMeta(180);
-
-            const items = Array.isArray(res)
-                ? res
-                : Array.isArray(res?.items)
-                    ? res.items
-                    : Array.isArray(res?.results)
-                        ? res.results
-                        : [];
-
-            setPautasMeta(items);
-        } catch (e) {
-            console.error("Error cargando campañas de campanas_meta_volvo:", e);
-            setPautasMeta([]);
-        } finally {
-            setLoadingPautas(false);
-        }
-    }, []);
-
-    useEffect(() => {
-        if (!openModal) return;
-        if (pautasMeta.length) return;
-
-        cargarPautasMeta();
-    }, [openModal, pautasMeta.length, cargarPautasMeta]);
 
     useEffect(() => {
         if (!ready) return;
@@ -1903,8 +1771,8 @@ export default function DigitalesProspectos() {
     const pageEnd = sorted.length === 0 ? 0 : Math.min(page * PAGE_SIZE, sorted.length);
 
     const openCreate = () => {
-        setTouchedSave(false);
         setMode("create");
+        setEstadoInicialModal("");
 
         const now = new Date();
         const nowLocal = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}-${String(now.getDate()).padStart(
@@ -2004,12 +1872,11 @@ export default function DigitalesProspectos() {
         setOpenAgendaModal(true);
     };
 
-    const openEdit = async (row) => {
+    const openEdit = async (row, estadoInicial = "") => {
         try {
-            setTouchedSave(false);
             setMode("edit");
-            setLoadingDetail(true);
             setOpenModal(true);
+            setEstadoInicialModal(estadoInicial);
 
             const p = await api.digitalesGetProspecto(row.id_exp);
             const nombreCompleto = String(p.nombre || "").trim();
@@ -2055,8 +1922,6 @@ export default function DigitalesProspectos() {
             console.error(e);
             alert("No se pudo abrir el prospecto para editar (revisa consola).");
             setOpenModal(false);
-        } finally {
-            setLoadingDetail(false);
         }
     };
 
@@ -2064,6 +1929,7 @@ export default function DigitalesProspectos() {
         if (saving) return;
         setOpenModal(false);
         setDraft(null);
+        setEstadoInicialModal("");
     };
 
     const refreshList = async () => {
@@ -2188,84 +2054,6 @@ export default function DigitalesProspectos() {
         XLSX.writeFile(workbook, generarNombreArchivoExcel(), { compression: true });
     }
 
-    const save = async () => {
-        if (!draft || saving) return;
-        if (!telIsOk) return;
-
-        setTouchedSave(true);
-        if (missing.length) return;
-        if (telInvalid) return;
-
-        setSaving(true);
-
-        try {
-            const agenciaFinal =
-                !isAdmin && contextoDigitalSesion?.agencia
-                    ? contextoDigitalSesion.agencia
-                    : (draft.agencia || "");
-
-            const asesorDigitalFinal =
-                !isAdmin && contextoDigitalSesion?.asesor_digital
-                    ? contextoDigitalSesion.asesor_digital
-                    : (draft.asesor_digital || "");
-
-            const nombreCapturado = getNombreCompletoDraft(draft);
-
-            const nombreFinal =
-                draft.tiene_nombre && nombreCapturado
-                    ? nombreCapturado
-                    : "SIN NOMBRE";
-
-            const payload = {
-                nombre: nombreFinal,
-                telefono: draft.telefono,
-                correo: draft.correo,
-                agencia: agenciaFinal,
-                business: draft.linea,
-                canal_contacto: draft.origen,
-                pauta: draft.pauta,
-                estado: draft.estado,
-                motivo_descalificacion:
-                    normalizeText(draft.estado) === "descalificado"
-                        ? String(draft.motivo_descalificacion || "").trim()
-                        : "",
-                asesor_digital: asesorDigitalFinal,
-                asesor_ventas: draft.asesor_solicita || "",
-                auto_interes: draft.cliente_interes || "",
-                comentarios: draft.comentarios || "",
-                enganche_monto: toNullableNumber(draft.enganche_monto),
-                presupuesto_mensual: toNullableNumber(draft.presupuesto_mensual),
-                buro_estado: draft.buro_estado || "",
-                forma_pago: draft.forma_pago || "",
-                tipo_cliente: draft.tipo_cliente || "",
-                plazo_compra: draft.plazo_compra || "",
-                uso_vehiculo: draft.uso_vehiculo || "",
-                comprobacion_ingresos: draft.comprobacion_ingresos || "",
-                id_cotizacion: String(draft.id_cotizacion || "").trim(),
-                folio_solicitud_credito: String(draft.folio_solicitud_credito || "").trim(),
-                solicitud_credito_estado: draft.solicitud_credito_estado || "",
-                vin_facturado: String(draft.vin_facturado || "").trim().toUpperCase(),
-                vin_estatus_entrega: draft.vin_estatus_entrega || "",
-            };
-
-            if (mode === "create") {
-                payload.primer_contacto_at = draft.primer_contacto_at || null;
-                payload.ultimo_contacto_at = draft.ultimo_contacto_at || null;
-                await api.digitalesCreateProspecto(payload);
-            } else {
-                await api.digitalesUpdateProspecto(draft.id_exp, payload);
-            }
-
-            await refreshList();
-            closeModal();
-        } catch (e) {
-            console.error(e);
-            alert("Error guardando el prospecto (revisa consola).");
-        } finally {
-            setSaving(false);
-        }
-    };
-
     const [drafter, setDrafter] = useState({
         agencia: "",
         fecha_cita: "",
@@ -2329,8 +2117,7 @@ export default function DigitalesProspectos() {
         // La descalificación necesita un motivo obligatorio, por eso se abre el modal
         // en lugar de guardar un registro incompleto desde el selector de la tabla.
         if (normalizeText(newEstado) === "descalificado") {
-            await openEdit(row);
-            setDraft((prev) => prev ? { ...prev, estado: newEstado } : prev);
+            await openEdit(row, newEstado);
             return;
         }
 
@@ -3021,505 +2808,27 @@ export default function DigitalesProspectos() {
                     </div>
                 </>
             )}
-
-            <Modal
+            <NuevoProspectoModal
                 open={openModal}
-                title={mode === "create" ? "Nuevo prospecto" : `Editar prospecto • ${draft?.id_exp}`}
+                mode={mode}
+                estadoInicial={estadoInicialModal}
+                prospectoId={mode === "edit" ? draft?.id_exp : null}
                 onClose={closeModal}
-                footer={
-                    <>
-                        <button
-                            onClick={closeModal}
-                            disabled={saving}
-                            className="inline-flex items-center justify-center gap-2 rounded-lg border border-white/10 bg-red-400 px-4 py-2 text-sm font-semibold text-white/90 hover:bg-red-600 hover:text-white disabled:opacity-60"
-                        >
-                            <X className="h-4 w-4" />
-                            Cancelar
-                        </button>
-
-                        <button
-                            onClick={save}
-                            disabled={saving || loadingDetail || telInvalid || (draft?.telefono ? !telIsOk : false)}
-                            className="inline-flex items-center justify-center gap-2 rounded-lg bg-black/85 px-4 py-2 text-sm font-bold text-white/90 hover:bg-black hover:text-white disabled:opacity-60"
-                        >
-                            {saving ? <Loader2 className="h-4 w-4 animate-spin" /> : <Save className="h-4 w-4" />}
-                            {saving ? "Guardando..." : "Guardar cambios"}
-                        </button>
-                    </>
+                onGuardado={async () => {
+                    await refreshList();
+                }}
+                agencias={DEALERS}
+                vehiculos={VEHICULOS}
+                asesoresDigitales={ASESORES_DIGITALES}
+                asesores={ASESORES}
+                agenciaInicial={contextoDigitalSesion?.agencia || "Volvo"}
+                asesorDigitalInicial={
+                    contextoDigitalSesion?.asesor_digital || "Mariana Tlamani"
                 }
-            >
-                {loadingDetail ? (
-                    <ModalSkeleton />
-                ) : !draft ? null : (
-                    <div className="grid gap-3 md:grid-cols-3">
-                        {touchedSave && missing.length ? (
-                            <div className="md:col-span-3 rounded-2xl border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
-                                <div className="font-extrabold">Faltan campos obligatorios</div>
-                                <div className="mt-1 text-xs font-semibold">{missing.map((k) => REQUIRED[k]).join(" • ")}</div>
-                            </div>
-                        ) : null}
-
-                        <Field label="Dealer" icon={Building2}>
-                            <select
-                                value={draft.agencia || ""}
-                                onChange={(e) => setDraft((p) => ({ ...p, agencia: e.target.value }))}
-                                disabled={!isAdmin && userAgencias.length <= 1}
-                                className={[
-                                    inputBase,
-                                    isInvalid("agencia") ? inputBad : inputOk,
-                                    !isAdmin && contextoDigitalSesion ? "cursor-not-allowed opacity-70" : "",
-                                ].join(" ")}
-                            >
-                                <option value="" disabled>Selecciona un dealer...</option>
-                                {(isAdmin ? DEALERS : userAgencias.length > 0 ? userAgencias : DEALERS).map((d) => (
-                                    <option key={d} value={d}>{d}</option>
-                                ))}
-                            </select>
-                        </Field>
-
-                        <Field label="Asesor Digital" icon={User}>
-                            <select
-                                value={draft.asesor_digital || ""}
-                                onChange={(e) => setDraft((p) => ({ ...p, asesor_digital: e.target.value }))}
-                                className={[inputBase, inputOk].join(" ")}
-                            >
-                                <option value="">— Selecciona —</option>
-                                {ASESORES_DIGITALES.map((n) => (
-                                    <option key={n} value={n}>{n}</option>
-                                ))}
-                            </select>
-                        </Field>
-
-                        <Field label="Asignado a" icon={User}>
-                            <select
-                                value={draft.asesor_solicita || ""}
-                                onChange={(e) => setDraft((p) => ({ ...p, asesor_solicita: e.target.value }))}
-                                className={[inputBase, inputOk].join(" ")}
-                            >
-                                <option value="">— Selecciona —</option>
-                                {ASESORES.map((n) => (
-                                    <option key={n} value={n}>{n}</option>
-                                ))}
-                            </select>
-                        </Field>
-
-                        <div className="md:col-span-3">
-                            <Field label="Cliente" icon={User}>
-                                <div className="grid gap-3 md:grid-cols-3">
-                                    <div>
-                                        <label className="inline-flex items-center gap-3 text-sm font-bold text-black">
-                                            <input
-                                                type="checkbox"
-                                                checked={!!draft.tiene_nombre}
-                                                onChange={(e) =>
-                                                    setDraft((p) => ({
-                                                        ...p,
-                                                        tiene_nombre: e.target.checked,
-                                                        nombre_cliente: e.target.checked ? p.nombre_cliente : "",
-                                                    }))
-                                                }
-                                                className="h-4 w-4"
-                                            />
-                                            Nombre del Prospecto
-                                        </label>
-                                        <input
-                                            value={draft.nombre_cliente || ""}
-                                            onChange={(e) => setDraft((p) => ({ ...p, nombre_cliente: e.target.value }))}
-                                            disabled={!draft.tiene_nombre}
-                                            className={[
-                                                inputBase,
-                                                inputOk,
-                                                !draft.tiene_nombre ? "cursor-not-allowed opacity-70" : "",
-                                            ].join(" ")}
-                                            placeholder={draft.tiene_nombre ? "Nombre" : "SIN NOMBRE"}
-                                        />
-                                    </div>
-
-                                    <div>
-                                        <div className="mb-1 text-sm font-bold text-black">Teléfono</div>
-                                        <input
-                                            maxLength={12}
-                                            disabled={telIsNormalized}
-                                            value={draft.telefono || ""}
-                                            onChange={(e) =>
-                                                setDraft((p) => ({
-                                                    ...p,
-                                                    telefono: e.target.value.replace(/\D/g, "").slice(0, 12),
-                                                }))
-                                            }
-                                            className={[
-                                                inputBase,
-                                                telIsNormalized ? "cursor-not-allowed opacity-70" : "",
-                                                isInvalid("telefono") || telInvalid ? inputBad : inputOk,
-                                            ].join(" ")}
-                                        />
-                                        {isInvalid("telefono") ? (
-                                            <div className="mt-1 text-xs font-bold text-red-600">Teléfono es requerido.</div>
-                                        ) : null}
-                                        {!isInvalid("telefono") && telError ? (
-                                            <div className="mt-1 text-xs font-bold text-red-600">{telError}</div>
-                                        ) : null}
-                                    </div>
-
-                                    <div>
-                                        <div className="mb-1 text-sm font-bold text-black">Volvo de sus sueños</div>
-                                        <select
-                                            value={draft.cliente_interes || ""}
-                                            onChange={(e) => setDraft((p) => ({ ...p, cliente_interes: e.target.value }))}
-                                            className={[inputBase, inputOk].join(" ")}
-                                        >
-                                            <option value="" disabled>Selecciona un modelo...</option>
-                                            {VEHICULOS.map((d) => (
-                                                <option key={d} value={d}>{d}</option>
-                                            ))}
-                                        </select>
-                                    </div>
-                                </div>
-
-                                <div className="mt-5 grid gap-3 md:grid-cols-2">
-                                    <div>
-                                        <div className="mb-1 text-sm font-bold text-black">Estado</div>
-                                        <select
-                                            value={draft.estado || ""}
-                                            onChange={(e) => {
-                                                const estado = e.target.value;
-                                                setDraft((p) => ({
-                                                    ...p,
-                                                    estado,
-                                                    motivo_descalificacion:
-                                                        normalizeText(estado) === "descalificado"
-                                                            ? p.motivo_descalificacion || ""
-                                                            : "",
-                                                }));
-                                            }}
-                                            className={[inputBase, inputOk].join(" ")}
-                                        >
-                                            {ESTADOS_PROSPECTO.map((s) => (
-                                                <option key={s} value={s} className="bg-neutral-200">{s}</option>
-                                            ))}
-                                        </select>
-                                        <div className="mt-2">
-                                            <BadgeEstado value={draft.estado} />
-                                        </div>
-
-                                        {normalizeText(draft.estado) === "descalificado" ? (
-                                            <div className="mt-3">
-                                                <div className="mb-1 text-sm font-bold text-black">
-                                                    Motivo de descalificación <span className="text-red-600">*</span>
-                                                </div>
-                                                <select
-                                                    value={draft.motivo_descalificacion || ""}
-                                                    onChange={(e) =>
-                                                        setDraft((p) => ({
-                                                            ...p,
-                                                            motivo_descalificacion: e.target.value,
-                                                        }))
-                                                    }
-                                                    className={[
-                                                        inputBase,
-                                                        isInvalid("motivo_descalificacion") ? inputBad : inputOk,
-                                                    ].join(" ")}
-                                                >
-                                                    <option value="">— Selecciona el motivo —</option>
-                                                    {MOTIVOS_DESCALIFICACION.map((motivo) => (
-                                                        <option key={motivo} value={motivo}>{motivo}</option>
-                                                    ))}
-                                                </select>
-                                                {isInvalid("motivo_descalificacion") ? (
-                                                    <div className="mt-1 text-xs font-bold text-red-600">
-                                                        Selecciona el motivo de descalificación.
-                                                    </div>
-                                                ) : null}
-                                            </div>
-                                        ) : null}
-                                    </div>
-                                    <div>
-                                        <div className="mb-1 text-sm font-bold text-black">Canal de Contacto</div>
-                                        <OrigenPicker
-                                            value={draft.origen}
-                                            onChange={(v) => setDraft((p) => ({ ...p, origen: v }))}
-                                        />
-                                    </div>
-                                </div>
-
-                                <div className="mt-5 grid gap-3 md:grid-cols-2">
-                                    <div>
-                                        <div className="mb-1 text-sm font-bold text-black">Business</div>
-                                        <LineaPicker
-                                            value={draft.linea}
-                                            onChange={(v) => setDraft((p) => ({ ...p, linea: v }))}
-                                        />
-                                    </div>
-                                    <div className="mt-5">
-                                        <div className="mb-1 flex items-center justify-between gap-2">
-                                            <div className="text-sm font-bold text-black">Pauta de Origen</div>
-
-                                            <button
-                                                type="button"
-                                                onClick={cargarPautasMeta}
-                                                disabled={loadingPautas}
-                                                className="inline-flex items-center gap-1 rounded-lg border border-black/10 bg-white px-2.5 py-1 text-xs font-bold text-black transition hover:bg-neutral-50 disabled:cursor-not-allowed disabled:opacity-50"
-                                                title="Recargar campañas Meta"
-                                            >
-                                                {loadingPautas ? (
-                                                    <Loader2 className="h-3.5 w-3.5 animate-spin" />
-                                                ) : (
-                                                    <ArrowUpDown className="h-3.5 w-3.5" />
-                                                )}
-                                                Recargar
-                                            </button>
-                                        </div>
-
-                                        <select
-                                            value={draft.pauta || ""}
-                                            onChange={(e) =>
-                                                setDraft((prev) => ({
-                                                    ...prev,
-                                                    pauta: e.target.value,
-                                                }))
-                                            }
-                                            disabled={loadingPautas}
-                                            className={[inputBase, inputOk].join(" ")}
-                                        >
-                                            <option value="">
-                                                {loadingPautas ? "Cargando campañas..." : "— Selecciona campaña —"}
-                                            </option>
-
-                                            {draft.pauta &&
-                                                !pautasOptions.some(
-                                                    (item) => normalizeText(item.value) === normalizeText(draft.pauta)
-                                                ) ? (
-                                                <option value={draft.pauta}>
-                                                    {draft.pauta} (actual)
-                                                </option>
-                                            ) : null}
-
-                                            {pautasOptions.map((item) => (
-                                                <option key={item.value} value={item.value}>
-                                                    {item.label}
-                                                </option>
-                                            ))}
-                                        </select>
-                                    </div>
-                                </div>
-                            </Field>
-                        </div>
-
-                        <div className="md:col-span-3">
-                            <Field label="Perfil financiero y de compra" icon={Gauge}>
-                                <div className="grid gap-3 md:grid-cols-4">
-                                    <div>
-                                        <div className="mb-1 text-sm font-bold text-black">Enganche disponible</div>
-                                        <input
-                                            type="number"
-                                            min="0"
-                                            inputMode="numeric"
-                                            value={draft.enganche_monto || ""}
-                                            onChange={(e) =>
-                                                setDraft((p) => ({
-                                                    ...p,
-                                                    enganche_monto: e.target.value.replace(/\D/g, ""),
-                                                }))
-                                            }
-                                            className={[inputBase, inputOk].join(" ")}
-                                            placeholder="Ej. 150000"
-                                        />
-                                    </div>
-                                    <div>
-                                        <div className="mb-1 text-sm font-bold text-black">Presupuesto mensual</div>
-                                        <input
-                                            type="number"
-                                            min="0"
-                                            inputMode="numeric"
-                                            value={draft.presupuesto_mensual || ""}
-                                            onChange={(e) =>
-                                                setDraft((p) => ({
-                                                    ...p,
-                                                    presupuesto_mensual: e.target.value.replace(/\D/g, ""),
-                                                }))
-                                            }
-                                            className={[inputBase, inputOk].join(" ")}
-                                            placeholder="Ej. 18000"
-                                        />
-                                    </div>
-                                    <div>
-                                        <div className="mb-1 text-sm font-bold text-black">Buró de crédito</div>
-                                        <select
-                                            value={draft.buro_estado || ""}
-                                            onChange={(e) => setDraft((p) => ({ ...p, buro_estado: e.target.value }))}
-                                            className={[inputBase, inputOk].join(" ")}
-                                        >
-                                            {BURO_OPTIONS.map((item) => (
-                                                <option key={item.value} value={item.value}>{item.label}</option>
-                                            ))}
-                                        </select>
-                                    </div>
-                                    <div>
-                                        <div className="mb-1 text-sm font-bold text-black">Forma de pago</div>
-                                        <select
-                                            value={draft.forma_pago || ""}
-                                            onChange={(e) => setDraft((p) => ({ ...p, forma_pago: e.target.value }))}
-                                            className={[inputBase, inputOk].join(" ")}
-                                        >
-                                            {FORMA_PAGO_OPTIONS.map((item) => (
-                                                <option key={item.value} value={item.value}>{item.label}</option>
-                                            ))}
-                                        </select>
-                                    </div>
-                                </div>
-
-                                <div className="mt-4 grid gap-3 md:grid-cols-4">
-                                    <div>
-                                        <div className="mb-1 text-sm font-bold text-black">Tipo de cliente</div>
-                                        <select
-                                            value={draft.tipo_cliente || ""}
-                                            onChange={(e) => setDraft((p) => ({ ...p, tipo_cliente: e.target.value }))}
-                                            className={[inputBase, inputOk].join(" ")}
-                                        >
-                                            {TIPO_CLIENTE_OPTIONS.map((item) => (
-                                                <option key={item.value} value={item.value}>{item.label}</option>
-                                            ))}
-                                        </select>
-                                    </div>
-                                    <div>
-                                        <div className="mb-1 text-sm font-bold text-black">Plazo de compra</div>
-                                        <select
-                                            value={draft.plazo_compra || ""}
-                                            onChange={(e) => setDraft((p) => ({ ...p, plazo_compra: e.target.value }))}
-                                            className={[inputBase, inputOk].join(" ")}
-                                        >
-                                            {PLAZO_COMPRA_OPTIONS.map((item) => (
-                                                <option key={item || "vacio"} value={item}>
-                                                    {item || "— Selecciona —"}
-                                                </option>
-                                            ))}
-                                        </select>
-                                    </div>
-                                    <div>
-                                        <div className="mb-1 text-sm font-bold text-black">Uso del vehículo</div>
-                                        <input
-                                            value={draft.uso_vehiculo || ""}
-                                            onChange={(e) => setDraft((p) => ({ ...p, uso_vehiculo: e.target.value }))}
-                                            className={[inputBase, inputOk].join(" ")}
-                                            placeholder="Personal, familiar, empresarial..."
-                                        />
-                                    </div>
-                                    <div>
-                                        <div className="mb-1 text-sm font-bold text-black">Comprobación de ingresos</div>
-                                        <input
-                                            value={draft.comprobacion_ingresos || ""}
-                                            onChange={(e) =>
-                                                setDraft((p) => ({ ...p, comprobacion_ingresos: e.target.value }))
-                                            }
-                                            className={[inputBase, inputOk].join(" ")}
-                                            placeholder="Nómina, estados de cuenta, negocio..."
-                                        />
-                                    </div>
-                                </div>
-                            </Field>
-                        </div>
-
-                        <div className="md:col-span-3">
-                            <Field label="Seguimiento comercial" icon={ClipboardCheck}>
-                                <div className="grid gap-3 md:grid-cols-4">
-                                    <div>
-                                        <div className="mb-1 text-sm font-bold text-black">ID de cotización</div>
-                                        <input
-                                            value={draft.id_cotizacion || ""}
-                                            onChange={(e) => setDraft((p) => ({ ...p, id_cotizacion: e.target.value }))}
-                                            className={[inputBase, inputOk].join(" ")}
-                                            placeholder="Folio o ID interno"
-                                        />
-                                    </div>
-                                    <div>
-                                        <div className="mb-1 text-sm font-bold text-black">Folio solicitud de crédito</div>
-                                        <input
-                                            value={draft.folio_solicitud_credito || ""}
-                                            onChange={(e) =>
-                                                setDraft((p) => ({ ...p, folio_solicitud_credito: e.target.value }))
-                                            }
-                                            className={[inputBase, inputOk].join(" ")}
-                                            placeholder="Folio de la financiera"
-                                        />
-                                    </div>
-                                    <div>
-                                        <div className="mb-1 text-sm font-bold text-black">Estado de solicitud</div>
-                                        <select
-                                            value={draft.solicitud_credito_estado || ""}
-                                            onChange={(e) =>
-                                                setDraft((p) => ({ ...p, solicitud_credito_estado: e.target.value }))
-                                            }
-                                            className={[inputBase, inputOk].join(" ")}
-                                        >
-                                            {SOLICITUD_CREDITO_OPTIONS.map((item) => (
-                                                <option key={item.value} value={item.value}>{item.label}</option>
-                                            ))}
-                                        </select>
-                                    </div>
-                                    <div>
-                                        <div className="mb-1 text-sm font-bold text-black">VIN facturado</div>
-                                        <input
-                                            value={draft.vin_facturado || ""}
-                                            onChange={(e) =>
-                                                setDraft((p) => ({
-                                                    ...p,
-                                                    vin_facturado: e.target.value.toUpperCase().slice(0, 32),
-                                                }))
-                                            }
-                                            className={[inputBase, inputOk].join(" ")}
-                                            placeholder="VIN del vehículo"
-                                        />
-                                    </div>
-                                </div>
-
-                                <div className="mt-4 max-w-sm">
-                                    <div className="mb-1 text-sm font-bold text-black">Estatus de entrega</div>
-                                    <select
-                                        value={draft.vin_estatus_entrega || ""}
-                                        onChange={(e) =>
-                                            setDraft((p) => ({ ...p, vin_estatus_entrega: e.target.value }))
-                                        }
-                                        className={[inputBase, inputOk].join(" ")}
-                                    >
-                                        <option value="">— Sin definir —</option>
-                                        <option value="entregado">Entregado</option>
-                                        <option value="cancelado">Cancelado</option>
-                                    </select>
-                                </div>
-                            </Field>
-                        </div>
-
-                        <div className="md:col-span-1">
-                            <Field label="Comentarios Adicionales" icon={FileText}>
-                                <textarea
-                                    value={draft.comentarios || ""}
-                                    onChange={(e) => setDraft((p) => ({ ...p, comentarios: e.target.value }))}
-                                    rows={4}
-                                    className={[inputBase, inputOk].join(" ")}
-                                />
-                            </Field>
-                        </div>
-
-                        <div className="md:col-span-2">
-                            <Field label="Resumen de conversación" icon={ClipboardCheck}>
-                                <textarea
-                                    value={draft.resumen || ""}
-                                    disabled
-                                    rows={5}
-                                    className="w-full rounded-lg border border-black/10 bg-neutral-100 px-3 py-2 text-sm font-semibold text-black outline-none"
-                                />
-                                {draft.resumen_actualizado_at ? (
-                                    <div className="mt-2 text-xs font-semibold text-slate-500">
-                                        Última actualización: {fmtDTIntl(draft.resumen_actualizado_at)}
-                                        {draft.resumen_fuente ? ` • ${draft.resumen_fuente}` : ""}
-                                    </div>
-                                ) : null}
-                            </Field>
-                        </div>
-                    </div>
-                )}
-            </Modal>
-
+                isAdmin={isAdmin}
+                userAgencias={userAgencias}
+                contextoDigitalSesion={contextoDigitalSesion}
+            />
             <Modal
                 open={openSummaryModal}
                 title={summaryInfo ? `Resumen IA • ${summaryInfo.nombre || `Prospecto ${summaryInfo.id_exp}`}` : "Resumen IA"}
