@@ -2185,6 +2185,8 @@ export default function DigitalesContacto() {
     const [copiedTel, setCopiedTel] = useState(false);
     const [markingUnreadTel, setMarkingUnreadTel] = useState("");
     const [blockingTel, setBlockingTel] = useState("");
+    const [blockConfirmAction, setBlockConfirmAction] = useState("");
+    const [blockNotice, setBlockNotice] = useState(null);
     const [chatMenu, setChatMenu] = useState(null);
 
     const endRef = useRef(null);
@@ -3024,21 +3026,13 @@ export default function DigitalesContacto() {
     async function bloquearContactoActivo() {
         if (!activeTel || blockingTel) return;
 
-        const confirmar = window.confirm(
-            `¿Seguro que quieres bloquear a ${formateaTelUi(activeTel)}?\n\n` +
-            "Este contacto quedará bloqueado en WhatsApp y la IA se pausará."
-        );
-
-        if (!confirmar) return;
-
         setBlockingTel(activeTel);
 
         try {
             await api.digitalesBloquearContacto({
                 tel: activeTel,
                 motivo:
-                    "Cliente bloqueado manualmente desde el CRM Volvo",
-                numero_asesor: numeroAsesorActivo,
+                    "Cliente bloqueado manualmente desde el chat",
             });
 
             setProspecto((prev) =>
@@ -3072,12 +3066,19 @@ export default function DigitalesContacto() {
             await refreshActiveChat(activeTel).catch(() => {});
             await refreshChats().catch(() => {});
 
-        } catch (error) {
-            alert(
-                `No se pudo bloquear el contacto: ${
-                    error?.message || "Error desconocido"
-                }`
-            );
+            setBlockNotice({
+                type: "success",
+                message: "Contacto bloqueado correctamente.",
+            });
+
+            } catch (error) {
+                setBlockNotice({
+                    type: "error",
+                    message:
+                        `No se pudo bloquear el contacto: ${
+                            error?.message || "Error desconocido"
+                        }`,
+                });
         } finally {
             setBlockingTel("");
         }
@@ -3087,18 +3088,11 @@ export default function DigitalesContacto() {
     async function desbloquearContactoActivo() {
         if (!activeTel || blockingTel) return;
 
-        const confirmar = window.confirm(
-            `¿Deseas desbloquear a ${formateaTelUi(activeTel)}?`
-        );
-
-        if (!confirmar) return;
-
         setBlockingTel(activeTel);
 
         try {
             await api.digitalesDesbloquearContacto({
                 tel: activeTel,
-                numero_asesor: numeroAsesorActivo,
             });
 
             setProspecto((prev) =>
@@ -3128,12 +3122,19 @@ export default function DigitalesContacto() {
             await refreshActiveChat(activeTel).catch(() => {});
             await refreshChats().catch(() => {});
 
-        } catch (error) {
-            alert(
-                `No se pudo desbloquear el contacto: ${
-                    error?.message || "Error desconocido"
-                }`
-            );
+            setBlockNotice({
+                type: "success",
+                message: "Contacto desbloqueado correctamente.",
+            });
+
+            } catch (error) {
+                setBlockNotice({
+                    type: "error",
+                    message:
+                        `No se pudo desbloquear el contacto: ${
+                            error?.message || "Error desconocido"
+                        }`,
+                });
         } finally {
             setBlockingTel("");
         }
@@ -3232,6 +3233,18 @@ export default function DigitalesContacto() {
     useEffect(() => {
         cargarPlantillas().catch(() => { });
     }, []);
+
+    useEffect(() => {
+        if (!blockNotice) return;
+
+        const timer = window.setTimeout(() => {
+            setBlockNotice(null);
+        }, 4500);
+
+        return () => {
+            window.clearTimeout(timer);
+        };
+    }, [blockNotice]);
 
     useEffect(() => {
         cargarPautasMetaContacto().catch(() => { });
@@ -4333,10 +4346,10 @@ function mostrarCitaToast({
                                                     {/* BLOQUEAR / DESBLOQUEAR WHATSAPP */}
                                                     <button
                                                         type="button"
-                                                        onClick={
-                                                            clienteBloqueado
-                                                                ? desbloquearContactoActivo
-                                                                : bloquearContactoActivo
+                                                        onClick={() =>
+                                                            setBlockConfirmAction(
+                                                                clienteBloqueado ? "desbloquear" : "bloquear"
+                                                            )
                                                         }
                                                         disabled={!activeTel || blockingTel === activeTel}
                                                         className={cls(
@@ -4757,6 +4770,151 @@ function mostrarCitaToast({
         </div>
     </div>
 ) : null}
+
+{blockConfirmAction ? (
+    <div className="fixed inset-0 z-[120] flex items-center justify-center p-4">
+        <div
+            className="absolute inset-0 bg-black/50 backdrop-blur-[1px]"
+            onClick={() => setBlockConfirmAction("")}
+        />
+
+        <div className="relative w-full max-w-md overflow-hidden rounded-2xl border border-black/10 bg-white shadow-2xl">
+            <div className="flex items-start gap-4 border-b border-slate-100 px-6 py-5">
+                <div
+                    className={cls(
+                        "flex h-11 w-11 shrink-0 items-center justify-center rounded-full",
+                        blockConfirmAction === "bloquear"
+                            ? "bg-red-50 text-red-600"
+                            : "bg-slate-100 text-[#001E50]"
+                    )}
+                >
+                    <Ban className="h-5 w-5" />
+                </div>
+
+                <div className="min-w-0 flex-1">
+                    <div className="text-lg font-extrabold text-[#001E50]">
+                        {blockConfirmAction === "bloquear"
+                            ? "Bloquear contacto"
+                            : "Desbloquear contacto"}
+                    </div>
+
+                    <div className="mt-1 text-sm font-semibold text-slate-400">
+                        {formateaTelUi(activeTel)}
+                    </div>
+                </div>
+
+                <button
+                    type="button"
+                    onClick={() => setBlockConfirmAction("")}
+                    className="inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-xl text-slate-400 transition hover:bg-slate-100 hover:text-[#001E50]"
+                    title="Cerrar"
+                >
+                    <X className="h-4 w-4" />
+                </button>
+            </div>
+
+            <div className="px-6 py-5">
+                <p className="text-sm font-semibold leading-6 text-slate-600">
+                    {blockConfirmAction === "bloquear"
+                        ? "Este contacto quedará bloqueado en WhatsApp y la IA se pausará. No podrás enviar mensajes hasta desbloquearlo."
+                        : "Este contacto volverá a estar disponible en WhatsApp y podrás enviarle mensajes nuevamente."}
+                </p>
+            </div>
+
+            <div className="flex justify-end gap-2 border-t border-slate-100 bg-slate-50 px-6 py-4">
+                <button
+                    type="button"
+                    onClick={() => setBlockConfirmAction("")}
+                    className="rounded-xl border border-slate-200 bg-white px-4 py-2.5 text-sm font-extrabold text-slate-600 transition hover:bg-slate-100"
+                >
+                    Cancelar
+                </button>
+
+                <button
+                    type="button"
+                    onClick={async () => {
+                        const action = blockConfirmAction;
+
+                        setBlockConfirmAction("");
+
+                        if (action === "bloquear") {
+                            await bloquearContactoActivo();
+                        } else {
+                            await desbloquearContactoActivo();
+                        }
+                    }}
+                    className={cls(
+                        "rounded-xl px-4 py-2.5 text-sm font-extrabold text-white transition",
+                        blockConfirmAction === "bloquear"
+                            ? "bg-red-600 hover:bg-red-700"
+                            : "bg-[#001E50] hover:bg-[#001640]"
+                    )}
+                >
+                    {blockConfirmAction === "bloquear"
+                        ? "Bloquear contacto"
+                        : "Desbloquear contacto"}
+                </button>
+            </div>
+        </div>
+    </div>
+) : null}
+
+{blockNotice ? (
+    <div className="fixed right-6 top-6 z-[130] w-full max-w-sm">
+        <div
+            className={cls(
+                "flex items-start gap-3 rounded-2xl border bg-white p-4 shadow-2xl",
+                blockNotice.type === "success"
+                    ? "border-emerald-200"
+                    : "border-red-200"
+            )}
+        >
+            <div
+                className={cls(
+                    "flex h-9 w-9 shrink-0 items-center justify-center rounded-full",
+                    blockNotice.type === "success"
+                        ? "bg-emerald-50 text-emerald-600"
+                        : "bg-red-50 text-red-600"
+                )}
+            >
+                {blockNotice.type === "success" ? (
+                    <Check className="h-4 w-4" />
+                ) : (
+                    <AlertCircle className="h-4 w-4" />
+                )}
+            </div>
+
+            <div className="min-w-0 flex-1">
+                <div
+                    className={cls(
+                        "text-sm font-extrabold",
+                        blockNotice.type === "success"
+                            ? "text-emerald-700"
+                            : "text-red-700"
+                    )}
+                >
+                    {blockNotice.type === "success"
+                        ? "Operación completada"
+                        : "Ocurrió un error"}
+                </div>
+
+                <div className="mt-1 text-xs font-semibold leading-5 text-slate-500">
+                    {blockNotice.message}
+                </div>
+            </div>
+
+            <button
+                type="button"
+                onClick={() => setBlockNotice(null)}
+                className="inline-flex h-7 w-7 shrink-0 items-center justify-center rounded-lg text-slate-400 transition hover:bg-slate-100"
+                title="Cerrar"
+            >
+                <X className="h-4 w-4" />
+            </button>
+        </div>
+    </div>
+) : null}
+
                 <NuevoProspectoModal
                     open={showNuevoProspectoModal}
                     onClose={() => setShowNuevoProspectoModal(false)}
