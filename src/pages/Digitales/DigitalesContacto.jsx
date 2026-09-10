@@ -3548,7 +3548,7 @@ function mostrarCitaToast({
                                             <button
                                                 type="button"
                                                 onClick={() => setShowNuevoProspectoModal(true)}
-                                                className="inline-flex h-8 w-8 items-center justify-center rounded-lg bg-[#DBE7FF] text-[#1746D1] transition hover:bg-[#c9dcff]"
+                                                className="inline-flex h-8 w-8 items-center justify-center rounded-lg bg-black text-white shadow-sm transition hover:bg-neutral-800 active:scale-[0.97]"
                                                 title="Nuevo prospecto"
                                                 aria-label="Nuevo prospecto"
                                             >
@@ -4151,7 +4151,7 @@ function mostrarCitaToast({
                                         <div className="rounded-2xl border border-black/10 bg-white p-4 shadow-sm">
 
                                             <div className="flex items-start gap-3">
-                                                <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-[#001E50] text-sm font-extrabold text-white">
+                                                <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-black text-sm font-extrabold text-white shadow-sm">
                                                     {String(
                                                         prospecto?.nombre ||
                                                         activeChat?.nombre ||
@@ -4161,7 +4161,6 @@ function mostrarCitaToast({
                                                         .charAt(0)
                                                         .toUpperCase()}
                                                 </div>
-
                                                 <div className="min-w-0 flex-1">
                                                     <div className="truncate text-sm font-extrabold text-[#000000]">
                                                         {prospecto?.nombre || activeChat?.nombre || "Prospecto"}
@@ -4272,8 +4271,8 @@ function mostrarCitaToast({
                                                 type="button"
                                                 onClick={() => setShowCitaModal(true)}
                                                 disabled={!activeTel}
-                                                className="mt-4 inline-flex h-11 w-full items-center justify-center gap-2 rounded-xl bg-[#001E50] px-4 text-sm font-extrabold text-white shadow-sm transition hover:bg-[#001640] disabled:cursor-not-allowed disabled:opacity-50"
-                                            >
+                                                className="mt-4 inline-flex h-11 w-full items-center justify-center gap-2 rounded-xl bg-black px-4 text-sm font-extrabold text-white shadow-sm transition hover:bg-neutral-800 active:scale-[0.99] disabled:cursor-not-allowed disabled:opacity-50"
+>
                                                 <CalendarPlus className="h-4 w-4" />
                                                 Agendar cita
                                             </button>
@@ -4285,7 +4284,7 @@ function mostrarCitaToast({
                                                         type="button"
                                                         onClick={() => marcarChatComoNoLeido(activeTel)}
                                                         disabled={!activeTel || markingUnreadTel === activeTel}
-                                                        className="inline-flex h-10 items-center justify-center rounded-xl border border-blue-100 bg-blue-50 text-blue-700 transition hover:bg-blue-100 disabled:cursor-not-allowed disabled:opacity-50"
+                                                        className="inline-flex h-10 items-center justify-center rounded-xl border border-black/15 bg-white text-blue-700 shadow-sm transition hover:bg-neutral-50 active:scale-[0.97] disabled:cursor-not-allowed disabled:opacity-50"
                                                         title="Marcar como no leído"
                                                     >
                                                         {markingUnreadTel === activeTel ? (
@@ -4302,7 +4301,7 @@ function mostrarCitaToast({
                                                                 type="button"
                                                                 onClick={pausarIaActiva}
                                                                 disabled={loadingIaAction}
-                                                                className="inline-flex h-10 items-center justify-center rounded-xl border border-amber-100 bg-amber-50 text-amber-700 transition hover:bg-amber-100 disabled:cursor-not-allowed disabled:opacity-50"
+                                                                className="inline-flex h-10 items-center justify-center rounded-xl border border-black/15 bg-white text-amber-600 shadow-sm transition hover:bg-neutral-50 active:scale-[0.97] disabled:cursor-not-allowed disabled:opacity-50"
                                                                 title="Pausar IA"
                                                             >
                                                                 {loadingIaAction ? (
@@ -4316,7 +4315,7 @@ function mostrarCitaToast({
                                                                 type="button"
                                                                 onClick={reactivarIaActiva}
                                                                 disabled={loadingIaAction}
-                                                                className="inline-flex h-10 items-center justify-center rounded-xl border border-emerald-100 bg-emerald-50 text-emerald-700 transition hover:bg-emerald-100 disabled:cursor-not-allowed disabled:opacity-50"
+                                                                className="inline-flex h-10 items-center justify-center rounded-xl border border-black/15 bg-white text-emerald-600 shadow-sm transition hover:bg-neutral-50 active:scale-[0.97] disabled:cursor-not-allowed disabled:opacity-50"
                                                                 title="Reactivar IA"
                                                             >
                                                                 {loadingIaAction ? (
@@ -4346,10 +4345,10 @@ function mostrarCitaToast({
                                                         }
                                                         disabled={!activeTel || blockingTel === activeTel}
                                                         className={cls(
-                                                            "inline-flex h-10 items-center justify-center rounded-xl border transition disabled:cursor-not-allowed disabled:opacity-50",
+                                                            "inline-flex h-10 items-center justify-center rounded-xl border bg-white shadow-sm transition active:scale-[0.97] disabled:cursor-not-allowed disabled:opacity-50",
                                                             clienteBloqueado
-                                                                ? "border-slate-200 bg-slate-50 text-slate-600 hover:bg-slate-100"
-                                                                : "border-red-100 bg-red-50 text-red-600 hover:bg-red-100"
+                                                                ? "border-black/15 text-slate-500 hover:bg-neutral-50"
+                                                                : "border-black/15 text-red-600 hover:bg-neutral-50"
                                                         )}
                                                         title={
                                                             clienteBloqueado
@@ -4649,8 +4648,8 @@ function mostrarCitaToast({
                                             onClick={saveQuickEdit}
                                             disabled={savingQuickEdit || !prospecto?.id}
                                             type="button"
-                                            className="inline-flex h-11 w-full items-center justify-center gap-2 rounded-xl bg-[#001E50] px-5 text-sm font-extrabold text-white shadow-sm transition hover:opacity-90 disabled:cursor-not-allowed disabled:opacity-50"
-                                        >
+                                            className="inline-flex h-11 w-full items-center justify-center gap-2 rounded-xl bg-black px-5 text-sm font-extrabold text-white shadow-sm transition hover:bg-neutral-800 active:scale-[0.99] disabled:cursor-not-allowed disabled:opacity-50"
+>
                                             <Save className="h-4 w-4" />
 
                                             {savingQuickEdit
