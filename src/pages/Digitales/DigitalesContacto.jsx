@@ -45,6 +45,7 @@ import NuevoProspectoModal from "./NuevoProspectoModal";
 const BRAND_BLUE = "#000000";
 const QUICK_BUBBLES_KEY = "volvo_digitales_quick_bubbles_global";
 const CHAT_PAGE_SIZE = 24;
+const CHAT_LIST_PAGE_SIZE = 30;
 const CHAT_UPDATES_LIMIT = 80;
 const CHAT_CACHE_LIMIT = 80;
 const DEALERS = [
@@ -2122,6 +2123,9 @@ export default function DigitalesContacto() {
     const [q, setQ] = useState("");
     const [chatFilter, setChatFilter] = useState("todos");
     const [loadingList, setLoadingList] = useState(false);
+    const [loadingMoreChats, setLoadingMoreChats] = useState(false);
+    const [loadingFilterChats, setLoadingFilterChats] = useState(false);
+    const [chatsHasMore, setChatsHasMore] = useState(true);
     const [loadingChat, setLoadingChat] = useState(false);
     const [chats, setChats] = useState([]);
     const [prospectosIndex, setProspectosIndex] = useState([]);
@@ -2190,7 +2194,15 @@ export default function DigitalesContacto() {
 
     const endRef = useRef(null);
     const messagesScrollRef = useRef(null);
+    const chatListScrollRef = useRef(null);
     const activeTelRef = useRef("");
+
+    const chatsPaginationRef = useRef({
+        before: "",
+        before_tel: "",
+        hasMore: true,
+        query: "",
+    });
     const mensajesRef = useRef([]);
     const emojiRef = useRef(null);
     const fileInputRef = useRef(null);
@@ -2409,32 +2421,345 @@ export default function DigitalesContacto() {
         return true;
     }
 
-    async function refreshChats() {
-        const data = await api.digitalesChats();
-        const normalized = (Array.isArray(data) ? data : []).map(chat => ({
-            id: chat.id || chat.telefono || crypto.randomUUID(),
-            telefono: normalizaTelefonoMx(chat.telefono || ""),
-            nombre: chat.nombre || "Prospecto",
-            agencia: chat.agencia || "",
-            linea: chat.linea || "",
-            estado: chat.estado || "",
+    function normalizarResumenChat(chat) {
+    return {
+        id:
+            chat.id ||
+            chat.telefono ||
+            crypto.randomUUID(),
 
-            whatsapp_bloqueado: Boolean(chat.whatsapp_bloqueado),
-            whatsapp_bloqueado_motivo:
-                chat.whatsapp_bloqueado_motivo || "",
+        telefono: normalizaTelefonoMx(
+            chat.telefono || ""
+        ),
 
-            ia_estado: chat.ia_estado || null,
-            ia_pausada: Boolean(chat.ia_pausada),
-            ia_bloqueos: Array.isArray(chat.ia_bloqueos)
-                ? chat.ia_bloqueos
-                : [],
+        nombre: chat.nombre || "Prospecto",
+        agencia: chat.agencia || "",
+        linea: chat.linea || "",
+        estado: chat.estado || "",
 
-            unread: Number(chat.unread || 0),
-            last: { text: chat.last_text || "", time: chat.last_time || "" },
-        }));
-        setChats(normalized);
+        whatsapp_bloqueado: Boolean(
+            chat.whatsapp_bloqueado
+        ),
+
+        whatsapp_bloqueado_motivo:
+            chat.whatsapp_bloqueado_motivo || "",
+
+        ia_estado: chat.ia_estado || null,
+
+        ia_pausada: Boolean(
+            chat.ia_pausada
+        ),
+
+        ia_bloqueos: Array.isArray(
+            chat.ia_bloqueos
+        )
+            ? chat.ia_bloqueos
+            : [],
+
+        unread: Number(chat.unread || 0),
+
+        last: {
+            text: chat.last_text || "",
+            time: chat.last_time || "",
+        },
+    };
+}
+
+    async function refreshChats({
+        reset = true,
+        query = "",
+    } = {}) {
+        const actual = chatsPaginationRef.current;
+
+        if (!reset && !actual.hasMore) {
+            return [];
+        }
+
+        if (!reset && loadingMoreChats) {
+            return [];
+        }
+
+        const busqueda = String(query || "").trim();
+
+        const params = {
+            paginado: 1,
+            limit: CHAT_LIST_PAGE_SIZE,
+            q: busqueda || undefined,
+            before:
+                reset
+                    ? undefined
+                    : actual.before || undefined,
+            before_tel:
+                reset
+                    ? undefined
+                    : actual.before_tel || undefined,
+        };
+
+        try {
+            if (!reset) {
+                setLoadingMoreChats(true);
+            }
+
+            const data = await api.digitalesChats(params);
+
+            const items = Array.isArray(data?.results)
+                ? data.results
+                : Array.isArray(data)
+                    ? data
+                    : [];
+
+            const normalized = items
+                .map(normalizarResumenChat)
+                .filter((chat) =>
+                    Boolean(chat.telefono)
+                );
+
+            if (reset) {
+                setChats(normalized);
+            } else {
+                setChats((prev) => {
+                    const mapa = new Map();
+
+                    for (const chat of prev) {
+                        if (chat.telefono) {
+                            mapa.set(
+                                chat.telefono,
+                                chat
+                            );
+                        }
+                    }
+
+                    for (const chat of normalized) {
+                        if (chat.telefono) {
+                            mapa.set(
+                                chat.telefono,
+                                chat
+                            );
+                        }
+                    }
+
+                    return Array.from(
+                        mapa.values()
+                    );
+                });
+            }
+
+            const paginacion =
+                data?.paginacion || {};
+
+            const hasMore = Boolean(
+                paginacion.has_more
+            );
+
+            chatsPaginationRef.current = {
+                before:
+                    paginacion.before || "",
+                before_tel:
+                    paginacion.before_tel || "",
+                hasMore,
+                query: busqueda,
+            };
+
+            setChatsHasMore(hasMore);
+
+            return normalized;
+        } catch (error) {
+            console.error(
+                "Error cargando lista de chats:",
+                error
+            );
+
+            throw error;
+        } finally {
+            if (!reset) {
+                setLoadingMoreChats(false);
+            }
+        }
     }
 
+    async function refreshChatsSilencioso({
+        query = chatsPaginationRef.current.query || "",
+    } = {}) {
+        const busqueda = String(query || "").trim();
+
+        try {
+            const data = await api.digitalesChats({
+                paginado: 1,
+                limit: CHAT_LIST_PAGE_SIZE,
+                q: busqueda || undefined,
+            });
+
+            const items = Array.isArray(data?.results)
+                ? data.results
+                : Array.isArray(data)
+                    ? data
+                    : [];
+
+            const normalized = items
+                .map(normalizarResumenChat)
+                .filter((chat) =>
+                    Boolean(chat.telefono)
+                );
+
+            setChats((actuales) => {
+                const actualesPorTelefono = new Map(
+                    (actuales || []).map((chat) => [
+                        chat.telefono,
+                        chat,
+                    ])
+                );
+
+                const telefonosActualizados = new Set();
+
+                const actualizados = normalized.map(
+                    (chat) => {
+                        const telefono = chat.telefono;
+
+                        telefonosActualizados.add(
+                            telefono
+                        );
+
+                        const anterior =
+                            actualesPorTelefono.get(
+                                telefono
+                            );
+
+                        const esActivo =
+                            telefono ===
+                            activeTelRef.current;
+
+                        return {
+                            ...(anterior || {}),
+                            ...chat,
+
+                            unread: esActivo
+                                ? 0
+                                : Math.max(
+                                    Number(
+                                        chat.unread || 0
+                                    ),
+                                    Number(
+                                        anterior?.unread || 0
+                                    )
+                                ),
+
+                            last: {
+                                ...(anterior?.last || {}),
+                                ...(chat.last || {}),
+                            },
+                        };
+                    }
+                );
+
+                const historicos = (
+                    actuales || []
+                ).filter(
+                    (chat) =>
+                        !telefonosActualizados.has(
+                            chat.telefono
+                        )
+                );
+
+                return [
+                    ...actualizados,
+                    ...historicos,
+                ];
+            });
+
+            return normalized;
+        } catch (error) {
+            console.error(
+                "Error actualizando lista de chats:",
+                error
+            );
+
+            return [];
+        }
+    }
+
+    async function cargarMasChats() {
+        if (
+            loadingList ||
+            loadingMoreChats ||
+            !chatsHasMore
+        ) {
+            return;
+        }
+
+        await refreshChats({
+            reset: false,
+            query:
+                chatsPaginationRef.current.query ||
+                "",
+        }).catch(() => {});
+    }
+
+    function onChatListScroll(event) {
+        const el = event.currentTarget;
+
+        const distanciaAlFinal =
+            el.scrollHeight -
+            el.scrollTop -
+            el.clientHeight;
+
+        if (distanciaAlFinal <= 250) {
+            cargarMasChats();
+        }
+    }
+
+    async function cambiarFiltroChats(nextFilter) {
+        setChatFilter(nextFilter);
+
+        chatListScrollRef.current?.scrollTo({
+            top: 0,
+            behavior: "auto",
+        });
+
+        // "Todos" mantiene la carga progresiva normal.
+        if (nextFilter === "todos") {
+            return;
+        }
+
+        // Si ya cargamos todo anteriormente,
+        // el filtro local ya tiene todos los chats.
+        if (!chatsPaginationRef.current.hasMore) {
+            return;
+        }
+
+        if (loadingFilterChats) {
+            return;
+        }
+
+        try {
+            setLoadingFilterChats(true);
+
+            let paginasCargadas = 0;
+
+            // Termina de traer los chats en bloques de 30.
+            // El límite evita un ciclo infinito por cualquier
+            // respuesta anómala del servidor.
+            while (
+                chatsPaginationRef.current.hasMore &&
+                paginasCargadas < 50
+            ) {
+                await refreshChats({
+                    reset: false,
+                    query:
+                        chatsPaginationRef.current.query ||
+                        "",
+                });
+
+                paginasCargadas += 1;
+            }
+        } catch (error) {
+            console.error(
+                "Error cargando chats para filtro:",
+                error
+            );
+        } finally {
+            setLoadingFilterChats(false);
+        }
+    }
     async function cargarChatInicial(tel52) {
         const target = normalizaTelefonoMx(tel52);
         if (!target) return;
@@ -2455,7 +2780,7 @@ export default function DigitalesContacto() {
             setMensajes(items);
             setChatHasMore(Boolean(paginacion.has_more));
             setOldestMessageId(paginacion.oldest_id || items[0]?.id || null);
-            if (!isDirectChatMode) await refreshChats().catch(() => { });
+            if (!isDirectChatMode) await refreshChatsSilencioso().catch(() => { });
             requestAnimationFrame(() => { endRef.current?.scrollIntoView({ behavior: "auto" }); });
         } catch (error) {
             console.error("Error cargando chat:", error);
@@ -2476,7 +2801,7 @@ export default function DigitalesContacto() {
         setOldestMessageId(prev => prev || paginacion.oldest_id || incoming[0]?.id || null);
         setChatHasMore(prev => prev || Boolean(paginacion.has_more));
         if (forceBottom) shouldStickToBottomRef.current = true;
-        if (!isDirectChatMode) await refreshChats().catch(() => { });
+        if (!isDirectChatMode) await refreshChatsSilencioso().catch(() => { });
     }
 
     async function pausarIaActiva() {
@@ -3017,7 +3342,7 @@ export default function DigitalesContacto() {
             await llamarMarkUnread(target);
             setChats(prev => prev.map(c => c.telefono === target ? { ...c, unread: Math.max(Number(c.unread || 0), 1) } : c));
             mensajesCacheRef.current.delete(target);
-            if (!isDirectChatMode) await refreshChats().catch(() => { });
+            if (!isDirectChatMode) await refreshChatsSilencioso().catch(() => { });
         } catch (error) { alert(`No se pudo marcar como no leído: ${error.message}`); }
         finally { setMarkingUnreadTel(""); }
     }
@@ -3063,7 +3388,6 @@ export default function DigitalesContacto() {
             mensajesCacheRef.current.delete(activeTel);
 
             await refreshActiveChat(activeTel).catch(() => {});
-            await refreshChats().catch(() => {});
 
             setBlockNotice({
                 type: "success",
@@ -3119,7 +3443,6 @@ export default function DigitalesContacto() {
             mensajesCacheRef.current.delete(activeTel);
 
             await refreshActiveChat(activeTel).catch(() => {});
-            await refreshChats().catch(() => {});
 
             setBlockNotice({
                 type: "success",
@@ -3209,10 +3532,6 @@ export default function DigitalesContacto() {
         try {
             await api.digitalesPatchProspecto(prospecto.id, { pauta });
             await refreshActiveChat(activeTel).catch(() => { });
-
-            if (!isDirectChatMode) {
-                await refreshChats().catch(() => { });
-            }
         } catch (error) {
             console.error("Error guardando pauta:", error);
 
@@ -3318,7 +3637,7 @@ export default function DigitalesContacto() {
             const telefonoMensaje = normalizaTelefonoMx(data.telefono || "");
             if (!telefonoMensaje) return;
             if (telefonoMensaje === activeTelRef.current) { await refreshActiveChat(telefonoMensaje, { forceBottom: true }).catch(() => { }); return; }
-            if (!isDirectChatMode) await refreshChats().catch(() => { });
+            if (!isDirectChatMode) await refreshChatsSilencioso().catch(() => { });
         };
         window.addEventListener("whatsapp:nuevo-mensaje", onNuevoMensaje);
         return () => window.removeEventListener("whatsapp:nuevo-mensaje", onNuevoMensaje);
@@ -3326,14 +3645,45 @@ export default function DigitalesContacto() {
 
     useEffect(() => {
         let ignore = false;
-        if (isDirectChatMode) { setChats([]); setLoadingList(false); return () => { ignore = true; }; }
-        (async () => {
-            try { setLoadingList(true); await refreshChats(); }
-            catch { if (!ignore) setChats([]); }
-            finally { if (!ignore) setLoadingList(false); }
-        })();
-        return () => { ignore = true; };
-    }, [isDirectChatMode]);
+
+        if (isDirectChatMode) {
+            setChats([]);
+            setLoadingList(false);
+
+            return () => {
+                ignore = true;
+            };
+        }
+
+        const timer = setTimeout(async () => {
+            try {
+                setLoadingList(true);
+
+                await refreshChats({
+                    reset: true,
+                    query: deferredQ,
+                });
+            } catch (error) {
+                console.error(
+                    "Error cargando chats:",
+                    error
+                );
+
+                if (!ignore) {
+                    setChats([]);
+                }
+            } finally {
+                if (!ignore) {
+                    setLoadingList(false);
+                }
+            }
+        }, 300);
+
+        return () => {
+            ignore = true;
+            clearTimeout(timer);
+        };
+    }, [isDirectChatMode, deferredQ]);
 
     useEffect(() => {
         // Solo abrir automáticamente cuando el módulo recibe
@@ -3351,16 +3701,6 @@ export default function DigitalesContacto() {
     }, [activeTel, isDirectChatMode]);
 
     useEffect(() => {
-        let ignore = false;
-        if (isDirectChatMode) return;
-        (async () => {
-            try { const data = await api.digitalesListProspectos(); if (ignore) return; setProspectosIndex(Array.isArray(data) ? data : []); }
-            catch (error) { console.error("Error cargando índice de prospectos:", error); if (!ignore) setProspectosIndex([]); }
-        })();
-        return () => { ignore = true; };
-    }, [isDirectChatMode]);
-
-    useEffect(() => {
         let alive = true, timer = null, tickCount = 0;
         const tick = async () => {
             try {
@@ -3375,10 +3715,10 @@ export default function DigitalesContacto() {
                 if (incoming.length) {
                     shouldStickToBottomRef.current = isNearBottom(messagesScrollRef.current);
                     setMensajes(old => mergeMessages(old, incoming));
-                    if (!isDirectChatMode) await refreshChats().catch(() => { });
+                    if (!isDirectChatMode) await refreshChatsSilencioso().catch(() => { });
                 } else {
                     tickCount += 1;
-                    if (!isDirectChatMode && tickCount % 5 === 0) await refreshChats().catch(() => { });
+                    if (!isDirectChatMode && tickCount % 5 === 0) await refreshChatsSilencioso().catch(() => { });
                 }
             } catch { }
             timer = setTimeout(tick, 3500);
@@ -3578,20 +3918,34 @@ function mostrarCitaToast({
                                     {/* Filtros con scroll horizontal */}
                                     <div className="mt-2 flex gap-1.5 overflow-x-auto pb-0.5 scrollbar-hide" style={{ scrollbarWidth: "none", msOverflowStyle: "none" }}>
                                         {CHAT_FILTERS.map((f) => (
-                                            <button key={f.key} onClick={() => setChatFilter(f.key)}
+                                            <button
+                                                key={f.key}
+                                                onClick={() => cambiarFiltroChats(f.key)}
                                                 className={cls(
                                                     "shrink-0 rounded-full px-3 py-1.5 text-xs font-extrabold transition whitespace-nowrap",
-                                                    chatFilter === f.key ? "bg-[#000000] text-white" : "text-slate-500 hover:bg-neutral-200"
+                                                    chatFilter === f.key
+                                                        ? "bg-[#000000] text-white"
+                                                        : "text-slate-500 hover:bg-neutral-200"
                                                 )}
-                                                type="button">
+                                                type="button"
+                                            >
                                                 {f.label}
                                             </button>
                                         ))}
                                     </div>
                                 </div>
+                                {loadingFilterChats ? (
+                                    <div className="px-3 pb-2 text-[11px] font-semibold text-slate-400">
+                                        Cargando todos los chats para aplicar el filtro...
+                                    </div>
+                                ) : null}
 
                                 {/* Lista de chats estilo WhatsApp */}
-                                <div className="min-h-0 flex-1 overflow-y-auto overscroll-contain">
+                                <div
+                                    ref={chatListScrollRef}
+                                    onScroll={onChatListScroll}
+                                    className="min-h-0 flex-1 overflow-y-auto overscroll-contain"
+                                >
                                     {loadingList ? <ChatListSkeleton rows={9} /> : filteredChats.length ? (
                                         filteredChats.map((chat) => {
                                             const isActive = chat.telefono === activeTel;
