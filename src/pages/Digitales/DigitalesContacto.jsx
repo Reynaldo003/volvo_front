@@ -72,7 +72,13 @@ const CANALES = [
     "Llamada Entrante",
 ];
 
-const ESTADOS_PROSPECTO = ["Descalificado", "Contactado", "Sin Respuesta"];
+const ESTADOS_PROSPECTO = [
+    "Descalificado",
+    "Contactado",
+    "En Proceso",
+    "Facturado",
+    "Sin Respuesta",
+];
 
 const BURO_OPTIONS = [
     { value: "", label: "— Selecciona —" },
@@ -109,6 +115,8 @@ const CHAT_FILTERS = [
     { key: "todos", label: "Todos" },
     { key: "no_leidos", label: "No leídos" },
     { key: "contactado", label: "Contactado", estados: ["contactado"] },
+    { key: "en_proceso", label: "En Proceso", estados: ["en proceso", "en_proceso"] },
+    { key: "facturado", label: "Facturado", estados: ["facturado"] },
     { key: "sin_respuesta", label: "Sin respuesta", estados: ["sin respuesta", "sin_respuesta"] },
     { key: "descalificado", label: "Descalificado", estados: ["descalificado"] },
 ];
