@@ -13,7 +13,10 @@ import {
     ArrowUpDown,
     ChevronDown,
     ChevronUp,
-    ChevronLeft, ChevronRight,
+    ChevronLeft,
+    ChevronRight,
+    ChevronsLeft,
+    ChevronsRight,
     MessageSquareShare,
     Building2,
     FileText,
@@ -1559,6 +1562,10 @@ export default function DigitalesProspectos() {
     const [selectedNumeroAsesor, setSelectedNumeroAsesor] = useState("Todos");
     const deferredQ = useDeferredValue(filters.q);
     const [page, setPage] = useState(1);
+    const [totalProspectos, setTotalProspectos] = useState(0);
+    const [fullCases, setFullCases] = useState([]);
+    const [loadingFullCases, setLoadingFullCases] = useState(false);
+    const [exportingExcel, setExportingExcel] = useState(false);
 
     const filtroNumeroActivo = useMemo(() => {
         if (isAdmin) {
@@ -1597,19 +1604,180 @@ export default function DigitalesProspectos() {
     const filterLabelCls = "mb-1.5 block text-xs font-bold text-black";
     const filterControlCls =
         "h-9 w-full rounded-lg border border-black/15 placeholder:text-neutral-400 bg-white px-3 text-sm text-black shadow-sm outline-none transition focus:border-black focus:ring-2 focus:ring-black/10";
+    const getProspectosParams = useCallback(
+        (pageNumber = page, paginar = true) => {
+            const params = {
+                search: deferredQ.trim() || undefined,
+
+                agencia:
+                    filters.agencia !== "Todos"
+                        ? filters.agencia
+                        : undefined,
+
+                business:
+                    filters.linea !== "Todos"
+                        ? filters.linea
+                        : undefined,
+
+                estado:
+                    filters.estado !== "Todos"
+                        ? filters.estado
+                        : undefined,
+
+                fecha_registro_desde:
+                    filters.fechaRegistroDesde || undefined,
+
+                fecha_registro_hasta:
+                    filters.fechaRegistroHasta || undefined,
+
+                fecha_contacto_desde:
+                    filters.fechaContactoDesde || undefined,
+
+                fecha_contacto_hasta:
+                    filters.fechaContactoHasta || undefined,
+
+                sort_key: sort.key || undefined,
+                sort_dir: sort.key ? sort.dir : undefined,
+            };
+
+            if (filtroNumeroActivo?.asesor_digital) {
+                params.asesor_digital =
+                    filtroNumeroActivo.asesor_digital;
+            }
+
+            if (
+                !params.agencia &&
+                filtroNumeroActivo?.agencia
+            ) {
+                params.agencia = filtroNumeroActivo.agencia;
+            }
+
+            if (
+                !params.agencia &&
+                !isAdmin &&
+                userAgencias.length === 1
+            ) {
+                params.agencia = userAgencias[0];
+            }
+
+            if (paginar) {
+                params.page = pageNumber;
+                params.page_size = PAGE_SIZE;
+            }
+
+            return params;
+        },
+        [
+            page,
+            deferredQ,
+            filters,
+            sort,
+            filtroNumeroActivo,
+            isAdmin,
+            userAgencias,
+        ]
+    );
+
+const cargarProspectosCompletos = useCallback(async () => {
+    const data = await api.digitalesListProspectos(
+        getProspectosParams(1, false)
+    );
+
+    const rows = Array.isArray(data)
+        ? data
+        : Array.isArray(data?.results)
+            ? data.results
+            : [];
+
+    return rows.map(normalizeProspecto);
+}, [getProspectosParams]);
 
     useEffect(() => {
-        (async () => {
+        let cancelled = false;
+
+        const cargarProspectos = async () => {
             try {
-                const data = await api.digitalesListProspectos();
-                setCases((Array.isArray(data) ? data : []).map(normalizeProspecto));
+                setLoadingCases(true);
+
+                const data = await api.digitalesListProspectos(
+                    getProspectosParams(page, true)
+                );
+
+                if (cancelled) return;
+
+                const rows = Array.isArray(data?.results)
+                    ? data.results
+                    : Array.isArray(data)
+                        ? data
+                        : [];
+
+                setCases(rows.map(normalizeProspecto));
+
+                setTotalProspectos(
+                    Number(
+                        data?.count ??
+                        rows.length
+                    )
+                );
             } catch (e) {
-                console.error(e);
-                setCases([]);
+                console.error("Error cargando prospectos:", e);
+
+                if (!cancelled) {
+                    setCases([]);
+                    setTotalProspectos(0);
+                }
             } finally {
+                if (!cancelled) {
+                    setLoadingCases(false);
+                }
             }
-        })();
-    }, []);
+        };
+
+        cargarProspectos();
+
+        return () => {
+            cancelled = true;
+        };
+    }, [page, getProspectosParams]);
+
+    useEffect(() => {
+        if (viewMode !== "graficos" && viewMode !== "agenda") {
+            return;
+        }
+
+        let cancelled = false;
+
+        const cargarVistaCompleta = async () => {
+            try {
+                setLoadingFullCases(true);
+
+                const rows = await cargarProspectosCompletos();
+
+                if (!cancelled) {
+                    setFullCases(rows);
+                }
+            } catch (e) {
+                console.error(
+                    "Error cargando prospectos completos:",
+                    e
+                );
+
+                if (!cancelled) {
+                    setFullCases([]);
+                }
+            } finally {
+                if (!cancelled) {
+                    setLoadingFullCases(false);
+                }
+            }
+        };
+
+        cargarVistaCompleta();
+
+        return () => {
+            cancelled = true;
+        };
+    }, [viewMode, cargarProspectosCompletos]);
 
     useEffect(() => {
         if (!ready) return;
@@ -1631,7 +1799,11 @@ export default function DigitalesProspectos() {
     }, [cases, isAdmin, userAgencias]);
 
     const estados = useMemo(() => {
-        const s = new Set(cases.map((c) => c.estado).filter(Boolean));
+        const s = new Set([
+            ...ESTADOS_PROSPECTO,
+            ...cases.map((c) => c.estado).filter(Boolean),
+        ]);
+
         return ["Todos", ...Array.from(s)];
     }, [cases]);
 
@@ -1751,7 +1923,10 @@ export default function DigitalesProspectos() {
         });
     }, [filtered, sort]);
 
-    const totalPages = Math.max(1, Math.ceil(sorted.length / PAGE_SIZE));
+    const totalPages = Math.max(
+        1,
+        Math.ceil(totalProspectos / PAGE_SIZE)
+    );
 
     useEffect(() => {
         setPage(1);
@@ -1761,14 +1936,36 @@ export default function DigitalesProspectos() {
         setPage((prev) => Math.min(prev, totalPages));
     }, [totalPages]);
 
-    const paginatedRows = useMemo(() => {
-        const start = (page - 1) * PAGE_SIZE;
-        const end = start + PAGE_SIZE;
-        return sorted.slice(start, end);
-    }, [sorted, page]);
+    const paginatedRows = sorted;
 
-    const pageStart = sorted.length === 0 ? 0 : (page - 1) * PAGE_SIZE + 1;
-    const pageEnd = sorted.length === 0 ? 0 : Math.min(page * PAGE_SIZE, sorted.length);
+    const pageStart =
+        totalProspectos === 0
+            ? 0
+            : (page - 1) * PAGE_SIZE + 1;
+
+    const pageEnd =
+        totalProspectos === 0
+            ? 0
+            : Math.min(
+                (page - 1) * PAGE_SIZE + paginatedRows.length,
+                totalProspectos
+            );
+
+    const paginationPages = useMemo(() => {
+        if (totalPages <= 3) {
+            return Array.from({ length: totalPages }, (_, i) => i + 1);
+        }
+
+        if (page <= 2) {
+            return [1, 2, 3];
+        }
+
+        if (page >= totalPages - 1) {
+            return [totalPages - 2, totalPages - 1, totalPages];
+        }
+
+        return [page - 1, page, page + 1];
+    }, [page, totalPages]);
 
     const openCreate = () => {
         setMode("create");
@@ -1933,8 +2130,24 @@ export default function DigitalesProspectos() {
     };
 
     const refreshList = async () => {
-        const data = await api.digitalesListProspectos();
-        setCases((Array.isArray(data) ? data : []).map(normalizeProspecto));
+        const data = await api.digitalesListProspectos(
+            getProspectosParams(page, true)
+        );
+
+        const rows = Array.isArray(data?.results)
+            ? data.results
+            : Array.isArray(data)
+                ? data
+                : [];
+
+        setCases(rows.map(normalizeProspecto));
+
+        setTotalProspectos(
+            Number(
+                data?.count ??
+                rows.length
+            )
+        );
     };
 
     const dtFmt = new Intl.DateTimeFormat("es-MX", {
@@ -1975,13 +2188,23 @@ export default function DigitalesProspectos() {
         return `reporte_prospectos_volvo_${fecha}_${hora}.xlsx`;
     }
 
-    function exportarExcelProspectos() {
-        if (!sorted.length) {
-            alert("No hay registros para exportar con los filtros actuales.");
-            return;
-        }
+    async function exportarExcelProspectos() {
+        if (exportingExcel) return;
 
-        const registros = sorted.map((row) => ({
+        try {
+            setExportingExcel(true);
+
+            const rowsExportar =
+                await cargarProspectosCompletos();
+
+            if (!rowsExportar.length) {
+                alert(
+                    "No hay registros para exportar con los filtros actuales."
+                );
+                return;
+            }
+
+        const registros = rowsExportar.map((row) => ({
             ID: limpiarValorExcel(row.id_exp),
             Dealer: limpiarValorExcel(row.agencia),
             Cliente: limpiarValorExcel(`${row.cliente_nombre || ""} ${row.cliente_apellidos || ""}`.trim()),
@@ -2033,7 +2256,7 @@ export default function DigitalesProspectos() {
                         ? "Todos"
                         : `${formatTelefonoMx(selectedNumeroAsesor)} • ${getAsesorDigitalPorNumero(selectedNumeroAsesor)}`,
             },
-            { Filtro: "Total exportado", Valor: sorted.length },
+            { Filtro: "Total exportado", Valor: rowsExportar.length },
         ];
 
         const worksheetRegistros = XLSX.utils.json_to_sheet(registros);
@@ -2052,7 +2275,14 @@ export default function DigitalesProspectos() {
         XLSX.utils.book_append_sheet(workbook, worksheetRegistros, "Prospectos");
         XLSX.utils.book_append_sheet(workbook, worksheetFiltros, "Filtros aplicados");
         XLSX.writeFile(workbook, generarNombreArchivoExcel(), { compression: true });
-    }
+
+            } catch (e) {
+                console.error("Error exportando prospectos:", e);
+                alert("No se pudo generar el Excel.");
+            } finally {
+                setExportingExcel(false);
+            }
+        }
 
     const [drafter, setDrafter] = useState({
         agencia: "",
@@ -2217,6 +2447,13 @@ export default function DigitalesProspectos() {
     const weekEndStr = formatDateYMDLocal(getEndOfWeek(now));
     const last7DaysStartStr = formatDateYMDLocal(addDays(now, -6));
     const last7DaysEndStr = todayStr;
+    const last30DaysStartStr = formatDateYMDLocal(addDays(now, -29));
+    const last30DaysEndStr = todayStr;
+
+    const thisMonthStartStr = formatDateYMDLocal(
+        new Date(now.getFullYear(), now.getMonth(), 1)
+    );
+    const thisMonthEndStr = todayStr;
 
     const isQuickActive = (desde, hasta) =>
         filters.fechaRegistroDesde === desde && filters.fechaRegistroHasta === hasta;
@@ -2254,11 +2491,20 @@ export default function DigitalesProspectos() {
                     <button
                         type="button"
                         onClick={exportarExcelProspectos}
-                        disabled={loadingCases || sorted.length === 0}
+                        disabled={
+                            loadingCases ||
+                            exportingExcel ||
+                            totalProspectos === 0
+                        }
                         className="inline-flex items-center justify-center gap-2 rounded-lg border border-black/15 bg-white px-4 py-2.5 text-sm font-semibold text-black shadow-sm transition hover:bg-neutral-50 active:scale-[0.97] disabled:cursor-not-allowed disabled:opacity-50"
                     >
-                        <FileDown className="h-4 w-4" />
-                        Exportar Excel
+                        {exportingExcel ? (
+                            <Loader2 className="h-4 w-4 animate-spin" />
+                        ) : (
+                            <FileDown className="h-4 w-4" />
+                        )}
+
+                        {exportingExcel ? "Exportando..." : "Exportar Excel"}
                     </button>
 
                     <button
@@ -2346,7 +2592,7 @@ export default function DigitalesProspectos() {
                         />
                     </div>
 
-                    <div className="xl:col-span-3">
+                    <div className="xl:col-span-2">
                         <label className={filterLabelCls}>Registro hasta</label>
                         <input
                             type="date"
@@ -2356,7 +2602,7 @@ export default function DigitalesProspectos() {
                         />
                     </div>
 
-                    <div className="xl:col-span-3">
+                    <div className="xl:col-span-2">
                         <label className={filterLabelCls}>Contacto desde</label>
                         <input
                             type="date"
@@ -2366,7 +2612,7 @@ export default function DigitalesProspectos() {
                         />
                     </div>
 
-                    <div className="xl:col-span-3">
+                    <div className="xl:col-span-2">
                         <label className={filterLabelCls}>Contacto hasta</label>
                         <input
                             type="date"
@@ -2376,8 +2622,8 @@ export default function DigitalesProspectos() {
                         />
                     </div>
 
-                    <div className="xl:col-span-3 flex items-end">
-                        {isAdmin ? (
+                   {isAdmin ? (
+                        <div className="xl:col-span-2 flex items-end">
                             <select
                                 value={selectedNumeroAsesor}
                                 onChange={(e) => setSelectedNumeroAsesor(e.target.value)}
@@ -2392,33 +2638,28 @@ export default function DigitalesProspectos() {
                                     </option>
                                 ))}
                             </select>
-                        ) : null}
-                    </div>
-                </div>
-
-                {/* ── Fila inferior: contador + accesos rápidos + Tabla/Gráficos (mismo lugar) ── */}
-                <div className="mt-4 flex flex-col gap-3 border-t border-black/10 pt-4">
-                    <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
-                        <div className="text-sm font-semibold text-neutral-500">
-                            {viewMode !== "agenda" ? (
-                                <>Mostrando {pageStart}-{pageEnd} de {sorted.length} prospectos</>
-                            ) : (
-                                <>Vista de agenda</>
-                            )}
                         </div>
+                    ) : null}
 
-                        <div className="flex flex-wrap items-center gap-2">
+                    <div
+                        className={
+                            isAdmin
+                                ? "xl:col-span-4 flex items-end"
+                                : "xl:col-span-6 flex items-end"
+                        }
+                    >
+                        <div className="grid w-full grid-cols-7 gap-1.5">
                             <button
                                 type="button"
                                 onClick={() => applyQuickRegistroRange(todayStr, todayStr)}
                                 className={[
-                                    "inline-flex h-9 items-center justify-center gap-1.5 rounded-lg px-3.5 text-sm font-semibold shadow-sm transition active:scale-[0.95]",
+                                    "inline-flex h-9 w-full items-center justify-center gap-1 whitespace-nowrap rounded-lg px-1.5 text-xs font-semibold shadow-sm transition active:scale-[0.95]",
                                     isQuickActive(todayStr, todayStr)
                                         ? "bg-black text-white"
                                         : "border border-black/15 bg-white text-black hover:bg-neutral-50",
                                 ].join(" ")}
                             >
-                                <CalendarDays className="h-3.5 w-3.5" />
+                                <CalendarDays className="h-3 w-3" />
                                 Hoy
                             </button>
 
@@ -2426,13 +2667,13 @@ export default function DigitalesProspectos() {
                                 type="button"
                                 onClick={() => applyQuickRegistroRange(yesterdayStr, yesterdayStr)}
                                 className={[
-                                    "inline-flex h-9 items-center justify-center gap-1.5 rounded-lg px-3.5 text-sm font-semibold shadow-sm transition active:scale-[0.95]",
+                                    "inline-flex h-9 w-full items-center justify-center gap-1 whitespace-nowrap rounded-lg px-1.5 text-xs font-semibold shadow-sm transition active:scale-[0.95]",
                                     isQuickActive(yesterdayStr, yesterdayStr)
                                         ? "bg-black text-white"
                                         : "border border-black/15 bg-white text-black hover:bg-neutral-50",
                                 ].join(" ")}
                             >
-                                <CalendarDays className="h-3.5 w-3.5" />
+                                <CalendarDays className="h-3 w-3" />
                                 Ayer
                             </button>
 
@@ -2440,43 +2681,80 @@ export default function DigitalesProspectos() {
                                 type="button"
                                 onClick={() => applyQuickRegistroRange(weekStartStr, weekEndStr)}
                                 className={[
-                                    "inline-flex h-9 items-center justify-center gap-1.5 rounded-lg px-3.5 text-sm font-semibold shadow-sm transition active:scale-[0.95]",
+                                    "inline-flex h-9 w-full items-center justify-center gap-1 whitespace-nowrap rounded-lg px-1.5 text-xs font-semibold shadow-sm transition active:scale-[0.95]",
                                     isQuickActive(weekStartStr, weekEndStr)
                                         ? "bg-black text-white"
                                         : "border border-black/15 bg-white text-black hover:bg-neutral-50",
                                 ].join(" ")}
                             >
-                                <CalendarDays className="h-3.5 w-3.5" />
+                                <CalendarDays className="h-3 w-3" />
                                 Esta semana
                             </button>
 
                             <button
                                 type="button"
-                                onClick={() => applyQuickRegistroRange(last7DaysStartStr, last7DaysEndStr)}
+                                onClick={() =>
+                                    applyQuickRegistroRange(last7DaysStartStr, last7DaysEndStr)
+                                }
                                 className={[
-                                    "inline-flex h-9 items-center justify-center gap-1.5 rounded-lg px-3.5 text-sm font-semibold shadow-sm transition active:scale-[0.95]",
+                                    "inline-flex h-9 w-full items-center justify-center gap-1 whitespace-nowrap rounded-lg px-1.5 text-xs font-semibold shadow-sm transition active:scale-[0.95]",
                                     isQuickActive(last7DaysStartStr, last7DaysEndStr)
                                         ? "bg-black text-white"
                                         : "border border-black/15 bg-white text-black hover:bg-neutral-50",
                                 ].join(" ")}
                             >
-                                <CalendarDays className="h-3.5 w-3.5" />
-                                Últimos 7 días
+                                <CalendarDays className="h-3 w-3" />
+                                7 días
+                            </button>
+
+                            <button
+                                type="button"
+                                onClick={() =>
+                                    applyQuickRegistroRange(last30DaysStartStr, last30DaysEndStr)
+                                }
+                                className={[
+                                    "inline-flex h-9 w-full items-center justify-center gap-1 whitespace-nowrap rounded-lg px-1.5 text-xs font-semibold shadow-sm transition active:scale-[0.95]",
+                                    isQuickActive(last30DaysStartStr, last30DaysEndStr)
+                                        ? "bg-black text-white"
+                                        : "border border-black/15 bg-white text-black hover:bg-neutral-50",
+                                ].join(" ")}
+                            >
+                                <CalendarDays className="h-3 w-3 shrink-0" />
+                                30 días
+                            </button>
+
+                            <button
+                                type="button"
+                                onClick={() =>
+                                    applyQuickRegistroRange(thisMonthStartStr, thisMonthEndStr)
+                                }
+                                className={[
+                                    "inline-flex h-9 w-full items-center justify-center gap-1 whitespace-nowrap rounded-lg px-1.5 text-xs font-semibold shadow-sm transition active:scale-[0.95]",
+                                    isQuickActive(thisMonthStartStr, thisMonthEndStr)
+                                        ? "bg-black text-white"
+                                        : "border border-black/15 bg-white text-black hover:bg-neutral-50",
+                                ].join(" ")}
+                            >
+                                <CalendarDays className="h-3 w-3 shrink-0" />
+                                Este mes
                             </button>
 
                             <button
                                 type="button"
                                 onClick={resetFilters}
-                                className="inline-flex h-9 items-center justify-center gap-1.5 rounded-lg border border-black/15 bg-white px-3.5 text-sm font-semibold text-black shadow-sm transition hover:bg-neutral-50 active:scale-[0.95]"
-                            >
-                                <X className="h-3.5 w-3.5" />
+                                className="inline-flex h-9 w-full items-center justify-center gap-1 whitespace-nowrap rounded-lg border border-black/15 bg-white px-1.5 text-xs font-semibold text-black shadow-sm transition hover:bg-neutral-50 active:scale-[0.95]"
+>
+                                <X className="h-3 w-3" />
                                 Limpiar
                             </button>
                         </div>
                     </div>
+                </div>
 
+                {/* ── Fila inferior: contador + accesos rápidos + Tabla/Gráficos (mismo lugar) ── */}
+                <div className="flex flex-col gap-3">
                     {!loadingCases && sorted.length > 0 && viewMode === "tabla" ? (
-                        <div className="flex flex-col gap-3 border-t border-black/10 pt-4 sm:flex-row sm:items-center sm:justify-between">
+                        <div className="flex flex-col gap-3 border-t border-black/10 pt-4 sm:flex-row sm:items-center sm:justify-between lg:hidden">
                             <div className="text-xs font-semibold text-neutral-400">
                                 Página {page} de {totalPages} • {PAGE_SIZE} registros por página
                             </div>
@@ -2525,26 +2803,38 @@ export default function DigitalesProspectos() {
 
             {/* ── Vista: Agenda ──────────────────────────────────────────────────── */}
             {viewMode === "agenda" && (
-                <VistaAgenda
-                    rows={sorted}
-                    isAdmin={isAdmin}
-                    abrirAgendaCita={abrirAgendaCita}
-                    fmtDTIntl={fmtDTIntl}
-                />
+                loadingFullCases ? (
+                    <div className="rounded-2xl border border-black/10 bg-white p-8 text-center text-sm font-semibold text-neutral-500 shadow-sm">
+                        Cargando agenda...
+                    </div>
+                ) : (
+                    <VistaAgenda
+                        rows={fullCases}
+                        isAdmin={isAdmin}
+                        abrirAgendaCita={abrirAgendaCita}
+                        fmtDTIntl={fmtDTIntl}
+                    />
+                )
             )}
 
             {/* ── Vista: Gráficos ───────────────────────────────────────────────── */}
             {viewMode === "graficos" && (
-                <VistaGraficos rows={sorted} />
+                loadingFullCases ? (
+                    <div className="rounded-2xl border border-black/10 bg-white p-8 text-center text-sm font-semibold text-neutral-500 shadow-sm">
+                        Cargando gráficos...
+                    </div>
+                ) : (
+                    <VistaGraficos rows={fullCases} />
+                )
             )}
 
             {/* ── Vista: Tabla (desktop) ────────────────────────────────────────── */}
             {viewMode === "tabla" && (
                 <>
                     <div className="hidden overflow-hidden rounded-2xl border border-black/10 bg-white shadow-sm lg:block">
-                        <div className="overflow-auto">
+                        <div className="max-h-[560px] overflow-auto overscroll-contain [scrollbar-gutter:stable]">
                             <table className="min-w-full text-left text-sm">
-                                <thead className="font-vw-header border-b border-black/10 bg-neutral-50 text-xs text-neutral-500">
+                                <thead className="sticky top-0 z-20 font-vw-header border-b border-black/10 bg-neutral-50 text-xs text-neutral-500 shadow-sm">
                                     <tr>
                                         <th className="px-4 py-3">
                                             <button type="button" onClick={() => toggleSort("agencia")} className="inline-flex items-center gap-1 text-xs font-bold text-black">
@@ -2751,6 +3041,80 @@ export default function DigitalesProspectos() {
                                 onClose={() => setCtxMenu({ open: false, x: 0, y: 0, row: null })}
                             />
                         </div>
+                        {!loadingCases && sorted.length > 0 ? (
+                            <div className="flex items-center justify-between gap-4 border-t border-black/10 bg-white px-4 py-3">
+                                {/* CONTADOR */}
+                                <div className="text-xs font-semibold text-neutral-500">
+                                    Mostrando {pageStart}-{pageEnd} de {totalProspectos} registros
+                                </div>
+
+                                {/* PAGINACIÓN TIPO VW */}
+                                <div className="flex items-center gap-1">
+                                    {/* PRIMERA PÁGINA */}
+                                    <button
+                                        type="button"
+                                        onClick={() => setPage(1)}
+                                        disabled={page === 1}
+                                        className="inline-flex h-8 w-8 items-center justify-center rounded-lg border border-black/10 bg-white text-neutral-600 transition hover:bg-neutral-50 active:scale-95 disabled:cursor-not-allowed disabled:opacity-30"
+                                        title="Primera página"
+                                    >
+                                        <ChevronsLeft className="h-4 w-4" />
+                                    </button>
+
+                                    {/* ANTERIOR */}
+                                    <button
+                                        type="button"
+                                        onClick={() => setPage((prev) => Math.max(prev - 1, 1))}
+                                        disabled={page === 1}
+                                        className="inline-flex h-8 w-8 items-center justify-center rounded-lg border border-black/10 bg-white text-neutral-600 transition hover:bg-neutral-50 active:scale-95 disabled:cursor-not-allowed disabled:opacity-30"
+                                        title="Página anterior"
+                                    >
+                                        <ChevronLeft className="h-4 w-4" />
+                                    </button>
+
+                                    {/* NÚMEROS */}
+                                    {paginationPages.map((pageNumber) => (
+                                        <button
+                                            key={pageNumber}
+                                            type="button"
+                                            onClick={() => setPage(pageNumber)}
+                                            className={[
+                                                "inline-flex h-8 min-w-8 items-center justify-center rounded-lg border px-2 text-xs font-bold transition active:scale-95",
+                                                page === pageNumber
+                                                    ? "border-black bg-black text-white shadow-sm"
+                                                    : "border-black/10 bg-white text-black hover:bg-neutral-50",
+                                            ].join(" ")}
+                                        >
+                                            {pageNumber}
+                                        </button>
+                                    ))}
+
+                                    {/* SIGUIENTE */}
+                                    <button
+                                        type="button"
+                                        onClick={() =>
+                                            setPage((prev) => Math.min(prev + 1, totalPages))
+                                        }
+                                        disabled={page === totalPages}
+                                        className="inline-flex h-8 w-8 items-center justify-center rounded-lg border border-black/10 bg-white text-neutral-600 transition hover:bg-neutral-50 active:scale-95 disabled:cursor-not-allowed disabled:opacity-30"
+                                        title="Página siguiente"
+                                    >
+                                        <ChevronRight className="h-4 w-4" />
+                                    </button>
+
+                                    {/* ÚLTIMA PÁGINA */}
+                                    <button
+                                        type="button"
+                                        onClick={() => setPage(totalPages)}
+                                        disabled={page === totalPages}
+                                        className="inline-flex h-8 w-8 items-center justify-center rounded-lg border border-black/10 bg-white text-neutral-600 transition hover:bg-neutral-50 active:scale-95 disabled:cursor-not-allowed disabled:opacity-30"
+                                        title="Última página"
+                                    >
+                                        <ChevronsRight className="h-4 w-4" />
+                                    </button>
+                                </div>
+                            </div>
+                        ) : null}
                     </div>
 
                     {/* ── Vista: Tabla (móvil) ─────────────────────────────────────── */}
