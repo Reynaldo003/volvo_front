@@ -26,7 +26,7 @@ const BRAND_BLACK = "#0A0A0A";
 
 const DEFAULT_DEALERS = ["Volvo"];
 
-const DEFAULT_ASESORES_DIGITALES = ["Mariana Tlamani"];
+const DEFAULT_ASESORES_DIGITALES = ["Amauri Jaret Pérez Núñez"];
 
 const DEFAULT_ASESORES = [
     "Enrique Vazquez Islas",
@@ -427,7 +427,7 @@ function Field({ label, icon: Icon, children }) {
 
 function buildCreateDraft({
     agenciaInicial = "Volvo",
-    asesorDigitalInicial = "Mariana Tlamani",
+    asesorDigitalInicial = "Amauri Jaret Pérez Núñez",
 } = {}) {
 
     const now = new Date();
@@ -467,7 +467,7 @@ function buildCreateDraft({
         solicitud_credito_estado: "",
         vin_facturado: "",
         vin_estatus_entrega: "",
-        asesor_digital: asesorDigitalInicial || "Mariana Tlamani",
+        asesor_digital: asesorDigitalInicial || "Amauri Jaret Pérez Núñez",
         asesor_solicita: "",
         creado: nowLocal,
         primer_contacto_at: "",
@@ -537,7 +537,7 @@ export default function NuevoProspectoModal({
     asesoresDigitales = DEFAULT_ASESORES_DIGITALES,
     asesores = DEFAULT_ASESORES,
     agenciaInicial = "Volvo",
-    asesorDigitalInicial = "Mariana Tlamani",
+    asesorDigitalInicial = "Amauri Jaret Pérez Núñez",
     isAdmin = true,
     userAgencias = [],
     contextoDigitalSesion = null,
@@ -765,7 +765,7 @@ export default function NuevoProspectoModal({
                         asesorDigitalInicial:
                             asesorDigitalInicial ||
                             asesoresDigitalesDisponibles[0] ||
-                            "Mariana Tlamani",
+                            "Amauri Jaret Pérez Núñez",
                     })
                 );
                 return;

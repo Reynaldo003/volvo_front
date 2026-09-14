@@ -47,9 +47,9 @@ const byFuente = [
 ];
 
 const recentActivity = [
-    { when: "Hace 10 min", who: "Mariana T.", what: "Agendó cita para EX30 • Prueba de Manejo" },
+    { when: "Hace 10 min", who: "Amauri Jaret Pérez Núñez.", what: "Agendó cita para EX30 • Prueba de Manejo" },
     { when: "Hace 45 min", who: "Enrique V.", what: "Confirmó asistencia de cliente • XC60" },
-    { when: "Hoy", who: "Mariana T.", what: "Registró cita digital • EX40" },
+    { when: "Hoy", who: "Amauri Jaret Pérez Núñez.", what: "Registró cita digital • EX40" },
     { when: "Ayer", who: "Ricardo P.", what: "Canceló cita • EX90" },
 ];
 

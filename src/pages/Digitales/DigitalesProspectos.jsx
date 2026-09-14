@@ -80,7 +80,7 @@ function normalizarCanalContacto(value) {
     return canal;
 }
 
-const ASESORES_DIGITALES = ["Mariana Tlamani"];
+const ASESORES_DIGITALES = ["Amauri Jaret Pérez Núñez"];
 const ESTADOS_PROSPECTO = [
     "Contactado",
     "Calificado",
@@ -173,7 +173,7 @@ const ASESOR_DIGITAL_POR_NUMERO = {
     // Agrega aquí los números de WhatsApp de Volvo cuando quieras filtrar por asesor digital.
     // Ejemplo:
     // "52XXXXXXXXXX": {
-    //     asesor_digital: "Mariana Tlamani",
+    //     asesor_digital: "Amauri Jaret Pérez Núñez",
     //     agencia: "Volvo",
     // },
 };
@@ -1981,7 +1981,7 @@ const cargarProspectosCompletos = useCallback(async () => {
 
         const agenciaPorSesion = contextoDigitalSesion?.agencia || "Volvo";
 
-        const asesorDigitalPorSesion = contextoDigitalSesion?.asesor_digital || "Mariana Tlamani";
+        const asesorDigitalPorSesion = contextoDigitalSesion?.asesor_digital || "Amauri Jaret Pérez Núñez";
 
         setDraft({
             id_exp: null,
@@ -3189,7 +3189,7 @@ const cargarProspectosCompletos = useCallback(async () => {
                 asesores={ASESORES}
                 agenciaInicial={contextoDigitalSesion?.agencia || "Volvo"}
                 asesorDigitalInicial={
-                    contextoDigitalSesion?.asesor_digital || "Mariana Tlamani"
+                    contextoDigitalSesion?.asesor_digital || "Amauri Jaret Pérez Núñez"
                 }
                 isAdmin={isAdmin}
                 userAgencias={userAgencias}

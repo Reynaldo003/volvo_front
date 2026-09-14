@@ -887,7 +887,7 @@ export default function RegistroCitas() {
     const [selectedDay, setSelectedDay] = useState(() => localYMD(new Date()));
 
     const DEALERS = useMemo(() => ["Volvo"], []);
-    const ASESORES_DIGITALES = ["Mariana Tlamani"];
+    const ASESORES_DIGITALES = ["Amauri Jaret Pérez Núñez"];
     const ASESORES = [
         "Enrique Vazquez Islas", "Ricardo Platas",
         "Verónica Del Rayo Galindo León", "Julio Camacho Barragán",
