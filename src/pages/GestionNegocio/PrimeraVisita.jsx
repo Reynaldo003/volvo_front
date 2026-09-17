@@ -443,10 +443,6 @@ export default function PrimeraVisita() {
         <h1 className="text-2xl font-bold text-slate-900">
           Primera Visita
         </h1>
-
-        <p className="mt-1 text-slate-500">
-          Análisis de primeras visitas y tráfico de piso.
-        </p>
       </div>
 
       {errorCarga && (

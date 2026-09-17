@@ -1,6 +1,6 @@
 // src/components/Sidebar.jsx
 import { useState } from "react";
-import { NavLink, useNavigate } from "react-router-dom";
+import { NavLink, useLocation, useNavigate } from "react-router-dom";
 import volvoLogo from "../assets/volvo_sin_fondo.png";
 import {
     LayoutDashboard,
@@ -53,77 +53,105 @@ const managementItems = [
         to: "/comercial/prospectos",
         icon: BriefcaseBusiness,
         end: false,
+        activePrefix: "/comercial",
     },
     {
         label: "Gestión Calidad",
         to: "/calidad/checklist_recepcion",
         icon: BadgeCheck,
         end: false,
+        activePrefix: "/calidad",
     },
     {
         label: "Gestión de Negocio",
         to: "/gestion-negocio/leads-crm",
         icon: ChartNoAxesCombined,
         end: false,
+        activePrefix: "/gestion-negocio",
     },
     {
         label: "Panel de Inteligencias Artificiales",
         to: "/IAConfig",
         icon: BrainCircuit,
         end: false,
+        activePrefix: "/IAConfig",
     },
 ];
 
-function NavItem({ label, to, icon: Icon, end = false, onClick, contraido }) {
-    return (
-        <NavLink to={to} end={end} onClick={onClick} title={contraido ? label : undefined}>
-            {({ isActive }) => (
-                <div
-                    className={[
-                        "group relative flex items-center rounded-2xl py-3",
-                        "transition-all duration-300 ease-out cursor-pointer select-none",
-                        contraido ? "justify-center px-0" : "gap-3 px-4",
-                        isActive
-                            ? "bg-white text-slate-900 shadow-md -translate-y-[1px]"
-                            : "text-slate-500 hover:bg-white hover:text-slate-900 hover:shadow-md hover:-translate-y-[2px]",
-                    ].join(" ")}
-                >
-                    <Icon
-                        size={18}
-                        className={[
-                            "transition-all duration-300 shrink-0",
-                            isActive
-                                ? "text-slate-900"
-                                : "text-slate-400 group-hover:text-slate-900 group-hover:scale-110",
-                        ].join(" ")}
-                    />
+function NavItem({
+    label,
+    to,
+    icon: Icon,
+    end = false,
+    onClick,
+    contraido,
+    activePrefix = "",
+}) {
+    const { pathname } = useLocation();
 
-                    <span
+    const moduleActive =
+        activePrefix && pathname.startsWith(activePrefix);
+
+    return (
+        <NavLink
+            to={to}
+            end={end}
+            onClick={onClick}
+            title={contraido ? label : undefined}
+        >
+            {({ isActive }) => {
+                const active = isActive || moduleActive;
+
+                return (
+                    <div
                         className={[
-                            "overflow-hidden whitespace-nowrap text-[14px] tracking-wide transition-all duration-300",
-                            isActive ? "font-semibold" : "font-medium",
-                            contraido ? "max-w-0 opacity-0" : "max-w-[150px] opacity-100",
+                            "group relative flex items-center rounded-2xl py-3",
+                            "transition-all duration-300 ease-out cursor-pointer select-none",
+                            contraido ? "justify-center px-0" : "gap-3 px-4",
+                            active
+                                ? "bg-[#1C2B4A] text-white shadow-md -translate-y-[1px]"
+                                : "text-slate-500 hover:bg-white hover:text-slate-900 hover:shadow-md hover:-translate-y-[2px]",
                         ].join(" ")}
                     >
-                        {label}
-                    </span>
-
-                    {!contraido && (
-                        <span
+                        <Icon
+                            size={18}
                             className={[
-                                "absolute left-4 right-4 bottom-0 h-[2px] rounded-full transition-all duration-300",
-                                isActive
-                                    ? "bg-slate-900 opacity-100"
-                                    : "bg-slate-900 opacity-0 group-hover:opacity-20",
+                                "transition-all duration-300 shrink-0",
+                                active
+                                    ? "text-white"
+                                    : "text-slate-400 group-hover:text-slate-900 group-hover:scale-110",
                             ].join(" ")}
                         />
-                    )}
 
-                    {contraido && isActive && (
-                        <span className="absolute left-1 top-3 bottom-3 w-[3px] rounded-full bg-slate-900" />
-                    )}
-                </div>
-            )}
+                        <span
+                            className={[
+                                "overflow-hidden whitespace-nowrap text-[14px] tracking-wide transition-all duration-300",
+                                active ? "font-semibold" : "font-medium",
+                                contraido
+                                    ? "max-w-0 opacity-0"
+                                    : "max-w-[150px] opacity-100",
+                            ].join(" ")}
+                        >
+                            {label}
+                        </span>
+
+                        {!contraido && (
+                            <span
+                                className={[
+                                    "absolute left-4 right-4 bottom-0 h-[2px] rounded-full transition-all duration-300",
+                                    active
+                                        ? "bg-white opacity-30"
+                                        : "bg-slate-900 opacity-0 group-hover:opacity-20",
+                                ].join(" ")}
+                            />
+                        )}
+
+                        {contraido && active && (
+                            <span className="absolute left-1 top-3 bottom-3 w-[3px] rounded-full bg-white" />
+                        )}
+                    </div>
+                );
+            }}
         </NavLink>
     );
 }

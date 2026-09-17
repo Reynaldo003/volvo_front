@@ -14,6 +14,8 @@ import {
 import { http, toQuery } from "../../lib/apiClient";
 
 const ENDPOINT = "/salesforce/api/prospectos/";
+const ENDPOINT_OPCIONES =
+    "/salesforce/api/prospectos/opciones-filtros/";
 
 const FILTROS_INICIALES = {
     q: "",
@@ -118,20 +120,47 @@ function CampoFiltro({
     value,
     onChange,
     placeholder,
+    opciones = [],
 }) {
+    const tieneOpciones =
+        Array.isArray(opciones) && opciones.length > 0;
+
     return (
         <label className="flex min-w-0 flex-col gap-1.5">
             <span className="text-[11px] font-bold uppercase tracking-wide text-slate-500">
                 {label}
             </span>
 
-            <input
-                type="text"
-                value={value}
-                onChange={(event) => onChange(event.target.value)}
-                placeholder={placeholder}
-                className="h-10 w-full rounded-lg border border-slate-200 bg-white px-3 text-sm text-slate-700 outline-none transition placeholder:text-slate-300 focus:border-[#001E50] focus:ring-1 focus:ring-[#001E50]"
-            />
+            {tieneOpciones ? (
+                <select
+                    value={value}
+                    onChange={(event) =>
+                        onChange(event.target.value)
+                    }
+                    className="h-10 w-full rounded-lg border border-slate-200 bg-white px-3 text-sm text-slate-700 outline-none transition focus:border-[#001E50] focus:ring-1 focus:ring-[#001E50]"
+                >
+                    <option value="">Todos</option>
+
+                    {opciones.map((opcion) => (
+                        <option
+                            key={opcion}
+                            value={opcion}
+                        >
+                            {opcion}
+                        </option>
+                    ))}
+                </select>
+            ) : (
+                <input
+                    type="text"
+                    value={value}
+                    onChange={(event) =>
+                        onChange(event.target.value)
+                    }
+                    placeholder={placeholder}
+                    className="h-10 w-full rounded-lg border border-slate-200 bg-white px-3 text-sm text-slate-700 outline-none transition placeholder:text-slate-300 focus:border-[#001E50] focus:ring-1 focus:ring-[#001E50]"
+                />
+            )}
         </label>
     );
 }
@@ -153,6 +182,7 @@ export default function ProspectosSalesforce() {
 
     const [cargando, setCargando] = useState(false);
     const [error, setError] = useState("");
+    const [opcionesFiltros, setOpcionesFiltros] = useState({});
 
     const anioActual = new Date().getFullYear();
 
@@ -160,6 +190,31 @@ export default function ProspectosSalesforce() {
         { length: 10 },
         (_, index) => anioActual - index,
     );
+
+    useEffect(() => {
+        let activo = true;
+
+        async function cargarOpcionesFiltros() {
+            try {
+                const response = await http(ENDPOINT_OPCIONES);
+
+                if (!activo) return;
+
+                setOpcionesFiltros(response || {});
+            } catch (err) {
+                console.error(
+                    "Error consultando opciones de filtros Salesforce:",
+                    err,
+                );
+            }
+        }
+
+        cargarOpcionesFiltros();
+
+        return () => {
+            activo = false;
+        };
+    }, []);
 
     useEffect(() => {
         let activo = true;
@@ -277,11 +332,6 @@ export default function ProspectosSalesforce() {
                 <h1 className="text-2xl font-bold text-slate-900">
                     Prospectos Salesforce
                 </h1>
-
-                <p className="text-sm text-slate-500">
-                    Consulta de leads y prospectos almacenados en
-                    Salesforce.
-                </p>
             </div>
 
             {error && (
@@ -473,6 +523,7 @@ export default function ProspectosSalesforce() {
                             cambiarFiltro("origen", valor)
                         }
                         placeholder="Origen"
+                        opciones={opcionesFiltros.origen || []}
                     />
 
                     <CampoFiltro
@@ -485,6 +536,7 @@ export default function ProspectosSalesforce() {
                             )
                         }
                         placeholder="Estado"
+                        opciones={opcionesFiltros.estado_lead || []}
                     />
 
                     <CampoFiltro
@@ -497,6 +549,7 @@ export default function ProspectosSalesforce() {
                             )
                         }
                         placeholder="Propietario"
+                        opciones={opcionesFiltros.propietario_lead || []}
                     />
 
                     <CampoFiltro
@@ -509,6 +562,7 @@ export default function ProspectosSalesforce() {
                             )
                         }
                         placeholder="Tipo de solicitud"
+                        opciones={opcionesFiltros.tipo_solicitud || []}
                     />
                 </div>
             </form>

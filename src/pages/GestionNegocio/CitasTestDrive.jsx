@@ -789,10 +789,6 @@ export default function CitasTestDrive() {
         <h1 className="text-2xl font-bold text-slate-900">
           Citas y Test Drive
         </h1>
-
-        <p className="mt-1 text-slate-500">
-          Seguimiento comercial de citas y pruebas de manejo.
-        </p>
       </div>
 
       {errorCarga && (

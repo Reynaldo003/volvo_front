@@ -112,8 +112,8 @@ const gestionNegocioTabs = [
         icon: ChartNoAxesColumn,
     },
     {
-        label: "pspto",
-        to: "/gestion-negocio/pspto",
+        label: "Prospecto",
+        to: "/gestion-negocio/prospecto",
         icon: ChartNoAxesColumn,
     },
 ];

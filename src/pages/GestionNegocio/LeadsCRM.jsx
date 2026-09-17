@@ -600,10 +600,6 @@ export default function LeadsCRM() {
             <h1 className="text-2xl font-bold text-slate-900">
                 Leads CRM
             </h1>
-
-            <p className="text-slate-500">
-                Análisis de leads provenientes del CRM.
-            </p>
             </div>
 
             {errorCarga && (
