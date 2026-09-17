@@ -418,13 +418,42 @@ function BadgeEstado({ value }) {
 
 function badgeCls(value) {
     const map = {
-        descalificado: "bg-blue-600/15 text-blue-800 font-bold border-blue-300/25",
-        contactado: "bg-emerald-500/15 text-emerald-800 border-emerald-300/25",
-        "sin respuesta": "bg-red-500/15 text-red-800 border-red-300/25",
+        contactado:
+            "bg-emerald-500/15 text-emerald-800 border-emerald-300/40",
+
+        calificado:
+            "bg-violet-500/15 text-violet-800 border-violet-300/40",
+
+        "pendiente de cotización":
+            "bg-amber-500/20 text-amber-900 border-amber-300/50",
+
+        "requiere asesor":
+            "bg-orange-500/20 text-orange-900 border-orange-300/50",
+
+        financiamiento:
+            "bg-sky-500/15 text-sky-800 border-sky-300/40",
+
+        "en proceso":
+            "bg-indigo-500/15 text-indigo-800 border-indigo-300/40",
+
+        facturado:
+            "bg-teal-500/15 text-teal-800 border-teal-300/40",
+
+        "sin respuesta":
+            "bg-red-500/15 text-red-800 border-red-300/40",
+
+        descalificado:
+            "bg-blue-600/15 text-blue-800 font-bold border-blue-300/40",
     };
 
-    const key = String(value || "").trim().toLowerCase();
-    return map[key] || "bg-black/10 text-white/85 border-white/20";
+    const key = String(value || "")
+        .trim()
+        .toLowerCase();
+
+    return (
+        map[key] ||
+        "bg-slate-100 text-slate-700 border-slate-300"
+    );
 }
 
 function LineaPicker({ value, onChange }) {
