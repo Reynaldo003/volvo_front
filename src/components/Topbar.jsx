@@ -101,6 +101,21 @@ const gestionNegocioTabs = [
         to: "/gestion-negocio/estocastico",
         icon: ChartNoAxesColumn,
     },
+    {
+        label: "Oportunidades",
+        to: "/gestion-negocio/oportunidades",
+        icon: ChartNoAxesColumn,
+    },
+    {
+        label: "Tareas",
+        to: "/gestion-negocio/tareas",
+        icon: ChartNoAxesColumn,
+    },
+    {
+        label: "pspto",
+        to: "/gestion-negocio/pspto",
+        icon: ChartNoAxesColumn,
+    },
 ];
 
 function TabItem({ label, to, icon: Icon, end = false }) {

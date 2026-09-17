@@ -16,6 +16,9 @@ import LeadsCRM from "./pages/GestionNegocio/LeadsCRM";
 import PrimeraVisita from "./pages/GestionNegocio/PrimeraVisita";
 import CitasTestDrive from "./pages/GestionNegocio/CitasTestDrive";
 import Estocastico from "./pages/GestionNegocio/Estocastico";
+import Tareas from "./pages/GestionNegocio/Tareas";
+import Prospecto from "./pages/GestionNegocio/Prospecto";
+import Oportunidades from "./pages/GestionNegocio/Oportunidades";
 
 // ===== Gestión comercial =====
 import ComercialLayout from "./pages/Comercial/ComercialLayout";
@@ -206,6 +209,18 @@ export const router = createBrowserRouter(
                                 {
                                     path: "estocastico",
                                     element: <Estocastico />,
+                                },
+                                {
+                                    path: "oportunidades",
+                                    element: <Oportunidades />,
+                                },
+                                {
+                                    path: "tareas",
+                                    element: <Tareas />,
+                                },
+                                {
+                                    path: "prospecto",
+                                    element: <Prospecto />,
                                 },
                             ],
                         },
