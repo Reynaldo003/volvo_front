@@ -57,6 +57,9 @@ const ESTADOS_PROSPECTO = [
     "Pendiente de Cotización",
     "Requiere Asesor",
     "Financiamiento",
+    "Oportunidad",
+    "En proceso",
+    "Facturado",
     "Sin Respuesta",
     "Descalificado",
 ];
