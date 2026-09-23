@@ -500,16 +500,6 @@ const itemsFiltrados = items;
 
   return (
     <div className="space-y-4">
-      <div>
-        <h2 className="text-lg font-extrabold text-black">
-          Cruce CRM / Salesforce
-        </h2>
-
-        <p className="mt-1 text-sm text-neutral-500">
-          Comparación de prospectos registrados en el CRM de Volvo contra Salesforce.
-        </p>
-      </div>
-
       <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-5">
         {cards.map(
           ({

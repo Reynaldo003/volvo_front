@@ -1484,7 +1484,7 @@ export default function DigitalesProspectos() {
         { key: "tabla", label: "Tabla", Icon: Table2 },
         { key: "graficos", label: "Gráficos", Icon: BarChart3 },
         { key: "agenda", label: "Agenda", Icon: CalendarRange },
-        { key: "cruce", label: "Cruce", Icon: ArrowUpDown },
+        { key: "cruce", label: "Salesforce", Icon: ArrowUpDown },
     ];
 
     const isAdmin = useMemo(() => {
