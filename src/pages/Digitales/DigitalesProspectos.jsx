@@ -52,6 +52,7 @@ import { apiCitas } from "../../lib/apiCitas";
 import { useAuth } from "../../auth/AuthContext";
 import * as XLSX from "xlsx";
 import NuevoProspectoModal from "./NuevoProspectoModal";
+import CruceSalesforce from "./CruceSalesforce";
 
 const BRAND_BLACK = "#0A0A0A";
 const PAGE_SIZE = 200;
@@ -1483,6 +1484,7 @@ export default function DigitalesProspectos() {
         { key: "tabla", label: "Tabla", Icon: Table2 },
         { key: "graficos", label: "Gráficos", Icon: BarChart3 },
         { key: "agenda", label: "Agenda", Icon: CalendarRange },
+        { key: "cruce", label: "Cruce", Icon: ArrowUpDown },
     ];
 
     const isAdmin = useMemo(() => {
@@ -2550,6 +2552,7 @@ const cargarProspectosCompletos = useCallback(async () => {
             </div>
 
             {/* ── Filtros: card blanca, borde sutil, mismos campos de siempre ── */}
+        {viewMode !== "cruce" && (
             <div className="mb-4 rounded-2xl border border-black/10 bg-white p-5 shadow-sm">
                 <div className="grid gap-4 xl:grid-cols-12">
                     <div className="xl:col-span-4">
@@ -2832,6 +2835,12 @@ const cargarProspectosCompletos = useCallback(async () => {
                     ) : null}
                 </div>
             </div>
+            )}
+
+            {/* ── Vista: Cruce CRM / Salesforce ─────────────────────────────────── */}
+                {viewMode === "cruce" && (
+                    <CruceSalesforce />
+                )}
 
             {/* ── Vista: Agenda ──────────────────────────────────────────────────── */}
             {viewMode === "agenda" && (

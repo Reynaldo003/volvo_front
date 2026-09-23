@@ -120,6 +120,9 @@ export const api = {
   digitalesListProspectos: (params = {}) =>
     http(`/digitales/api/prospectos/${toQuery(cleanParams(params))}`),
 
+  digitalesCruceSalesforce: (params = {}) =>
+    http(`/digitales/api/cruce-salesforce/${toQuery(cleanParams(params))}`),
+
   digitalesGetProspecto: (id) => http(`/digitales/api/prospectos/${id}/`),
 
   digitalesCreateProspecto: (payload) =>
