@@ -83,7 +83,7 @@ function normalizarCanalContacto(value) {
 
 const ASESORES_DIGITALES = ["Amauri Jaret Pérez Núñez"];
 const ESTADOS_PROSPECTO = [
-    "Contactado",
+    "En espera de respuesta",
     "Calificado",
     "Pendiente de Cotización",
     "Requiere Asesor",
@@ -406,6 +406,8 @@ function BadgeEstado({ value }) {
         vwfs: "bg-neutral-400/15 text-blue-800 font-bold border-blue-300/25",
         afasa: "bg-purple-400/15 text-blue-800 font-bold border-blue-300/25",
         "bancario externo": "bg-red-500/15 text-red-800 border-red-300/25",
+        "en espera de respuesta":
+            "bg-emerald-500/15 text-emerald-800 border-emerald-300/25",
     };
 
     const key = String(value || "").trim().toLowerCase();
@@ -440,6 +442,9 @@ function badgeCls(value) {
 
         facturado:
             "bg-teal-500/15 text-teal-800 border-teal-300/40",
+
+        "en espera de respuesta":
+        "bg-emerald-500/15 text-emerald-800 border-emerald-300/40",
 
         "sin respuesta":
             "bg-red-500/15 text-red-800 border-red-300/40",
@@ -1000,8 +1005,10 @@ function VistaGraficos({ rows }) {
                         <div className="text-xs text-black/50">Total prospectos</div>
                     </div>
                     <div className="text-center">
-                        <div className="text-2xl font-black text-emerald-600">{statsPorEstado.find(([k]) => k === "CONTACTADO")?.[1] || 0}</div>
-                        <div className="text-xs text-black/50">Contactados</div>
+                        <div className="text-2xl font-black text-emerald-600">
+                            {statsPorEstado.find(([k]) => normalizeText(k) === "en espera de respuesta")?.[1] || 0}
+                        </div>
+                        <div className="text-xs text-black/50">En espera de respuesta</div>
                     </div>
                     <div className="text-center">
                         <div className="text-2xl font-black text-amber-600">{statsPorEstado.find(([k]) => k === "NUEVO")?.[1] || 0}</div>
@@ -2079,7 +2086,7 @@ const cargarProspectosCompletos = useCallback(async () => {
             linea: "",
             origen: "",
             pauta: "",
-            estado: "Contactado",
+            estado: "En espera de respuesta",
             motivo_descalificacion: "",
             cliente_interes: "",
             comentarios: "",
@@ -3056,7 +3063,7 @@ const cargarProspectosCompletos = useCallback(async () => {
                                                         <td className="px-4 py-3">
                                                             <div className="relative inline-flex items-center">
                                                                 <select
-                                                                    value={row.estado || "Contactado"}
+                                                                    value={row.estado || "En espera de respuesta"}
                                                                     disabled={isUpdating}
                                                                     onClick={(e) => e.stopPropagation()}
                                                                     onChange={(e) => {

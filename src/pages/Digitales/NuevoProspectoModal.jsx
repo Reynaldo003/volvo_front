@@ -52,7 +52,7 @@ const DEFAULT_VEHICULOS = [
 ];
 
 const ESTADOS_PROSPECTO = [
-    "Contactado",
+    "En espera de respuesta",
     "Calificado",
     "Pendiente de Cotización",
     "Requiere Asesor",
@@ -255,6 +255,7 @@ function BadgeEstado({ value }) {
         vwfs: "bg-neutral-400/15 text-blue-800 font-bold border-blue-300/25",
         afasa: "bg-purple-400/15 text-blue-800 font-bold border-blue-300/25",
         "bancario externo": "bg-red-500/15 text-red-800 border-red-300/25",
+        "en espera de respuesta": "bg-emerald-500/15 text-emerald-800 border-emerald-300/25",
     };
 
     const key = String(value || "").trim().toLowerCase();
@@ -453,7 +454,7 @@ function buildCreateDraft({
         linea: "",
         origen: "",
         pauta: "",
-        estado: "Contactado",
+        estado: "En espera de respuesta",
         motivo_descalificacion: "",
         cliente_interes: "",
         comentarios: "",

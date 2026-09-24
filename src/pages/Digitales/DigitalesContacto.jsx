@@ -74,7 +74,7 @@ const CANALES = [
 
 const ESTADOS_PROSPECTO = [
     "Descalificado",
-    "Contactado",
+    "En espera de respuesta",
     "En Proceso",
     "Facturado",
     "Sin Respuesta",
@@ -114,7 +114,7 @@ const PLAZO_COMPRA_OPTIONS = [
 const CHAT_FILTERS = [
     { key: "todos", label: "Todos" },
     { key: "no_leidos", label: "No leídos" },
-    { key: "contactado", label: "Contactado", estados: ["contactado"] },
+    { key: "contactado", label: "En espera de respuesta", estados: ["en espera de respuesta"] },
     { key: "en_proceso", label: "En Proceso", estados: ["en proceso", "en_proceso"] },
     { key: "facturado", label: "Facturado", estados: ["facturado"] },
     { key: "sin_respuesta", label: "Sin respuesta", estados: ["sin respuesta", "sin_respuesta"] },
@@ -123,7 +123,7 @@ const CHAT_FILTERS = [
 
 const ESTADOS_HEADER = [
     "Sin Respuesta",
-    "Contactado",
+    "En espera de respuesta",
     "Descalificado",
 ];
 
