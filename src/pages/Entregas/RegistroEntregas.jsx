@@ -724,7 +724,7 @@ export default function RegistroEntregas() {
     const [entregas, setEntregas] = useState([]);
 
     const DEALERS = useMemo(() => ["Volvo"], []);
-    const ASESORES = ["Enrique Vazquez Islas", "Ricardo Platas", "Verónica Del Rayo Galindo León", "Julio Camacho Barragán", "Fernanda Romero Aguilar", "Zaira Vanessa Hernández Gómez",];
+    const ASESORES = ["Enrique Vazquez Islas", "Ricardo Platas", "Carlos Bautista Camacho", "Julio Camacho Barragán", "Fernanda Romero Aguilar", "Zaira Vanessa Hernández Gómez",];
     const MODELOS = [
         "EX30",
         "EX40",

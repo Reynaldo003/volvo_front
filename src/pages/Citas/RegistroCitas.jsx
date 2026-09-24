@@ -890,7 +890,7 @@ export default function RegistroCitas() {
     const ASESORES_DIGITALES = ["Amauri Jaret Pérez Núñez"];
     const ASESORES = [
         "Enrique Vazquez Islas", "Ricardo Platas",
-        "Verónica Del Rayo Galindo León", "Julio Camacho Barragán",
+        "Carlos Bautista Camacho", "Julio Camacho Barragán",
         "Fernanda Romero Aguilar", "Zaira Vanessa Hernández Gómez",
     ];
     const FUENTE = [

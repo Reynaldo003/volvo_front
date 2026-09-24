@@ -625,7 +625,7 @@ export default function RegistroPruebaManejo() {
 
     const VIEWS = [{ key: "tabla", icon: LayoutList, label: "Tabla" }, { key: "agenda", icon: CalendarRange, label: "Agenda" }, { key: "graficas", icon: BarChart2, label: "Gráficas" }];
     const DEALERS = ["Volvo"];
-    const ASESORES = ["Enrique Vazquez Islas", "Ricardo Platas", "Verónica Del Rayo Galindo León", "Julio Camacho Barragán", "Fernanda Romero Aguilar"];
+    const ASESORES = ["Enrique Vazquez Islas", "Ricardo Platas", "Carlos Bautista Camacho", "Julio Camacho Barragán", "Fernanda Romero Aguilar"];
     const VEHICULOS = [
         "EX30",
         "EX40",

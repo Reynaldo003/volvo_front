@@ -1533,7 +1533,7 @@ export default function DigitalesProspectos() {
     const ASESORES = [
         "Enrique Vazquez Islas",
         "Ricardo Platas",
-        "Verónica Del Rayo Galindo León",
+        "Carlos Bautista Camacho",
         "Julio Camacho Barragán",
         "Fernanda Romero Aguilar",
         "Zaira Vanessa Hernández Gómez",

@@ -663,7 +663,7 @@ export default function RegistroAvaluos() {
     const ASESORES = [
         "Enrique Vazquez Islas",
         "Ricardo Platas",
-        "Verónica Del Rayo Galindo León",
+        "Carlos Bautista Camacho",
         "Julio Camacho Barragán",
     ];
     const ETAPAS_PROCESO = [

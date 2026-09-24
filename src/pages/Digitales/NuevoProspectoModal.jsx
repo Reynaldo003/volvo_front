@@ -31,7 +31,7 @@ const DEFAULT_ASESORES_DIGITALES = ["Amauri Jaret Pérez Núñez"];
 const DEFAULT_ASESORES = [
     "Enrique Vazquez Islas",
     "Ricardo Platas",
-    "Verónica Del Rayo Galindo León",
+    "Carlos Bautista Camacho",
     "Julio Camacho Barragán",
     "Fernanda Romero Aguilar",
     "Zaira Vanessa Hernández Gómez",

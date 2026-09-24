@@ -29,7 +29,7 @@ const VIEWS = [
 
 const DEALERS = ["Volvo"];
 const ASESORES = [
-    "Enrique Vazquez Islas", "Ricardo Platas", "Verónica Del Rayo Galindo León",
+    "Enrique Vazquez Islas", "Ricardo Platas", "Carlos Bautista Camacho",
     "Julio Camacho Barragán", "Fernanda Romero Aguilar", "Zaira Vanessa Hernández Gómez",
 ];
 const FUENTE = [
