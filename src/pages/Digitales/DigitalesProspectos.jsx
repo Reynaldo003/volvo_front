@@ -2939,6 +2939,11 @@ const cargarProspectosCompletos = useCallback(async () => {
                                             </button>
                                         </th>
                                         <th className="px-4 py-3 font-bold text-black">Cliente</th>
+                                        <th className="w-28 min-w-28 max-w-28 px-2 py-3 font-bold text-black">
+                                            Correo
+                                            <br />
+                                            electrónico
+                                        </th>
                                         <th className="px-4 py-3 font-bold text-black">Salesforce</th>
                                         <th className="px-4 py-3">
                                             <button type="button" onClick={() => toggleSort("fecha_reclamacion")} className="inline-flex items-center gap-1 text-xs font-bold text-black">
@@ -3006,6 +3011,14 @@ const cargarProspectosCompletos = useCallback(async () => {
                                                         <td className="px-4 py-3 text-xs text-black">{row.agencia}</td>
                                                         <td className="max-w-32 px-4 py-3 truncate text-black">
                                                             {row.cliente_nombre + " " + row.cliente_apellidos}
+                                                        </td>
+                                                        <td className="w-28 min-w-28 max-w-28 px-2 py-3 text-black">
+                                                            <span
+                                                                className="block max-w-24 truncate"
+                                                                title={row.correo || "Sin correo registrado"}
+                                                            >
+                                                                {row.correo || "—"}
+                                                            </span>
                                                         </td>
                                                         <td className="px-4 py-3">
                                                             <div className="flex items-center gap-2 whitespace-nowrap">
@@ -3161,7 +3174,7 @@ const cargarProspectosCompletos = useCallback(async () => {
                                                     </tr>
                                                     {estaExpandido && tieneSalesforce && !cargandoCruce && !errorCruce ? (
                                                         <tr className="bg-slate-50" onDoubleClick={(e) => e.stopPropagation()}>
-                                                            <td colSpan={12} className="px-5 py-4">
+                                                            <td colSpan={13} className="px-5 py-4">
                                                                 <div className="max-w-xl space-y-2 rounded-xl border border-black/10 bg-white p-4 text-sm text-black">
                                                                     <div className="font-bold">Datos de Salesforce (solo lectura)</div>
                                                                     {cruce.salesforce.map((registro, indice) => (
@@ -3297,6 +3310,9 @@ const cargarProspectosCompletos = useCallback(async () => {
                                             <div className="min-w-0">
                                                 <div className="truncate text-sm font-extrabold text-black">
                                                     {row.cliente_nombre + " " + row.cliente_apellidos}
+                                                </div>
+                                                <div className="mt-1 truncate text-xs text-slate-600">
+                                                    Correo: {row.correo || "—"}
                                                 </div>
                                                 <div className="mt-1 text-xs text-slate-600">
                                                     {row.agencia} • {row.fecha_reclamacion || "—"}
