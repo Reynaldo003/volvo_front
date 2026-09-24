@@ -1,6 +1,6 @@
 //volvo
 // src/pages/Digitales/DigitalesProspectos.jsx
-import { useMemo, useState, useEffect, useDeferredValue, useCallback } from "react";
+import { Fragment, useMemo, useState, useEffect, useDeferredValue, useCallback } from "react";
 import {
     Plus,
     Search,
@@ -1476,6 +1476,10 @@ export default function DigitalesProspectos() {
     const navigate = useNavigate();
     const { user, ready } = useAuth();
     const [cases, setCases] = useState([]);
+    const [crucePorExpediente, setCrucePorExpediente] = useState({});
+    const [cargandoCruce, setCargandoCruce] = useState(false);
+    const [errorCruce, setErrorCruce] = useState(false);
+    const [cruceExpandido, setCruceExpandido] = useState({});
 
     //Estado de la vista activa 
     const [viewMode, setViewMode] = useState("tabla");
@@ -1971,6 +1975,55 @@ const cargarProspectosCompletos = useCallback(async () => {
     }, [totalPages]);
 
     const paginatedRows = sorted;
+
+    // Cruzar ÚNICAMENTE expedientes presentes en la página normal del CRM.
+    // El endpoint permite como máximo 100 IDs por consulta.
+    const idsCrucePagina = useMemo(
+        () => [...new Set(cases.map((row) => Number(row.id_exp)).filter((id) => Number.isInteger(id) && id > 0))].join(","),
+        [cases]
+    );
+
+    useEffect(() => {
+        if (viewMode !== "tabla") return;
+        let cancelado = false;
+        setCruceExpandido({});
+        setCrucePorExpediente({});
+        setErrorCruce(false);
+
+        if (!idsCrucePagina) {
+            setCargandoCruce(false);
+            return;
+        }
+
+        const cargarCruce = async () => {
+            setCargandoCruce(true);
+            try {
+                const ids = idsCrucePagina.split(",");
+                const solicitudes = [];
+                for (let i = 0; i < ids.length; i += 100) {
+                    solicitudes.push(
+                        api.digitalesCruceSalesforce({ expediente_ids: ids.slice(i, i + 100).join(",") })
+                    );
+                }
+                const respuestas = await Promise.all(solicitudes);
+                if (cancelado) return;
+                if (respuestas.some((respuesta) => !respuesta?.ok || !respuesta?.por_expediente)) {
+                    throw new Error("Respuesta incompleta del cruce de Salesforce");
+                }
+                setCrucePorExpediente(Object.assign({}, ...respuestas.map((respuesta) => respuesta.por_expediente)));
+            } catch (error) {
+                if (cancelado) return;
+                console.error("No se pudo consultar el cruce de Salesforce:", error);
+                setErrorCruce(true);
+                setCrucePorExpediente({});
+            } finally {
+                if (!cancelado) setCargandoCruce(false);
+            }
+        };
+
+        cargarCruce();
+        return () => { cancelado = true; };
+    }, [viewMode, idsCrucePagina]);
 
     const pageStart =
         totalProspectos === 0
@@ -2886,6 +2939,7 @@ const cargarProspectosCompletos = useCallback(async () => {
                                             </button>
                                         </th>
                                         <th className="px-4 py-3 font-bold text-black">Cliente</th>
+                                        <th className="px-4 py-3 font-bold text-black">Salesforce</th>
                                         <th className="px-4 py-3">
                                             <button type="button" onClick={() => toggleSort("fecha_reclamacion")} className="inline-flex items-center gap-1 text-xs font-bold text-black">
                                                 Fecha de Registro
@@ -2923,10 +2977,27 @@ const cargarProspectosCompletos = useCallback(async () => {
                                         <>
                                             {paginatedRows.map((row) => {
                                                 const isUpdating = !!updatingEstado[row.id_exp];
+                                                const cruce = crucePorExpediente[String(row.id_exp)];
+                                                const tipoCruce = cruce?.origen_cruce;
+                                                const tieneSalesforce = Array.isArray(cruce?.salesforce) && cruce.salesforce.length > 0;
+                                                const estaExpandido = !!cruceExpandido[row.id_exp];
+                                                const etiquetaCruce = cargandoCruce
+                                                    ? "Consultando…"
+                                                    : errorCruce || !cruce
+                                                        ? "No disponible"
+                                                        : tipoCruce === "AMBOS"
+                                                            ? "Ambos"
+                                                            : tipoCruce === "SOLO_CRM"
+                                                                ? "Solo CRM"
+                                                                : tipoCruce === "SIN_IDENTIDAD"
+                                                                    ? "Sin identidad"
+                                                                    : tipoCruce === "REVISAR"
+                                                                        ? "Revisar"
+                                                                        : "Sin confirmar";
 
                                                 return (
+                                                    <Fragment key={row.id_exp}>
                                                     <tr
-                                                        key={row.id_exp}
                                                         onDoubleClick={() => openEdit(row)}
                                                         onContextMenu={(e) => onRowContextMenu(e, row)}
                                                         className="cursor-pointer transition hover:bg-neutral-50"
@@ -2935,6 +3006,33 @@ const cargarProspectosCompletos = useCallback(async () => {
                                                         <td className="px-4 py-3 text-xs text-black">{row.agencia}</td>
                                                         <td className="max-w-32 px-4 py-3 truncate text-black">
                                                             {row.cliente_nombre + " " + row.cliente_apellidos}
+                                                        </td>
+                                                        <td className="px-4 py-3">
+                                                            <div className="flex items-center gap-2 whitespace-nowrap">
+                                                                <span className={[
+                                                                    "rounded-full border px-2 py-1 text-xs font-semibold",
+                                                                    tipoCruce === "AMBOS" && !errorCruce && !cargandoCruce
+                                                                        ? "border-emerald-200 bg-emerald-50 text-emerald-700"
+                                                                        : "border-neutral-200 bg-neutral-50 text-neutral-600",
+                                                                ].join(" ")}>
+                                                                    {etiquetaCruce}
+                                                                </span>
+                                                                {tieneSalesforce && !cargandoCruce && !errorCruce ? (
+                                                                    <button
+                                                                        type="button"
+                                                                        onClick={(e) => {
+                                                                            e.stopPropagation();
+                                                                            setCruceExpandido((prev) => ({ ...prev, [row.id_exp]: !prev[row.id_exp] }));
+                                                                        }}
+                                                                        onDoubleClick={(e) => e.stopPropagation()}
+                                                                        aria-label={estaExpandido ? "Ocultar estado y origen de Salesforce" : "Mostrar estado y origen de Salesforce"}
+                                                                        aria-expanded={estaExpandido}
+                                                                        className="rounded-lg border border-black/10 p-1 hover:bg-neutral-100"
+                                                                    >
+                                                                        {estaExpandido ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
+                                                                    </button>
+                                                                ) : null}
+                                                            </div>
                                                         </td>
                                                         <td className="px-4 py-3 text-black">{row.fecha_reclamacion || "—"}</td>
                                                         <td className="px-4 py-3 text-black">{fmtDTIntl(row.ultimo_contacto_at)}</td>
@@ -3061,12 +3159,28 @@ const cargarProspectosCompletos = useCallback(async () => {
                                                             </div>
                                                         </td>
                                                     </tr>
+                                                    {estaExpandido && tieneSalesforce && !cargandoCruce && !errorCruce ? (
+                                                        <tr className="bg-slate-50" onDoubleClick={(e) => e.stopPropagation()}>
+                                                            <td colSpan={12} className="px-5 py-4">
+                                                                <div className="max-w-xl space-y-2 rounded-xl border border-black/10 bg-white p-4 text-sm text-black">
+                                                                    <div className="font-bold">Datos de Salesforce (solo lectura)</div>
+                                                                    {cruce.salesforce.map((registro, indice) => (
+                                                                        <div key={indice} className="grid gap-2 border-t border-black/10 pt-2 sm:grid-cols-2">
+                                                                            <div><span className="text-xs font-semibold text-neutral-500">Estado: </span>{registro.estado_lead || "—"}</div>
+                                                                            <div><span className="text-xs font-semibold text-neutral-500">Origen: </span>{registro.origen || "—"}</div>
+                                                                        </div>
+                                                                    ))}
+                                                                </div>
+                                                            </td>
+                                                        </tr>
+                                                    ) : null}
+                                                    </Fragment>
                                                 );
                                             })}
 
                                             {paginatedRows.length === 0 ? (
                                                 <tr>
-                                                    <td colSpan={11} className="px-4 py-10 text-center text-black">
+                                                    <td colSpan={12} className="px-4 py-10 text-center text-black">
                                                         No hay resultados con esos filtros.
                                                     </td>
                                                 </tr>
