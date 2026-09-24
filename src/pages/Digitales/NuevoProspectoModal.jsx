@@ -1225,6 +1225,26 @@ export default function NuevoProspectoModal({
                                 </div>
                             </div>
 
+                            <div className="mt-3 max-w-md">
+                                <label htmlFor="prospecto-correo" className="mb-1 block text-sm font-bold text-black">
+                                    Correo electrónico
+                                </label>
+                                <input
+                                    id="prospecto-correo"
+                                    type="email"
+                                    autoComplete="email"
+                                    value={draft.correo || ""}
+                                    onChange={(e) =>
+                                        setDraft((p) => ({
+                                            ...p,
+                                            correo: e.target.value,
+                                        }))
+                                    }
+                                    className={[inputBase, inputOk].join(" ")}
+                                    placeholder="ejemplo@correo.com"
+                                />
+                            </div>
+
                             <div className="mt-5 grid gap-3 md:grid-cols-2">
                                 <div>
                                     <div className="mb-1 text-sm font-bold text-black">
