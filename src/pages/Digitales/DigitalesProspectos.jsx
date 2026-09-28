@@ -444,7 +444,7 @@ function badgeCls(value) {
             "bg-teal-500/15 text-teal-800 border-teal-300/40",
 
         "en espera de respuesta":
-        "bg-emerald-500/15 text-emerald-800 border-emerald-300/40",
+            "bg-emerald-500/15 text-emerald-800 border-emerald-300/40",
 
         "sin respuesta":
             "bg-red-500/15 text-red-800 border-red-300/40",
@@ -1723,19 +1723,19 @@ export default function DigitalesProspectos() {
         ]
     );
 
-const cargarProspectosCompletos = useCallback(async () => {
-    const data = await api.digitalesListProspectos(
-        getProspectosParams(1, false)
-    );
+    const cargarProspectosCompletos = useCallback(async () => {
+        const data = await api.digitalesListProspectos(
+            getProspectosParams(1, false)
+        );
 
-    const rows = Array.isArray(data)
-        ? data
-        : Array.isArray(data?.results)
-            ? data.results
-            : [];
+        const rows = Array.isArray(data)
+            ? data
+            : Array.isArray(data?.results)
+                ? data.results
+                : [];
 
-    return rows.map(normalizeProspecto);
-}, [getProspectosParams]);
+        return rows.map(normalizeProspecto);
+    }, [getProspectosParams]);
 
     useEffect(() => {
         let cancelled = false;
@@ -2298,85 +2298,85 @@ const cargarProspectosCompletos = useCallback(async () => {
                 return;
             }
 
-        const registros = rowsExportar.map((row) => ({
-            ID: limpiarValorExcel(row.id_exp),
-            Dealer: limpiarValorExcel(row.agencia),
-            Cliente: limpiarValorExcel(`${row.cliente_nombre || ""} ${row.cliente_apellidos || ""}`.trim()),
-            Teléfono: limpiarValorExcel(formatTelefonoMx(row.telefono)),
-            Correo: limpiarValorExcel(row.correo),
-            Business: limpiarValorExcel(row.linea),
-            "Canal de Contacto": limpiarValorExcel(row.origen),
-            "Pauta de Origen": limpiarValorExcel(row.pauta),
-            Estado: limpiarValorExcel(row.estado),
-            "Motivo de descalificación": limpiarValorExcel(row.motivo_descalificacion),
-            Enganche: limpiarValorExcel(row.enganche_monto),
-            "Presupuesto mensual": limpiarValorExcel(row.presupuesto_mensual),
-            Buró: limpiarValorExcel(row.buro_estado),
-            "Forma de pago": limpiarValorExcel(row.forma_pago),
-            "Tipo de cliente": limpiarValorExcel(row.tipo_cliente),
-            "Plazo de compra": limpiarValorExcel(row.plazo_compra),
-            "Uso del vehículo": limpiarValorExcel(row.uso_vehiculo),
-            "Comprobación de ingresos": limpiarValorExcel(row.comprobacion_ingresos),
-            "ID cotización": limpiarValorExcel(row.id_cotizacion),
-            "Folio solicitud crédito": limpiarValorExcel(row.folio_solicitud_credito),
-            "Estado solicitud crédito": limpiarValorExcel(row.solicitud_credito_estado),
-            "VIN facturado": limpiarValorExcel(row.vin_facturado),
-            "Estatus de entrega": limpiarValorExcel(row.vin_estatus_entrega),
-            "Asesor Digital": limpiarValorExcel(row.asesor_digital),
-            "Asignado a": limpiarValorExcel(row.asesor_solicita),
-            "Volvo de sus sueños": limpiarValorExcel(row.cliente_interes),
-            "Fecha de Registro": limpiarValorExcel(row.fecha_reclamacion),
-            "Primer Contacto": limpiarValorExcel(fmtDTIntl(row.primer_contacto_at)),
-            "Último Contacto": limpiarValorExcel(fmtDTIntl(row.ultimo_contacto_at)),
-            Comentarios: limpiarValorExcel(row.comentarios),
-            "Resumen IA": limpiarValorExcel(row.resumen),
-            "Resumen Actualizado": limpiarValorExcel(fmtDTIntl(row.resumen_actualizado_at)),
-            "Fuente Resumen": limpiarValorExcel(row.resumen_fuente),
-        }));
+            const registros = rowsExportar.map((row) => ({
+                ID: limpiarValorExcel(row.id_exp),
+                Dealer: limpiarValorExcel(row.agencia),
+                Cliente: limpiarValorExcel(`${row.cliente_nombre || ""} ${row.cliente_apellidos || ""}`.trim()),
+                Teléfono: limpiarValorExcel(formatTelefonoMx(row.telefono)),
+                Correo: limpiarValorExcel(row.correo),
+                Business: limpiarValorExcel(row.linea),
+                "Canal de Contacto": limpiarValorExcel(row.origen),
+                "Pauta de Origen": limpiarValorExcel(row.pauta),
+                Estado: limpiarValorExcel(row.estado),
+                "Motivo de descalificación": limpiarValorExcel(row.motivo_descalificacion),
+                Enganche: limpiarValorExcel(row.enganche_monto),
+                "Presupuesto mensual": limpiarValorExcel(row.presupuesto_mensual),
+                Buró: limpiarValorExcel(row.buro_estado),
+                "Forma de pago": limpiarValorExcel(row.forma_pago),
+                "Tipo de cliente": limpiarValorExcel(row.tipo_cliente),
+                "Plazo de compra": limpiarValorExcel(row.plazo_compra),
+                "Uso del vehículo": limpiarValorExcel(row.uso_vehiculo),
+                "Comprobación de ingresos": limpiarValorExcel(row.comprobacion_ingresos),
+                "ID cotización": limpiarValorExcel(row.id_cotizacion),
+                "Folio solicitud crédito": limpiarValorExcel(row.folio_solicitud_credito),
+                "Estado solicitud crédito": limpiarValorExcel(row.solicitud_credito_estado),
+                "VIN facturado": limpiarValorExcel(row.vin_facturado),
+                "Estatus de entrega": limpiarValorExcel(row.vin_estatus_entrega),
+                "Asesor Digital": limpiarValorExcel(row.asesor_digital),
+                "Asignado a": limpiarValorExcel(row.asesor_solicita),
+                "Volvo de sus sueños": limpiarValorExcel(row.cliente_interes),
+                "Fecha de Registro": limpiarValorExcel(row.fecha_reclamacion),
+                "Primer Contacto": limpiarValorExcel(fmtDTIntl(row.primer_contacto_at)),
+                "Último Contacto": limpiarValorExcel(fmtDTIntl(row.ultimo_contacto_at)),
+                Comentarios: limpiarValorExcel(row.comentarios),
+                "Resumen IA": limpiarValorExcel(row.resumen),
+                "Resumen Actualizado": limpiarValorExcel(fmtDTIntl(row.resumen_actualizado_at)),
+                "Fuente Resumen": limpiarValorExcel(row.resumen_fuente),
+            }));
 
-        const filtrosAplicados = [
-            { Filtro: "Búsqueda", Valor: filters.q || "Todos" },
-            { Filtro: "Dealer", Valor: filters.agencia || "Todos" },
-            { Filtro: "Business", Valor: filters.linea || "Todos" },
-            { Filtro: "Estado", Valor: filters.estado || "Todos" },
-            { Filtro: "Registro desde", Valor: filters.fechaRegistroDesde || "Sin filtro" },
-            { Filtro: "Registro hasta", Valor: filters.fechaRegistroHasta || "Sin filtro" },
-            { Filtro: "Contacto desde", Valor: filters.fechaContactoDesde || "Sin filtro" },
-            { Filtro: "Contacto hasta", Valor: filters.fechaContactoHasta || "Sin filtro" },
-            {
-                Filtro: "Número asesor",
-                Valor:
-                    selectedNumeroAsesor === "Todos"
-                        ? "Todos"
-                        : `${formatTelefonoMx(selectedNumeroAsesor)} • ${getAsesorDigitalPorNumero(selectedNumeroAsesor)}`,
-            },
-            { Filtro: "Total exportado", Valor: rowsExportar.length },
-        ];
+            const filtrosAplicados = [
+                { Filtro: "Búsqueda", Valor: filters.q || "Todos" },
+                { Filtro: "Dealer", Valor: filters.agencia || "Todos" },
+                { Filtro: "Business", Valor: filters.linea || "Todos" },
+                { Filtro: "Estado", Valor: filters.estado || "Todos" },
+                { Filtro: "Registro desde", Valor: filters.fechaRegistroDesde || "Sin filtro" },
+                { Filtro: "Registro hasta", Valor: filters.fechaRegistroHasta || "Sin filtro" },
+                { Filtro: "Contacto desde", Valor: filters.fechaContactoDesde || "Sin filtro" },
+                { Filtro: "Contacto hasta", Valor: filters.fechaContactoHasta || "Sin filtro" },
+                {
+                    Filtro: "Número asesor",
+                    Valor:
+                        selectedNumeroAsesor === "Todos"
+                            ? "Todos"
+                            : `${formatTelefonoMx(selectedNumeroAsesor)} • ${getAsesorDigitalPorNumero(selectedNumeroAsesor)}`,
+                },
+                { Filtro: "Total exportado", Valor: rowsExportar.length },
+            ];
 
-        const worksheetRegistros = XLSX.utils.json_to_sheet(registros);
-        const worksheetFiltros = XLSX.utils.json_to_sheet(filtrosAplicados);
+            const worksheetRegistros = XLSX.utils.json_to_sheet(registros);
+            const worksheetFiltros = XLSX.utils.json_to_sheet(filtrosAplicados);
 
-        worksheetRegistros["!cols"] = [
-            { wch: 10 }, { wch: 22 }, { wch: 32 }, { wch: 18 }, { wch: 28 },
-            { wch: 16 }, { wch: 22 }, { wch: 35 }, { wch: 18 }, { wch: 28 },
-            { wch: 28 }, { wch: 20 }, { wch: 18 }, { wch: 22 }, { wch: 22 },
-            { wch: 45 }, { wch: 60 }, { wch: 22 }, { wch: 18 },
-        ];
+            worksheetRegistros["!cols"] = [
+                { wch: 10 }, { wch: 22 }, { wch: 32 }, { wch: 18 }, { wch: 28 },
+                { wch: 16 }, { wch: 22 }, { wch: 35 }, { wch: 18 }, { wch: 28 },
+                { wch: 28 }, { wch: 20 }, { wch: 18 }, { wch: 22 }, { wch: 22 },
+                { wch: 45 }, { wch: 60 }, { wch: 22 }, { wch: 18 },
+            ];
 
-        worksheetFiltros["!cols"] = [{ wch: 24 }, { wch: 50 }];
+            worksheetFiltros["!cols"] = [{ wch: 24 }, { wch: 50 }];
 
-        const workbook = XLSX.utils.book_new();
-        XLSX.utils.book_append_sheet(workbook, worksheetRegistros, "Prospectos");
-        XLSX.utils.book_append_sheet(workbook, worksheetFiltros, "Filtros aplicados");
-        XLSX.writeFile(workbook, generarNombreArchivoExcel(), { compression: true });
+            const workbook = XLSX.utils.book_new();
+            XLSX.utils.book_append_sheet(workbook, worksheetRegistros, "Prospectos");
+            XLSX.utils.book_append_sheet(workbook, worksheetFiltros, "Filtros aplicados");
+            XLSX.writeFile(workbook, generarNombreArchivoExcel(), { compression: true });
 
-            } catch (e) {
-                console.error("Error exportando prospectos:", e);
-                alert("No se pudo generar el Excel.");
-            } finally {
-                setExportingExcel(false);
-            }
+        } catch (e) {
+            console.error("Error exportando prospectos:", e);
+            alert("No se pudo generar el Excel.");
+        } finally {
+            setExportingExcel(false);
         }
+    }
 
     const [drafter, setDrafter] = useState({
         agencia: "",
@@ -2612,295 +2612,295 @@ const cargarProspectosCompletos = useCallback(async () => {
             </div>
 
             {/* ── Filtros: card blanca, borde sutil, mismos campos de siempre ── */}
-        {viewMode !== "cruce" && (
-            <div className="mb-4 rounded-2xl border border-black/10 bg-white p-5 shadow-sm">
-                <div className="grid gap-4 xl:grid-cols-12">
-                    <div className="xl:col-span-4">
-                        <label className={filterLabelCls}>Búsqueda</label>
-                        <div className="relative">
-                            <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-neutral-400" />
-                            <input
-                                value={filters.q}
-                                onChange={(e) => updateFilter("q", e.target.value)}
-                                placeholder="Buscar por dealer, cliente, teléfono, business, asesor, correo..."
-                                className={`${filterControlCls} pl-10 pr-10`}
-                            />
-                            {filters.q ? (
-                                <button
-                                    onClick={() => updateFilter("q", "")}
-                                    className="absolute right-2 top-1/2 inline-flex h-7 w-7 -translate-y-1/2 items-center justify-center rounded-lg text-neutral-400 transition hover:bg-neutral-100 hover:text-red-500"
-                                    aria-label="Limpiar búsqueda"
-                                    type="button"
-                                >
-                                    <X className="h-4 w-4" />
-                                </button>
-                            ) : null}
+            {viewMode !== "cruce" && (
+                <div className="mb-4 rounded-2xl border border-black/10 bg-white p-5 shadow-sm">
+                    <div className="grid gap-4 xl:grid-cols-12">
+                        <div className="xl:col-span-4">
+                            <label className={filterLabelCls}>Búsqueda</label>
+                            <div className="relative">
+                                <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-neutral-400" />
+                                <input
+                                    value={filters.q}
+                                    onChange={(e) => updateFilter("q", e.target.value)}
+                                    placeholder="Buscar por dealer, cliente, teléfono, business, asesor, correo..."
+                                    className={`${filterControlCls} pl-10 pr-10`}
+                                />
+                                {filters.q ? (
+                                    <button
+                                        onClick={() => updateFilter("q", "")}
+                                        className="absolute right-2 top-1/2 inline-flex h-7 w-7 -translate-y-1/2 items-center justify-center rounded-lg text-neutral-400 transition hover:bg-neutral-100 hover:text-red-500"
+                                        aria-label="Limpiar búsqueda"
+                                        type="button"
+                                    >
+                                        <X className="h-4 w-4" />
+                                    </button>
+                                ) : null}
+                            </div>
                         </div>
-                    </div>
 
-                    <div className="xl:col-span-2">
-                        <label className={filterLabelCls}>Dealer</label>
-                        <select
-                            value={filters.agencia}
-                            onChange={(e) => updateFilter("agencia", e.target.value)}
-                            className={filterControlCls}
-                        >
-                            {dealers.map((d) => (
-                                <option key={d} value={d}>{d}</option>
-                            ))}
-                        </select>
-                    </div>
-
-                    <div className="xl:col-span-2">
-                        <label className={filterLabelCls}>Business</label>
-                        <select
-                            value={filters.linea}
-                            onChange={(e) => updateFilter("linea", e.target.value)}
-                            className={filterControlCls}
-                        >
-                            {businessOptions.map((linea) => (
-                                <option key={linea} value={linea}>{linea}</option>
-                            ))}
-                        </select>
-                    </div>
-
-                    <div className="xl:col-span-2">
-                        <label className={filterLabelCls}>Estado</label>
-                        <select
-                            value={filters.estado}
-                            onChange={(e) => updateFilter("estado", e.target.value)}
-                            className={filterControlCls}
-                        >
-                            {estados.map((s) => (
-                                <option key={s} value={s}>{s}</option>
-                            ))}
-                        </select>
-                    </div>
-
-                    <div className="xl:col-span-2">
-                        <label className={filterLabelCls}>Registro desde</label>
-                        <input
-                            type="date"
-                            value={filters.fechaRegistroDesde}
-                            onChange={(e) => updateFilter("fechaRegistroDesde", e.target.value)}
-                            className={filterControlCls}
-                        />
-                    </div>
-
-                    <div className="xl:col-span-2">
-                        <label className={filterLabelCls}>Registro hasta</label>
-                        <input
-                            type="date"
-                            value={filters.fechaRegistroHasta}
-                            onChange={(e) => updateFilter("fechaRegistroHasta", e.target.value)}
-                            className={filterControlCls}
-                        />
-                    </div>
-
-                    <div className="xl:col-span-2">
-                        <label className={filterLabelCls}>Contacto desde</label>
-                        <input
-                            type="date"
-                            value={filters.fechaContactoDesde}
-                            onChange={(e) => updateFilter("fechaContactoDesde", e.target.value)}
-                            className={filterControlCls}
-                        />
-                    </div>
-
-                    <div className="xl:col-span-2">
-                        <label className={filterLabelCls}>Contacto hasta</label>
-                        <input
-                            type="date"
-                            value={filters.fechaContactoHasta}
-                            onChange={(e) => updateFilter("fechaContactoHasta", e.target.value)}
-                            className={filterControlCls}
-                        />
-                    </div>
-
-                   {isAdmin ? (
-                        <div className="xl:col-span-2 flex items-end">
+                        <div className="xl:col-span-2">
+                            <label className={filterLabelCls}>Dealer</label>
                             <select
-                                value={selectedNumeroAsesor}
-                                onChange={(e) => setSelectedNumeroAsesor(e.target.value)}
+                                value={filters.agencia}
+                                onChange={(e) => updateFilter("agencia", e.target.value)}
                                 className={filterControlCls}
-                                title="Filtrar por número de asesor"
                             >
-                                {phoneOptions.map((numero) => (
-                                    <option key={numero} value={numero}>
-                                        {numero === "Todos"
-                                            ? "Todos los números"
-                                            : `${formatTelefonoMx(numero)} • ${getAsesorDigitalPorNumero(numero)}`}
-                                    </option>
+                                {dealers.map((d) => (
+                                    <option key={d} value={d}>{d}</option>
                                 ))}
                             </select>
                         </div>
-                    ) : null}
 
-                    <div
-                        className={
-                            isAdmin
-                                ? "xl:col-span-4 flex items-end"
-                                : "xl:col-span-6 flex items-end"
-                        }
-                    >
-                        <div className="grid w-full grid-cols-7 gap-1.5">
-                            <button
-                                type="button"
-                                onClick={() => applyQuickRegistroRange(todayStr, todayStr)}
-                                className={[
-                                    "inline-flex h-9 w-full items-center justify-center gap-1 whitespace-nowrap rounded-lg px-1.5 text-xs font-semibold shadow-sm transition active:scale-[0.95]",
-                                    isQuickActive(todayStr, todayStr)
-                                        ? "bg-black text-white"
-                                        : "border border-black/15 bg-white text-black hover:bg-neutral-50",
-                                ].join(" ")}
+                        <div className="xl:col-span-2">
+                            <label className={filterLabelCls}>Business</label>
+                            <select
+                                value={filters.linea}
+                                onChange={(e) => updateFilter("linea", e.target.value)}
+                                className={filterControlCls}
                             >
-                                <CalendarDays className="h-3 w-3" />
-                                Hoy
-                            </button>
+                                {businessOptions.map((linea) => (
+                                    <option key={linea} value={linea}>{linea}</option>
+                                ))}
+                            </select>
+                        </div>
 
-                            <button
-                                type="button"
-                                onClick={() => applyQuickRegistroRange(yesterdayStr, yesterdayStr)}
-                                className={[
-                                    "inline-flex h-9 w-full items-center justify-center gap-1 whitespace-nowrap rounded-lg px-1.5 text-xs font-semibold shadow-sm transition active:scale-[0.95]",
-                                    isQuickActive(yesterdayStr, yesterdayStr)
-                                        ? "bg-black text-white"
-                                        : "border border-black/15 bg-white text-black hover:bg-neutral-50",
-                                ].join(" ")}
+                        <div className="xl:col-span-2">
+                            <label className={filterLabelCls}>Estado</label>
+                            <select
+                                value={filters.estado}
+                                onChange={(e) => updateFilter("estado", e.target.value)}
+                                className={filterControlCls}
                             >
-                                <CalendarDays className="h-3 w-3" />
-                                Ayer
-                            </button>
+                                {estados.map((s) => (
+                                    <option key={s} value={s}>{s}</option>
+                                ))}
+                            </select>
+                        </div>
 
-                            <button
-                                type="button"
-                                onClick={() => applyQuickRegistroRange(weekStartStr, weekEndStr)}
-                                className={[
-                                    "inline-flex h-9 w-full items-center justify-center gap-1 whitespace-nowrap rounded-lg px-1.5 text-xs font-semibold shadow-sm transition active:scale-[0.95]",
-                                    isQuickActive(weekStartStr, weekEndStr)
-                                        ? "bg-black text-white"
-                                        : "border border-black/15 bg-white text-black hover:bg-neutral-50",
-                                ].join(" ")}
-                            >
-                                <CalendarDays className="h-3 w-3" />
-                                Esta semana
-                            </button>
+                        <div className="xl:col-span-2">
+                            <label className={filterLabelCls}>Registro desde</label>
+                            <input
+                                type="date"
+                                value={filters.fechaRegistroDesde}
+                                onChange={(e) => updateFilter("fechaRegistroDesde", e.target.value)}
+                                className={filterControlCls}
+                            />
+                        </div>
 
-                            <button
-                                type="button"
-                                onClick={() =>
-                                    applyQuickRegistroRange(last7DaysStartStr, last7DaysEndStr)
-                                }
-                                className={[
-                                    "inline-flex h-9 w-full items-center justify-center gap-1 whitespace-nowrap rounded-lg px-1.5 text-xs font-semibold shadow-sm transition active:scale-[0.95]",
-                                    isQuickActive(last7DaysStartStr, last7DaysEndStr)
-                                        ? "bg-black text-white"
-                                        : "border border-black/15 bg-white text-black hover:bg-neutral-50",
-                                ].join(" ")}
-                            >
-                                <CalendarDays className="h-3 w-3" />
-                                7 días
-                            </button>
+                        <div className="xl:col-span-2">
+                            <label className={filterLabelCls}>Registro hasta</label>
+                            <input
+                                type="date"
+                                value={filters.fechaRegistroHasta}
+                                onChange={(e) => updateFilter("fechaRegistroHasta", e.target.value)}
+                                className={filterControlCls}
+                            />
+                        </div>
 
-                            <button
-                                type="button"
-                                onClick={() =>
-                                    applyQuickRegistroRange(last30DaysStartStr, last30DaysEndStr)
-                                }
-                                className={[
-                                    "inline-flex h-9 w-full items-center justify-center gap-1 whitespace-nowrap rounded-lg px-1.5 text-xs font-semibold shadow-sm transition active:scale-[0.95]",
-                                    isQuickActive(last30DaysStartStr, last30DaysEndStr)
-                                        ? "bg-black text-white"
-                                        : "border border-black/15 bg-white text-black hover:bg-neutral-50",
-                                ].join(" ")}
-                            >
-                                <CalendarDays className="h-3 w-3 shrink-0" />
-                                30 días
-                            </button>
+                        <div className="xl:col-span-2">
+                            <label className={filterLabelCls}>Contacto desde</label>
+                            <input
+                                type="date"
+                                value={filters.fechaContactoDesde}
+                                onChange={(e) => updateFilter("fechaContactoDesde", e.target.value)}
+                                className={filterControlCls}
+                            />
+                        </div>
 
-                            <button
-                                type="button"
-                                onClick={() =>
-                                    applyQuickRegistroRange(thisMonthStartStr, thisMonthEndStr)
-                                }
-                                className={[
-                                    "inline-flex h-9 w-full items-center justify-center gap-1 whitespace-nowrap rounded-lg px-1.5 text-xs font-semibold shadow-sm transition active:scale-[0.95]",
-                                    isQuickActive(thisMonthStartStr, thisMonthEndStr)
-                                        ? "bg-black text-white"
-                                        : "border border-black/15 bg-white text-black hover:bg-neutral-50",
-                                ].join(" ")}
-                            >
-                                <CalendarDays className="h-3 w-3 shrink-0" />
-                                Este mes
-                            </button>
+                        <div className="xl:col-span-2">
+                            <label className={filterLabelCls}>Contacto hasta</label>
+                            <input
+                                type="date"
+                                value={filters.fechaContactoHasta}
+                                onChange={(e) => updateFilter("fechaContactoHasta", e.target.value)}
+                                className={filterControlCls}
+                            />
+                        </div>
 
-                            <button
-                                type="button"
-                                onClick={resetFilters}
-                                className="inline-flex h-9 w-full items-center justify-center gap-1 whitespace-nowrap rounded-lg border border-black/15 bg-white px-1.5 text-xs font-semibold text-black shadow-sm transition hover:bg-neutral-50 active:scale-[0.95]"
->
-                                <X className="h-3 w-3" />
-                                Limpiar
-                            </button>
+                        {isAdmin ? (
+                            <div className="xl:col-span-2 flex items-end">
+                                <select
+                                    value={selectedNumeroAsesor}
+                                    onChange={(e) => setSelectedNumeroAsesor(e.target.value)}
+                                    className={filterControlCls}
+                                    title="Filtrar por número de asesor"
+                                >
+                                    {phoneOptions.map((numero) => (
+                                        <option key={numero} value={numero}>
+                                            {numero === "Todos"
+                                                ? "Todos los números"
+                                                : `${formatTelefonoMx(numero)} • ${getAsesorDigitalPorNumero(numero)}`}
+                                        </option>
+                                    ))}
+                                </select>
+                            </div>
+                        ) : null}
+
+                        <div
+                            className={
+                                isAdmin
+                                    ? "xl:col-span-4 flex items-end"
+                                    : "xl:col-span-6 flex items-end"
+                            }
+                        >
+                            <div className="grid w-full grid-cols-7 gap-1.5">
+                                <button
+                                    type="button"
+                                    onClick={() => applyQuickRegistroRange(todayStr, todayStr)}
+                                    className={[
+                                        "inline-flex h-9 w-full items-center justify-center gap-1 whitespace-nowrap rounded-lg px-1.5 text-xs font-semibold shadow-sm transition active:scale-[0.95]",
+                                        isQuickActive(todayStr, todayStr)
+                                            ? "bg-black text-white"
+                                            : "border border-black/15 bg-white text-black hover:bg-neutral-50",
+                                    ].join(" ")}
+                                >
+                                    <CalendarDays className="h-3 w-3" />
+                                    Hoy
+                                </button>
+
+                                <button
+                                    type="button"
+                                    onClick={() => applyQuickRegistroRange(yesterdayStr, yesterdayStr)}
+                                    className={[
+                                        "inline-flex h-9 w-full items-center justify-center gap-1 whitespace-nowrap rounded-lg px-1.5 text-xs font-semibold shadow-sm transition active:scale-[0.95]",
+                                        isQuickActive(yesterdayStr, yesterdayStr)
+                                            ? "bg-black text-white"
+                                            : "border border-black/15 bg-white text-black hover:bg-neutral-50",
+                                    ].join(" ")}
+                                >
+                                    <CalendarDays className="h-3 w-3" />
+                                    Ayer
+                                </button>
+
+                                <button
+                                    type="button"
+                                    onClick={() => applyQuickRegistroRange(weekStartStr, weekEndStr)}
+                                    className={[
+                                        "inline-flex h-9 w-full items-center justify-center gap-1 whitespace-nowrap rounded-lg px-1.5 text-xs font-semibold shadow-sm transition active:scale-[0.95]",
+                                        isQuickActive(weekStartStr, weekEndStr)
+                                            ? "bg-black text-white"
+                                            : "border border-black/15 bg-white text-black hover:bg-neutral-50",
+                                    ].join(" ")}
+                                >
+                                    <CalendarDays className="h-3 w-3" />
+                                    Esta semana
+                                </button>
+
+                                <button
+                                    type="button"
+                                    onClick={() =>
+                                        applyQuickRegistroRange(last7DaysStartStr, last7DaysEndStr)
+                                    }
+                                    className={[
+                                        "inline-flex h-9 w-full items-center justify-center gap-1 whitespace-nowrap rounded-lg px-1.5 text-xs font-semibold shadow-sm transition active:scale-[0.95]",
+                                        isQuickActive(last7DaysStartStr, last7DaysEndStr)
+                                            ? "bg-black text-white"
+                                            : "border border-black/15 bg-white text-black hover:bg-neutral-50",
+                                    ].join(" ")}
+                                >
+                                    <CalendarDays className="h-3 w-3" />
+                                    7 días
+                                </button>
+
+                                <button
+                                    type="button"
+                                    onClick={() =>
+                                        applyQuickRegistroRange(last30DaysStartStr, last30DaysEndStr)
+                                    }
+                                    className={[
+                                        "inline-flex h-9 w-full items-center justify-center gap-1 whitespace-nowrap rounded-lg px-1.5 text-xs font-semibold shadow-sm transition active:scale-[0.95]",
+                                        isQuickActive(last30DaysStartStr, last30DaysEndStr)
+                                            ? "bg-black text-white"
+                                            : "border border-black/15 bg-white text-black hover:bg-neutral-50",
+                                    ].join(" ")}
+                                >
+                                    <CalendarDays className="h-3 w-3 shrink-0" />
+                                    30 días
+                                </button>
+
+                                <button
+                                    type="button"
+                                    onClick={() =>
+                                        applyQuickRegistroRange(thisMonthStartStr, thisMonthEndStr)
+                                    }
+                                    className={[
+                                        "inline-flex h-9 w-full items-center justify-center gap-1 whitespace-nowrap rounded-lg px-1.5 text-xs font-semibold shadow-sm transition active:scale-[0.95]",
+                                        isQuickActive(thisMonthStartStr, thisMonthEndStr)
+                                            ? "bg-black text-white"
+                                            : "border border-black/15 bg-white text-black hover:bg-neutral-50",
+                                    ].join(" ")}
+                                >
+                                    <CalendarDays className="h-3 w-3 shrink-0" />
+                                    Este mes
+                                </button>
+
+                                <button
+                                    type="button"
+                                    onClick={resetFilters}
+                                    className="inline-flex h-9 w-full items-center justify-center gap-1 whitespace-nowrap rounded-lg border border-black/15 bg-white px-1.5 text-xs font-semibold text-black shadow-sm transition hover:bg-neutral-50 active:scale-[0.95]"
+                                >
+                                    <X className="h-3 w-3" />
+                                    Limpiar
+                                </button>
+                            </div>
                         </div>
                     </div>
-                </div>
 
-                {/* ── Fila inferior: contador + accesos rápidos + Tabla/Gráficos (mismo lugar) ── */}
-                <div className="flex flex-col gap-3">
-                    {!loadingCases && sorted.length > 0 && viewMode === "tabla" ? (
-                        <div className="flex flex-col gap-3 border-t border-black/10 pt-4 sm:flex-row sm:items-center sm:justify-between lg:hidden">
-                            <div className="text-xs font-semibold text-neutral-400">
-                                Página {page} de {totalPages} • {PAGE_SIZE} registros por página
+                    {/* ── Fila inferior: contador + accesos rápidos + Tabla/Gráficos (mismo lugar) ── */}
+                    <div className="flex flex-col gap-3">
+                        {!loadingCases && sorted.length > 0 && viewMode === "tabla" ? (
+                            <div className="flex flex-col gap-3 border-t border-black/10 pt-4 sm:flex-row sm:items-center sm:justify-between lg:hidden">
+                                <div className="text-xs font-semibold text-neutral-400">
+                                    Página {page} de {totalPages} • {PAGE_SIZE} registros por página
+                                </div>
+
+                                <div className="flex flex-wrap items-center gap-2">
+                                    <button
+                                        type="button"
+                                        onClick={() => setPage(1)}
+                                        disabled={page === 1}
+                                        className="rounded-lg border border-black/15 px-3 py-2 text-sm font-semibold text-black transition hover:bg-neutral-50 active:scale-[0.95] disabled:cursor-not-allowed disabled:opacity-50"
+                                    >
+                                        Inicio
+                                    </button>
+
+                                    <button
+                                        type="button"
+                                        onClick={() => setPage((prev) => Math.max(prev - 1, 1))}
+                                        disabled={page === 1}
+                                        className="rounded-lg border border-black/15 px-3 py-2 text-sm font-semibold text-black transition hover:bg-neutral-50 active:scale-[0.95] disabled:cursor-not-allowed disabled:opacity-50"
+                                    >
+                                        Anterior
+                                    </button>
+
+                                    <button
+                                        type="button"
+                                        onClick={() => setPage((prev) => Math.min(prev + 1, totalPages))}
+                                        disabled={page === totalPages}
+                                        className="rounded-lg border border-black/15 px-3 py-2 text-sm font-semibold text-black transition hover:bg-neutral-50 active:scale-[0.95] disabled:cursor-not-allowed disabled:opacity-50"
+                                    >
+                                        Siguiente
+                                    </button>
+
+                                    <button
+                                        type="button"
+                                        onClick={() => setPage(totalPages)}
+                                        disabled={page === totalPages}
+                                        className="rounded-lg border border-black/15 px-3 py-2 text-sm font-semibold text-black transition hover:bg-neutral-50 active:scale-[0.95] disabled:cursor-not-allowed disabled:opacity-50"
+                                    >
+                                        Final
+                                    </button>
+                                </div>
                             </div>
-
-                            <div className="flex flex-wrap items-center gap-2">
-                                <button
-                                    type="button"
-                                    onClick={() => setPage(1)}
-                                    disabled={page === 1}
-                                    className="rounded-lg border border-black/15 px-3 py-2 text-sm font-semibold text-black transition hover:bg-neutral-50 active:scale-[0.95] disabled:cursor-not-allowed disabled:opacity-50"
-                                >
-                                    Inicio
-                                </button>
-
-                                <button
-                                    type="button"
-                                    onClick={() => setPage((prev) => Math.max(prev - 1, 1))}
-                                    disabled={page === 1}
-                                    className="rounded-lg border border-black/15 px-3 py-2 text-sm font-semibold text-black transition hover:bg-neutral-50 active:scale-[0.95] disabled:cursor-not-allowed disabled:opacity-50"
-                                >
-                                    Anterior
-                                </button>
-
-                                <button
-                                    type="button"
-                                    onClick={() => setPage((prev) => Math.min(prev + 1, totalPages))}
-                                    disabled={page === totalPages}
-                                    className="rounded-lg border border-black/15 px-3 py-2 text-sm font-semibold text-black transition hover:bg-neutral-50 active:scale-[0.95] disabled:cursor-not-allowed disabled:opacity-50"
-                                >
-                                    Siguiente
-                                </button>
-
-                                <button
-                                    type="button"
-                                    onClick={() => setPage(totalPages)}
-                                    disabled={page === totalPages}
-                                    className="rounded-lg border border-black/15 px-3 py-2 text-sm font-semibold text-black transition hover:bg-neutral-50 active:scale-[0.95] disabled:cursor-not-allowed disabled:opacity-50"
-                                >
-                                    Final
-                                </button>
-                            </div>
-                        </div>
-                    ) : null}
+                        ) : null}
+                    </div>
                 </div>
-            </div>
             )}
 
             {/* ── Vista: Cruce CRM / Salesforce ─────────────────────────────────── */}
-                {viewMode === "cruce" && (
-                    <CruceSalesforce />
-                )}
+            {viewMode === "cruce" && (
+                <CruceSalesforce />
+            )}
 
             {/* ── Vista: Agenda ──────────────────────────────────────────────────── */}
             {viewMode === "agenda" && (
@@ -3009,191 +3009,191 @@ const cargarProspectosCompletos = useCallback(async () => {
 
                                                 return (
                                                     <Fragment key={row.id_exp}>
-                                                    <tr
-                                                        onDoubleClick={() => openEdit(row)}
-                                                        onContextMenu={(e) => onRowContextMenu(e, row)}
-                                                        className="cursor-pointer transition hover:bg-neutral-50"
-                                                        title="Doble clic para editar"
-                                                    >
-                                                        <td className="px-4 py-3 text-xs text-black">{row.agencia}</td>
-                                                        <td className="max-w-32 px-4 py-3 truncate text-black">
-                                                            {row.cliente_nombre + " " + row.cliente_apellidos}
-                                                        </td>
-                                                        <td className="w-28 min-w-28 max-w-28 px-2 py-3 text-black">
-                                                            <span
-                                                                className="block max-w-24 truncate"
-                                                                title={row.correo || "Sin correo registrado"}
-                                                            >
-                                                                {row.correo || "—"}
-                                                            </span>
-                                                        </td>
-                                                        <td className="px-4 py-3">
-                                                            <div className="flex items-center gap-2 whitespace-nowrap">
-                                                                <span className={[
-                                                                    "rounded-full border px-2 py-1 text-xs font-semibold",
-                                                                    tipoCruce === "AMBOS" && !errorCruce && !cargandoCruce
-                                                                        ? "border-emerald-200 bg-emerald-50 text-emerald-700"
-                                                                        : "border-neutral-200 bg-neutral-50 text-neutral-600",
-                                                                ].join(" ")}>
-                                                                    {etiquetaCruce}
-                                                                </span>
-                                                                {tieneSalesforce && !cargandoCruce && !errorCruce ? (
-                                                                    <button
-                                                                        type="button"
-                                                                        onClick={(e) => {
-                                                                            e.stopPropagation();
-                                                                            setCruceExpandido((prev) => ({ ...prev, [row.id_exp]: !prev[row.id_exp] }));
-                                                                        }}
-                                                                        onDoubleClick={(e) => e.stopPropagation()}
-                                                                        aria-label={estaExpandido ? "Ocultar estado y origen de Salesforce" : "Mostrar estado y origen de Salesforce"}
-                                                                        aria-expanded={estaExpandido}
-                                                                        className="rounded-lg border border-black/10 p-1 hover:bg-neutral-100"
-                                                                    >
-                                                                        {estaExpandido ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
-                                                                    </button>
-                                                                ) : null}
-                                                            </div>
-                                                        </td>
-                                                        <td className="px-4 py-3 text-black">{row.fecha_reclamacion || "—"}</td>
-                                                        <td className="px-4 py-3 text-black">{fmtDTIntl(row.ultimo_contacto_at)}</td>
-                                                        <td className="max-w-28 px-4 py-3 truncate text-black">{row.linea || "—"}</td>
-                                                        <td className="max-w-28 px-4 py-3 truncate text-black">{row.asesor_digital || "—"}</td>
-                                                        <td className="max-w-28 px-4 py-3 truncate text-black">{row.asesor_solicita || "—"}</td>
-
-                                                        <td className="px-4 py-3">
-                                                            <div className="relative inline-flex items-center">
-                                                                <select
-                                                                    value={row.estado || "En espera de respuesta"}
-                                                                    disabled={isUpdating}
-                                                                    onClick={(e) => e.stopPropagation()}
-                                                                    onChange={(e) => {
-                                                                        e.stopPropagation();
-                                                                        updateEstadoInline(row, e.target.value);
-                                                                    }}
-                                                                    className={[
-                                                                        "inline-flex appearance-none items-center rounded-full border bg-transparent px-3 py-1 pr-8 text-xs font-semibold outline-none shadow-sm",
-                                                                        badgeCls(row.estado),
-                                                                        isUpdating ? "cursor-not-allowed opacity-70" : "cursor-pointer hover:opacity-90",
-                                                                    ].join(" ")}
-                                                                    title="Cambiar estado"
+                                                        <tr
+                                                            onDoubleClick={() => openEdit(row)}
+                                                            onContextMenu={(e) => onRowContextMenu(e, row)}
+                                                            className="cursor-pointer transition hover:bg-neutral-50"
+                                                            title="Doble clic para editar"
+                                                        >
+                                                            <td className="px-4 py-3 text-xs text-black">{row.agencia}</td>
+                                                            <td className="max-w-32 px-4 py-3 truncate text-black">
+                                                                {row.cliente_nombre + " " + row.cliente_apellidos}
+                                                            </td>
+                                                            <td className="w-28 min-w-28 max-w-28 px-2 py-3 text-black">
+                                                                <span
+                                                                    className="block max-w-24 truncate"
+                                                                    title={row.correo || "Sin correo registrado"}
                                                                 >
-                                                                    {ESTADOS_PROSPECTO.map((s) => (
-                                                                        <option key={s} value={s} className="bg-white text-black">
-                                                                            {s}
-                                                                        </option>
-                                                                    ))}
-                                                                </select>
-
-                                                                <span className="pointer-events-none absolute right-2 inline-flex items-center">
-                                                                    {isUpdating ? (
-                                                                        <Loader2 className="h-3.5 w-3.5 animate-spin text-black" />
-                                                                    ) : (
-                                                                        <ChevronDown className="h-3.5 w-3.5 text-black/70" />
-                                                                    )}
+                                                                    {row.correo || "—"}
                                                                 </span>
-                                                            </div>
-                                                        </td>
+                                                            </td>
+                                                            <td className="px-4 py-3">
+                                                                <div className="flex items-center gap-2 whitespace-nowrap">
+                                                                    <span className={[
+                                                                        "rounded-full border px-2 py-1 text-xs font-semibold",
+                                                                        tipoCruce === "AMBOS" && !errorCruce && !cargandoCruce
+                                                                            ? "border-emerald-200 bg-emerald-50 text-emerald-700"
+                                                                            : "border-neutral-200 bg-neutral-50 text-neutral-600",
+                                                                    ].join(" ")}>
+                                                                        {etiquetaCruce}
+                                                                    </span>
+                                                                    {tieneSalesforce && !cargandoCruce && !errorCruce ? (
+                                                                        <button
+                                                                            type="button"
+                                                                            onClick={(e) => {
+                                                                                e.stopPropagation();
+                                                                                setCruceExpandido((prev) => ({ ...prev, [row.id_exp]: !prev[row.id_exp] }));
+                                                                            }}
+                                                                            onDoubleClick={(e) => e.stopPropagation()}
+                                                                            aria-label={estaExpandido ? "Ocultar estado y origen de Salesforce" : "Mostrar estado y origen de Salesforce"}
+                                                                            aria-expanded={estaExpandido}
+                                                                            className="rounded-lg border border-black/10 p-1 hover:bg-neutral-100"
+                                                                        >
+                                                                            {estaExpandido ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
+                                                                        </button>
+                                                                    ) : null}
+                                                                </div>
+                                                            </td>
+                                                            <td className="px-4 py-3 text-black">{row.fecha_reclamacion || "—"}</td>
+                                                            <td className="px-4 py-3 text-black">{fmtDTIntl(row.ultimo_contacto_at)}</td>
+                                                            <td className="max-w-28 px-4 py-3 truncate text-black">{row.linea || "—"}</td>
+                                                            <td className="max-w-28 px-4 py-3 truncate text-black">{row.asesor_digital || "—"}</td>
+                                                            <td className="max-w-28 px-4 py-3 truncate text-black">{row.asesor_solicita || "—"}</td>
 
-                                                        <td className="px-4 py-3 text-black">
-                                                            <span className="line-clamp-2">{row.origen}</span>
-                                                        </td>
+                                                            <td className="px-4 py-3">
+                                                                <div className="relative inline-flex items-center">
+                                                                    <select
+                                                                        value={row.estado || "En espera de respuesta"}
+                                                                        disabled={isUpdating}
+                                                                        onClick={(e) => e.stopPropagation()}
+                                                                        onChange={(e) => {
+                                                                            e.stopPropagation();
+                                                                            updateEstadoInline(row, e.target.value);
+                                                                        }}
+                                                                        className={[
+                                                                            "inline-flex appearance-none items-center rounded-full border bg-transparent px-3 py-1 pr-8 text-xs font-semibold outline-none shadow-sm",
+                                                                            badgeCls(row.estado),
+                                                                            isUpdating ? "cursor-not-allowed opacity-70" : "cursor-pointer hover:opacity-90",
+                                                                        ].join(" ")}
+                                                                        title="Cambiar estado"
+                                                                    >
+                                                                        {ESTADOS_PROSPECTO.map((s) => (
+                                                                            <option key={s} value={s} className="bg-white text-black">
+                                                                                {s}
+                                                                            </option>
+                                                                        ))}
+                                                                    </select>
 
-                                                        <td className="w-[320px] px-4 py-3 text-black">
-                                                            <div className="flex items-start gap-2">
-                                                                <div className="min-w-0 flex-1">
+                                                                    <span className="pointer-events-none absolute right-2 inline-flex items-center">
+                                                                        {isUpdating ? (
+                                                                            <Loader2 className="h-3.5 w-3.5 animate-spin text-black" />
+                                                                        ) : (
+                                                                            <ChevronDown className="h-3.5 w-3.5 text-black/70" />
+                                                                        )}
+                                                                    </span>
+                                                                </div>
+                                                            </td>
+
+                                                            <td className="px-4 py-3 text-black">
+                                                                <span className="line-clamp-2">{row.origen}</span>
+                                                            </td>
+
+                                                            <td className="w-[320px] px-4 py-3 text-black">
+                                                                <div className="flex items-start gap-2">
+                                                                    <div className="min-w-0 flex-1">
+                                                                        <button
+                                                                            type="button"
+                                                                            onClick={(e) => {
+                                                                                e.preventDefault();
+                                                                                e.stopPropagation();
+                                                                                openSummaryViewer(row);
+                                                                            }}
+                                                                            className="w-full text-left"
+                                                                            title={row.resumen ? "Ver resumen completo" : "No hay resumen"}
+                                                                        >
+                                                                            <span className="line-clamp-3 text-sm">{row.resumen || "Sin resumen"}</span>
+                                                                            {row.resumen_actualizado_at ? (
+                                                                                <div className="mt-1 text-[11px] text-slate-500">
+                                                                                    Actualizado: {fmtDTIntl(row.resumen_actualizado_at)}
+                                                                                    {row.resumen_fuente ? ` • ${row.resumen_fuente}` : ""}
+                                                                                </div>
+                                                                            ) : null}
+                                                                        </button>
+                                                                    </div>
+
                                                                     <button
                                                                         type="button"
                                                                         onClick={(e) => {
                                                                             e.preventDefault();
                                                                             e.stopPropagation();
-                                                                            openSummaryViewer(row);
+                                                                            generarResumenInline(row);
                                                                         }}
-                                                                        className="w-full text-left"
-                                                                        title={row.resumen ? "Ver resumen completo" : "No hay resumen"}
+                                                                        disabled={!!generatingSummary[row.id_exp]}
+                                                                        className="inline-flex h-9 w-9 items-center justify-center rounded-xl border border-black/10 bg-white shadow-sm transition hover:bg-neutral-50 active:scale-[0.95] disabled:opacity-60"
+                                                                        title="Generar resumen"
                                                                     >
-                                                                        <span className="line-clamp-3 text-sm">{row.resumen || "Sin resumen"}</span>
-                                                                        {row.resumen_actualizado_at ? (
-                                                                            <div className="mt-1 text-[11px] text-slate-500">
-                                                                                Actualizado: {fmtDTIntl(row.resumen_actualizado_at)}
-                                                                                {row.resumen_fuente ? ` • ${row.resumen_fuente}` : ""}
-                                                                            </div>
-                                                                        ) : null}
+                                                                        {generatingSummary[row.id_exp] ? (
+                                                                            <Loader2 className="h-5 w-5 animate-spin text-black" />
+                                                                        ) : (
+                                                                            <ClipboardCheck className="h-5 w-5 text-black" />
+                                                                        )}
                                                                     </button>
                                                                 </div>
+                                                            </td>
 
-                                                                <button
-                                                                    type="button"
-                                                                    onClick={(e) => {
-                                                                        e.preventDefault();
-                                                                        e.stopPropagation();
-                                                                        generarResumenInline(row);
-                                                                    }}
-                                                                    disabled={!!generatingSummary[row.id_exp]}
-                                                                    className="inline-flex h-9 w-9 items-center justify-center rounded-xl border border-black/10 bg-white shadow-sm transition hover:bg-neutral-50 active:scale-[0.95] disabled:opacity-60"
-                                                                    title="Generar resumen"
-                                                                >
-                                                                    {generatingSummary[row.id_exp] ? (
-                                                                        <Loader2 className="h-5 w-5 animate-spin text-black" />
-                                                                    ) : (
-                                                                        <ClipboardCheck className="h-5 w-5 text-black" />
-                                                                    )}
-                                                                </button>
-                                                            </div>
-                                                        </td>
+                                                            <td className="px-4 py-1">
+                                                                <div className="flex items-center gap-2">
+                                                                    <button
+                                                                        type="button"
+                                                                        onClick={(e) => {
+                                                                            e.preventDefault();
+                                                                            e.stopPropagation();
+                                                                            abrirAgendaCita(row);
+                                                                        }}
+                                                                        className="inline-flex h-9 w-9 items-center justify-center rounded-xl border border-black/10 bg-white shadow-sm transition hover:bg-black hover:text-white focus:outline-none focus:ring-2 focus:ring-black/20 active:scale-[0.95]"
+                                                                        title="Agendar cita"
+                                                                    >
+                                                                        <CalendarPlus className="h-5 w-5" />
+                                                                    </button>
 
-                                                        <td className="px-4 py-1">
-                                                            <div className="flex items-center gap-2">
-                                                                <button
-                                                                    type="button"
-                                                                    onClick={(e) => {
-                                                                        e.preventDefault();
-                                                                        e.stopPropagation();
-                                                                        abrirAgendaCita(row);
-                                                                    }}
-                                                                    className="inline-flex h-9 w-9 items-center justify-center rounded-xl border border-black/10 bg-white shadow-sm transition hover:bg-black hover:text-white focus:outline-none focus:ring-2 focus:ring-black/20 active:scale-[0.95]"
-                                                                    title="Agendar cita"
-                                                                >
-                                                                    <CalendarPlus className="h-5 w-5" />
-                                                                </button>
-
-                                                                <button
-                                                                    type="button"
-                                                                    onClick={(e) => {
-                                                                        e.preventDefault();
-                                                                        e.stopPropagation();
-                                                                        navigate(
-                                                                            `/comercial/prospectos/contacto?tel=${encodeURIComponent(row.telefono || "")}&direct=1`
-                                                                        );
-                                                                    }}
-                                                                    className="flex h-9 w-[150px] items-center justify-between rounded-xl border border-black/10 bg-white px-3 shadow-sm transition hover:bg-neutral-50 hover:shadow focus:outline-none focus:ring-2 focus:ring-black/20 active:scale-[0.95] disabled:opacity-50"
-                                                                    title="Abrir chat"
-                                                                    disabled={!row.telefono}
-                                                                >
-                                                                    <div className="flex min-w-0 items-center gap-2">
-                                                                        <MessageSquareShare className="h-5 w-5 text-black" />
-                                                                        <span className="min-w-0 truncate text-sm font-medium text-black">
-                                                                            {row.telefono || "SIN TELÉFONO"}
-                                                                        </span>
-                                                                    </div>
-                                                                </button>
-                                                            </div>
-                                                        </td>
-                                                    </tr>
-                                                    {estaExpandido && tieneSalesforce && !cargandoCruce && !errorCruce ? (
-                                                        <tr className="bg-slate-50" onDoubleClick={(e) => e.stopPropagation()}>
-                                                            <td colSpan={13} className="px-5 py-4">
-                                                                <div className="max-w-xl space-y-2 rounded-xl border border-black/10 bg-white p-4 text-sm text-black">
-                                                                    <div className="font-bold">Datos de Salesforce (solo lectura)</div>
-                                                                    {cruce.salesforce.map((registro, indice) => (
-                                                                        <div key={indice} className="grid gap-2 border-t border-black/10 pt-2 sm:grid-cols-2">
-                                                                            <div><span className="text-xs font-semibold text-neutral-500">Estado: </span>{registro.estado_lead || "—"}</div>
-                                                                            <div><span className="text-xs font-semibold text-neutral-500">Origen: </span>{registro.origen || "—"}</div>
+                                                                    <button
+                                                                        type="button"
+                                                                        onClick={(e) => {
+                                                                            e.preventDefault();
+                                                                            e.stopPropagation();
+                                                                            navigate(
+                                                                                `/comercial/prospectos/contacto?tel=${encodeURIComponent(row.telefono || "")}&direct=1`
+                                                                            );
+                                                                        }}
+                                                                        className="flex h-9 w-[150px] items-center justify-between rounded-xl border border-black/10 bg-white px-3 shadow-sm transition hover:bg-neutral-50 hover:shadow focus:outline-none focus:ring-2 focus:ring-black/20 active:scale-[0.95] disabled:opacity-50"
+                                                                        title="Abrir chat"
+                                                                        disabled={!row.telefono}
+                                                                    >
+                                                                        <div className="flex min-w-0 items-center gap-2">
+                                                                            <MessageSquareShare className="h-5 w-5 text-black" />
+                                                                            <span className="min-w-0 truncate text-sm font-medium text-black">
+                                                                                {row.telefono || "SIN TELÉFONO"}
+                                                                            </span>
                                                                         </div>
-                                                                    ))}
+                                                                    </button>
                                                                 </div>
                                                             </td>
                                                         </tr>
-                                                    ) : null}
+                                                        {estaExpandido && tieneSalesforce && !cargandoCruce && !errorCruce ? (
+                                                            <tr className="bg-slate-50" onDoubleClick={(e) => e.stopPropagation()}>
+                                                                <td colSpan={13} className="px-5 py-4">
+                                                                    <div className="max-w-xl space-y-2 rounded-xl border border-black/10 bg-white p-4 text-sm text-black">
+                                                                        <div className="font-bold">Datos de Salesforce (solo lectura)</div>
+                                                                        {cruce.salesforce.map((registro, indice) => (
+                                                                            <div key={indice} className="grid gap-2 border-t border-black/10 pt-2 sm:grid-cols-2">
+                                                                                <div><span className="text-xs font-semibold text-neutral-500">Estado: </span>{registro.estado_lead || "—"}</div>
+                                                                                <div><span className="text-xs font-semibold text-neutral-500">Origen: </span>{registro.origen || "—"}</div>
+                                                                            </div>
+                                                                        ))}
+                                                                    </div>
+                                                                </td>
+                                                            </tr>
+                                                        ) : null}
                                                     </Fragment>
                                                 );
                                             })}
