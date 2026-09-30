@@ -1,6 +1,6 @@
 import React from "react";
 import { Outlet } from "react-router-dom";
-import CitasTopNav from "../Citas/CitasTopNav";
+import CitasTopNav from "../../Citas/CitasTopNav";
 
 export default function CitasLayout() {
     return (
