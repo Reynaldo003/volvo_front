@@ -1540,10 +1540,11 @@ export default function DigitalesProspectos() {
     const ASESORES = [
         "Enrique Vazquez Islas",
         "Ricardo Platas",
-        "Carlos Bautista Camacho",
+        "Verónica Del Rayo Galindo León",
         "Julio Camacho Barragán",
         "Fernanda Romero Aguilar",
         "Zaira Vanessa Hernández Gómez",
+        "Carlos Bautista Camacho",
     ];
 
     const [ctxMenu, setCtxMenu] = useState({ open: false, x: 0, y: 0, row: null });

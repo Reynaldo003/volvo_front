@@ -28,9 +28,15 @@ const VIEWS = [
 ];
 
 const DEALERS = ["Volvo"];
+
 const ASESORES = [
-    "Enrique Vazquez Islas", "Ricardo Platas", "Carlos Bautista Camacho",
-    "Julio Camacho Barragán", "Fernanda Romero Aguilar", "Zaira Vanessa Hernández Gómez",
+    "Enrique Vazquez Islas",
+    "Ricardo Platas",
+    "Verónica Del Rayo Galindo León",
+    "Julio Camacho Barragán",
+    "Fernanda Romero Aguilar",
+    "Zaira Vanessa Hernández Gómez",
+    "Carlos Bautista Camacho",
 ];
 const FUENTE = [
     "Facebook", "WhatsApp", "VW-Concesionarios", "Llamada Entrante", "Prospeccion",
