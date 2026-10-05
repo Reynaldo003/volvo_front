@@ -14,12 +14,36 @@ import {
     ShieldAlert,
     Trash2,
     X,
+    UploadCloud,
 } from "lucide-react";
 import { api } from "../../lib/apiPruebas";
 import { useAuth } from "../../auth/AuthContext";
 
 const inputCls = "w-full rounded-xl border border-[#E4E7F0] bg-white px-3.5 py-2.5 text-sm text-[#1A1F3C] outline-none transition placeholder:text-[#C8CEDF] focus:border-[#131E5C]/30 focus:ring-2 focus:ring-[#131E5C]/10";
 const textareaCls = `${inputCls} resize-y`;
+const HEADER_MEDIA_RULES = {
+    IMAGE: {
+        accept: "image/jpeg,image/png",
+        mime: ["image/jpeg", "image/png"],
+        maxBytes: 5 * 1024 * 1024,
+        maxLabel: "5 MB",
+        label: "imagen",
+    },
+    VIDEO: {
+        accept: "video/mp4",
+        mime: ["video/mp4"],
+        maxBytes: 16 * 1024 * 1024,
+        maxLabel: "16 MB",
+        label: "video",
+    },
+    DOCUMENT: {
+        accept: "application/pdf",
+        mime: ["application/pdf"],
+        maxBytes: 100 * 1024 * 1024,
+        maxLabel: "100 MB",
+        label: "documento PDF",
+    },
+};
 
 const STATUS_CFG = {
     APPROVED: { label: "Aprobada", cls: "border-emerald-200 bg-emerald-50 text-emerald-700" },
@@ -93,9 +117,14 @@ function emptyDraft() {
         name: "",
         language: "es_MX",
         category: "UTILITY",
-        headerEnabled: false,
+        headerType: "NONE",
         headerText: "",
         headerExamples: {},
+        headerFile: null,
+        headerFileName: "",
+        headerPreview: "",
+        headerHandle: "",
+        headerUploading: false,
         preservedHeader: null,
         body: "",
         bodyExamples: {},
@@ -186,10 +215,38 @@ function draftFromTemplate(template) {
         name: String(template?.name || template?.key || ""),
         language: String(template?.language || template?.idioma || "es_MX"),
         category: String(template?.category || "UTILITY").toUpperCase(),
-        headerEnabled: Boolean(header),
-        headerText: headerFormat === "TEXT" ? String(header?.text || "") : "",
-        headerExamples: extractExamples(header, "header"),
-        preservedHeader: header && headerFormat !== "TEXT" ? header : null,
+        headerType:
+            headerFormat === "TEXT"
+                ? "TEXT"
+                : ["IMAGE", "VIDEO", "DOCUMENT"].includes(headerFormat)
+                ? headerFormat
+                : "NONE",
+
+        headerText:
+            headerFormat === "TEXT"
+                ? header?.text || ""
+                : "",
+
+        headerExamples:
+            headerFormat === "TEXT"
+                ? examplesFromComponent(header)
+                : {},
+
+        headerFile: null,
+        headerFileName: "",
+        headerPreview: "",
+
+        headerHandle:
+            headerFormat !== "TEXT"
+                ? String(header?.example?.header_handle?.[0] || "")
+                : "",
+
+        headerUploading: false,
+
+        preservedHeader:
+            header && headerFormat !== "TEXT"
+                ? header
+                : null,
         body: String(body?.text || ""),
         bodyExamples: extractExamples(body, "body"),
         footer: String(footer?.text || ""),
@@ -208,13 +265,41 @@ function draftFromTemplate(template) {
 function buildComponents(draft) {
     const components = [];
 
-    if (draft.preservedHeader) {
-        components.push(draft.preservedHeader);
-    } else if (draft.headerEnabled && draft.headerText.trim()) {
+    const headerType = String(draft.headerType || "NONE").toUpperCase();
+
+    if (headerType === "TEXT" && draft.headerText.trim()) {
         const vars = variableIndexes(draft.headerText);
-        const header = { type: "HEADER", format: "TEXT", text: draft.headerText.trim() };
-        if (vars.length) header.example = { header_text: vars.map((index) => String(draft.headerExamples[index] || "")) };
+
+        const header = {
+            type: "HEADER",
+            format: "TEXT",
+            text: draft.headerText.trim(),
+        };
+
+        if (vars.length) {
+            header.example = {
+                header_text: vars.map((index) =>
+                    String(draft.headerExamples[index] || "")
+                ),
+            };
+        }
+
         components.push(header);
+    } else if (["IMAGE", "VIDEO", "DOCUMENT"].includes(headerType)) {
+        if (draft.headerHandle) {
+            components.push({
+                type: "HEADER",
+                format: headerType,
+                example: {
+                    header_handle: [draft.headerHandle],
+                },
+            });
+        } else if (
+            draft.preservedHeader &&
+            String(draft.preservedHeader?.format || "").toUpperCase() === headerType
+        ) {
+            components.push(draft.preservedHeader);
+        }
     }
 
     const bodyVars = variableIndexes(draft.body);
@@ -475,8 +560,43 @@ function TemplatePreview({ draft }) {
         <div className="rounded-2xl border border-[#D9E0DA] bg-[#E9E4DC] p-4">
             <p className="mb-3 text-[12px] font-bold uppercase tracking-widest text-[#6D756D]">Vista previa</p>
             <div className="ml-auto max-w-md rounded-xl rounded-tr-sm bg-[#D9FDD3] p-3 shadow-sm">
-                {draft.preservedHeader && <p className="mb-2 text-xs font-bold text-[#1A1F3C]">Encabezado multimedia existente</p>}
-                {draft.headerEnabled && draft.headerText && <p className="mb-2 text-sm font-bold text-[#1A1F3C]">{replace(draft.headerText, draft.headerExamples)}</p>}
+                {draft.headerType === "IMAGE" && draft.headerPreview && (
+                    <img
+                        src={draft.headerPreview}
+                        alt="Vista previa del encabezado"
+                        className="mb-3 max-h-52 w-full rounded-lg object-cover"
+                    />
+                )}
+
+                {draft.headerType === "VIDEO" && draft.headerPreview && (
+                    <video
+                        src={draft.headerPreview}
+                        controls
+                        className="mb-3 max-h-52 w-full rounded-lg"
+                    />
+                )}
+
+                {draft.headerType === "DOCUMENT" && (
+                    <div className="mb-3 flex items-center gap-2 rounded-lg bg-white/70 px-3 py-2 text-xs font-semibold text-[#1A1F3C]">
+                        <FileText size={16} />
+                        {draft.headerFileName || "Documento PDF"}
+                    </div>
+                )}
+
+                {["IMAGE", "VIDEO", "DOCUMENT"].includes(draft.headerType) &&
+                    !draft.headerPreview &&
+                    !draft.headerFileName &&
+                    draft.preservedHeader && (
+                        <p className="mb-2 text-xs font-bold text-[#1A1F3C]">
+                            Encabezado multimedia existente
+                        </p>
+                    )}
+
+                {draft.headerType === "TEXT" && draft.headerText && (
+                    <p className="mb-2 text-sm font-bold text-[#1A1F3C]">
+                        {replace(draft.headerText, draft.headerExamples)}
+                    </p>
+                )}
                 <p className="whitespace-pre-wrap text-sm leading-relaxed text-[#1A1F3C]">{replace(draft.body, draft.bodyExamples) || "Escribe el cuerpo de la plantilla..."}</p>
                 {draft.footer && <p className="mt-2 text-[11px] text-[#667085]">{draft.footer}</p>}
                 {draft.buttons.filter((button) => button.text).map((button, index) => (
@@ -735,8 +855,96 @@ export default function Plantillas() {
         });
     }
 
+async function handleHeaderFile(file) {
+    const headerType = String(draft.headerType || "").toUpperCase();
+    const rule = HEADER_MEDIA_RULES[headerType];
+
+    if (!rule) {
+        showToast("Selecciona primero Imagen, Video o Documento PDF.", "error");
+        return;
+    }
+
+    if (!file) {
+        return;
+    }
+
+    if (!rule.mime.includes(file.type)) {
+        showToast(
+            `Tipo de archivo no permitido. Selecciona ${rule.label}.`,
+            "error"
+        );
+        return;
+    }
+
+    if (file.size > rule.maxBytes) {
+        showToast(
+            `El archivo supera el límite permitido de ${rule.maxLabel}.`,
+            "error"
+        );
+        return;
+    }
+
+    const preview =
+        headerType === "IMAGE" || headerType === "VIDEO"
+            ? URL.createObjectURL(file)
+            : "";
+
+    setDraft((current) => ({
+        ...current,
+        headerFile: file,
+        headerFileName: file.name,
+        headerPreview: preview,
+        headerHandle: "",
+        headerUploading: true,
+    }));
+
+    try {
+        const response = await api.digitalesPlantillaUploadMedia(
+            numeroSeleccionado,
+            file,
+            headerType
+        );
+
+        const headerHandle = String(
+            response?.header_handle ||
+            response?.data?.header_handle ||
+            ""
+        ).trim();
+
+        if (!headerHandle) {
+            throw new Error(
+                "Meta no devolvió el identificador del archivo."
+            );
+        }
+
+        setDraft((current) => ({
+            ...current,
+            headerHandle,
+            headerUploading: false,
+            preservedHeader: null,
+        }));
+
+        showToast("Archivo multimedia cargado correctamente.", "success");
+    } catch (error) {
+        setDraft((current) => ({
+            ...current,
+            headerFile: null,
+            headerFileName: "",
+            headerPreview: "",
+            headerHandle: "",
+            headerUploading: false,
+        }));
+
+        showToast(
+            error?.message ||
+            "No se pudo cargar el archivo multimedia.",
+            "error"
+        );
+    }
+}
+
     function addButton() {
-        if (draft.buttons.length >= 3) return;
+        if (draft.buttons.length >= 10) return;
         setDraft((current) => ({ ...current, buttons: [...current.buttons, { type: "QUICK_REPLY", text: "", url: "", phone_number: "", example: "" }] }));
     }
 
@@ -753,9 +961,33 @@ export default function Plantillas() {
 
     function validateDraft() {
         if (!isEditing && !draft.name.trim()) return "Escribe el nombre de la plantilla.";
-        if (draft.headerEnabled && !draft.preservedHeader && !draft.headerText.trim()) return "Escribe el encabezado o desactiva esa opción.";
+        if (draft.headerType === "TEXT" && !draft.headerText.trim()) {
+            return "Escribe el encabezado o selecciona Ninguno.";
+        }
+
+        if (
+            ["IMAGE", "VIDEO", "DOCUMENT"].includes(draft.headerType) &&
+            !draft.headerHandle &&
+            !(
+                draft.preservedHeader &&
+                String(draft.preservedHeader?.format || "").toUpperCase() === draft.headerType
+            )
+        ) {
+            return "Carga el archivo multimedia del encabezado.";
+        }
+
+        if (draft.headerUploading) {
+            return "Espera a que termine de cargarse el archivo multimedia.";
+        }
         if (!draft.body.trim()) return "El cuerpo de la plantilla es obligatorio.";
-        if (variableIndexes(draft.headerText).some((index) => !String(draft.headerExamples[index] || "").trim())) return "Completa todos los datos variables del encabezado.";
+        if (
+            draft.headerType === "TEXT" &&
+            variableIndexes(draft.headerText).some(
+                (index) => !String(draft.headerExamples[index] || "").trim()
+            )
+        ) {
+            return "Completa todos los datos variables del encabezado.";
+        }
         if (variableIndexes(draft.body).some((index) => !String(draft.bodyExamples[index] || "").trim())) return "Completa todos los datos variables del cuerpo.";
 
         const dynamicUrlWithoutExample = draft.buttons.some(
@@ -1063,48 +1295,181 @@ export default function Plantillas() {
                             <label className="flex items-center gap-2 self-end rounded-xl border border-[#E4E7F0] px-3.5 py-3 text-sm font-semibold text-[#515778]"><input disabled type="checkbox" checked={draft.allowCategoryChange} onChange={(e) => patchDraft("allowCategoryChange", e.target.checked)} /> Permitir que Meta ajuste la categoría</label>
                         </div>
 
-                        {draft.preservedHeader ? (
-                            <div className="rounded-xl border border-blue-200 bg-blue-50 px-4 py-3 text-xs font-semibold text-blue-800">Esta plantilla tiene encabezado multimedia. El CRM lo conservará y te permitirá editar el cuerpo, pie y botones.</div>
-                        ) : (
-                            <div className="space-y-3 rounded-2xl border border-[#E4E7F0] p-4">
-                                <label className="flex items-center gap-2 text-sm font-bold text-[#1A1F3C]"><input type="checkbox" checked={draft.headerEnabled} onChange={(e) => patchDraft("headerEnabled", e.target.checked)} /> Agregar encabezado de texto</label>
-
-                                {draft.headerEnabled && (
-                                    <>
-                                        <div className="flex flex-col gap-2 sm:flex-row sm:items-center">
-                                            <input
-                                                ref={headerInputRef}
-                                                value={draft.headerText}
-                                                maxLength={60}
-                                                onChange={(event) => patchVariableText("headerText", "headerExamples", event.target.value)}
-                                                className={inputCls}
-                                                placeholder="Confirmación de cita"
-                                            />
-                                            <button
-                                                type="button"
-                                                onClick={() => addVariable("headerText", "headerExamples", headerInputRef)}
-                                                className="inline-flex shrink-0 items-center justify-center gap-1.5 rounded-xl border border-[#131E5C]/20 bg-[#131E5C]/5 px-3 py-2.5 text-xs font-bold text-[#131E5C] transition hover:bg-[#131E5C]/10"
-                                            >
-                                                <Braces className="h-4 w-4" />
-                                                Agregar variable
-                                            </button>
-                                        </div>
-
-                                        <p className="text-[12px] leading-relaxed text-[#8891AD]">
-                                            Coloca el cursor donde debe aparecer el dato y presiona “Agregar variable”.
-                                        </p>
-
-                                        <VariableExamples
-                                            title="encabezado"
-                                            text={draft.headerText}
-                                            values={draft.headerExamples}
-                                            onChange={(index, value) => patchExample("headerExamples", index, value)}
-                                            onRemove={(index) => removeVariable("headerText", "headerExamples", index)}
-                                        />
-                                    </>
-                                )}
+                        <div className="space-y-4 rounded-2xl border border-[#E4E7F0] p-4">
+                            <div>
+                                <label className="text-sm font-bold text-[#1A1F3C]">
+                                    Encabezado opcional
+                                </label>
+                                <p className="mt-1 text-[12px] leading-relaxed text-[#8891AD]">
+                                    Agrega texto o contenido multimedia al encabezado de la plantilla.
+                                </p>
                             </div>
-                        )}
+
+                            <select
+                                value={draft.headerType}
+                                onChange={(event) => {
+                                    const nextType = event.target.value;
+
+                                    setDraft((current) => ({
+                                        ...current,
+                                        headerType: nextType,
+                                        headerText: nextType === "TEXT" ? current.headerText : "",
+                                        headerExamples:
+                                            nextType === "TEXT" ? current.headerExamples : {},
+                                        headerFile: null,
+                                        headerFileName: "",
+                                        headerPreview: "",
+                                        headerHandle:
+                                            current.preservedHeader &&
+                                            String(
+                                                current.preservedHeader?.format || ""
+                                            ).toUpperCase() === nextType
+                                                ? String(
+                                                    current.preservedHeader?.example
+                                                        ?.header_handle?.[0] || ""
+                                                )
+                                                : "",
+                                        headerUploading: false,
+                                    }));
+                                }}
+                                className={inputCls}
+                            >
+                                <option value="NONE">Sin encabezado</option>
+                                <option value="TEXT">Texto</option>
+                                <option value="IMAGE">Imagen</option>
+                                <option value="VIDEO">Video</option>
+                                <option value="DOCUMENT">Documento PDF</option>
+                            </select>
+
+                            {draft.headerType === "TEXT" && (
+                                <>
+                                    <div className="flex flex-col gap-2 sm:flex-row sm:items-center">
+                                        <input
+                                            ref={headerInputRef}
+                                            value={draft.headerText}
+                                            maxLength={60}
+                                            onChange={(event) =>
+                                                patchVariableText(
+                                                    "headerText",
+                                                    "headerExamples",
+                                                    event.target.value
+                                                )
+                                            }
+                                            className={inputCls}
+                                            placeholder="Confirmación de cita"
+                                        />
+
+                                        <button
+                                            type="button"
+                                            onClick={() =>
+                                                addVariable(
+                                                    "headerText",
+                                                    "headerExamples",
+                                                    headerInputRef
+                                                )
+                                            }
+                                            className="inline-flex shrink-0 items-center justify-center gap-1.5 rounded-xl border border-[#131E5C]/20 bg-[#131E5C]/5 px-3 py-2.5 text-xs font-bold text-[#131E5C] transition hover:bg-[#131E5C]/10"
+                                        >
+                                            <Braces className="h-4 w-4" />
+                                            Agregar variable
+                                        </button>
+                                    </div>
+
+                                    <p className="text-[12px] leading-relaxed text-[#8891AD]">
+                                        Coloca el cursor donde debe aparecer el dato y presiona
+                                        {" "}“Agregar variable”.
+                                    </p>
+
+                                    <VariableExamples
+                                        title="encabezado"
+                                        text={draft.headerText}
+                                        values={draft.headerExamples}
+                                        onChange={(index, value) =>
+                                            patchExample("headerExamples", index, value)
+                                        }
+                                        onRemove={(index) =>
+                                            removeVariable(
+                                                "headerText",
+                                                "headerExamples",
+                                                index
+                                            )
+                                        }
+                                    />
+                                </>
+                            )}
+
+                            {["IMAGE", "VIDEO", "DOCUMENT"].includes(draft.headerType) && (
+                                <div className="space-y-3">
+                                    <label className="flex cursor-pointer flex-col items-center justify-center rounded-2xl border-2 border-dashed border-[#D9DEEA] bg-[#F9FAFC] px-5 py-6 text-center transition hover:border-[#131E5C]/40 hover:bg-[#F5F6FA]">
+                                        {draft.headerUploading ? (
+                                            <Loader2 className="mb-2 h-7 w-7 animate-spin text-[#131E5C]" />
+                                        ) : (
+                                            <UploadCloud className="mb-2 h-7 w-7 text-[#131E5C]" />
+                                        )}
+
+                                        <span className="text-sm font-bold text-[#1A1F3C]">
+                                            {draft.headerUploading
+                                                ? "Subiendo archivo..."
+                                                : draft.headerFileName
+                                                ? "Reemplazar archivo"
+                                                : "Seleccionar archivo"}
+                                        </span>
+
+                                        <span className="mt-1 text-[11px] text-[#8891AD]">
+                                            {draft.headerType === "IMAGE" &&
+                                                "JPEG o PNG · máximo 5 MB"}
+                                            {draft.headerType === "VIDEO" &&
+                                                "MP4 · máximo 16 MB"}
+                                            {draft.headerType === "DOCUMENT" &&
+                                                "PDF · máximo 100 MB"}
+                                        </span>
+
+                                        <input
+                                            type="file"
+                                            className="hidden"
+                                            disabled={draft.headerUploading}
+                                            accept={
+                                                HEADER_MEDIA_RULES[draft.headerType]?.accept || ""
+                                            }
+                                            onChange={(event) => {
+                                                const file = event.target.files?.[0];
+
+                                                if (file) {
+                                                    handleHeaderFile(file);
+                                                }
+
+                                                event.target.value = "";
+                                            }}
+                                        />
+                                    </label>
+
+                                    {draft.headerFileName && (
+                                        <div className="flex items-center gap-2 rounded-xl border border-[#E4E7F0] bg-white px-3 py-2.5">
+                                            <FileText className="h-4 w-4 shrink-0 text-[#131E5C]" />
+                                            <span className="min-w-0 flex-1 truncate text-xs font-semibold text-[#515778]">
+                                                {draft.headerFileName}
+                                            </span>
+
+                                            {draft.headerHandle && (
+                                                <CheckCircle2 className="h-4 w-4 shrink-0 text-green-600" />
+                                            )}
+                                        </div>
+                                    )}
+
+                                    {!draft.headerFileName &&
+                                        draft.preservedHeader &&
+                                        String(
+                                            draft.preservedHeader?.format || ""
+                                        ).toUpperCase() === draft.headerType && (
+                                            <div className="rounded-xl border border-blue-200 bg-blue-50 px-4 py-3 text-xs font-semibold text-blue-800">
+                                                Esta plantilla ya tiene un encabezado multimedia.
+                                                Puedes conservarlo o seleccionar un archivo para
+                                                reemplazarlo.
+                                            </div>
+                                        )}
+                                </div>
+                            )}
+                        </div>
 
                         <div className="space-y-3 rounded-2xl border border-[#E4E7F0] p-4">
                             <div className="flex flex-wrap items-center justify-between gap-2">
@@ -1148,10 +1513,10 @@ export default function Plantillas() {
                         <div className="space-y-2 rounded-2xl border border-[#E4E7F0] p-4"><div className="flex items-center justify-between"><label className="text-sm font-bold text-[#1A1F3C]">Pie opcional</label><span className="text-[11px] text-[#8891AD]">{draft.footer.length}/60</span></div><input value={draft.footer} maxLength={60} onChange={(e) => patchDraft("footer", e.target.value)} className={inputCls} placeholder="Grupo Automotriz R&R" /></div>
 
                         <div className="space-y-3 rounded-2xl border border-[#E4E7F0] p-4">
-                            <div className="flex items-center justify-between"><div><h3 className="text-sm font-bold text-[#1A1F3C]">Botones</h3><p className="text-[11px] text-[#8891AD]">Hasta 3 botones.</p></div><button onClick={addButton} disabled={draft.buttons.length >= 3} className="inline-flex items-center gap-1.5 rounded-lg border border-[#E4E7F0] px-3 py-2 text-xs font-bold text-[#131E5C] disabled:opacity-40"><Plus className="h-3.5 w-3.5" /> Agregar</button></div>
+                            <div className="flex items-center justify-between"><div><h3 className="text-sm font-bold text-[#1A1F3C]">Botones</h3><p className="text-[11px] text-[#8891AD]">Hasta 10 botones.</p></div><button onClick={addButton} disabled={draft.buttons.length >= 10} className="inline-flex items-center gap-1.5 rounded-lg border border-[#E4E7F0] px-3 py-2 text-xs font-bold text-[#131E5C] disabled:opacity-40"><Plus className="h-3.5 w-3.5" /> Agregar</button></div>
                             {draft.buttons.map((button, index) => (
                                 <div key={index} className="grid gap-2 rounded-xl bg-[#F7F8FC] p-3 sm:grid-cols-[150px_1fr_auto]">
-                                    <select value={button.type} onChange={(e) => patchButton(index, "type", e.target.value)} className={inputCls}><option value="QUICK_REPLY">Respuesta rápida</option><option value="URL">Abrir URL</option></select>
+                                    <select value={button.type} onChange={(e) => patchButton(index, "type", e.target.value)} className={inputCls}><option value="QUICK_REPLY">Respuesta rápida</option><option value="URL">Abrir URL</option><option value="PHONE_NUMBER">Llamar por teléfono</option></select>
                                     <div className="space-y-2"><input value={button.text} maxLength={25} onChange={(e) => patchButton(index, "text", e.target.value)} className={inputCls} placeholder="Texto del botón" />{button.type === "URL" && <><input value={button.url} onChange={(e) => patchButton(index, "url", e.target.value)} className={inputCls} placeholder="https://ejemplo.com/cita/{{1}}" />{variableIndexes(button.url).length > 0 && <input value={button.example} onChange={(e) => patchButton(index, "example", e.target.value)} className={inputCls} placeholder="Ejemplo para la variable de URL" />}</>}{button.type === "PHONE_NUMBER" && <input value={button.phone_number} onChange={(e) => patchButton(index, "phone_number", e.target.value)} className={inputCls} placeholder="+522711234567" />}</div>
                                     <button onClick={() => removeButton(index)} className="flex h-10 w-10 items-center justify-center rounded-xl text-red-600 hover:bg-red-50"><Trash2 className="h-4 w-4" /></button>
                                 </div>

@@ -261,6 +261,34 @@ digitalesDesbloquearContacto: (input = {}) => {
       )}`,
     ),
 
+    digitalesPlantillaUploadMedia: (numeroAsesor = "", file, format = "") => {
+      if (!file) {
+        return Promise.reject(new Error("Selecciona un archivo."));
+      }
+
+      const contexto = withNumeroAsesor({
+        numero_asesor: numeroAsesor,
+      });
+
+      const formData = new FormData();
+
+      formData.append("file", file);
+      formData.append("format", String(format || "").toUpperCase());
+
+      if (contexto.numero_asesor) {
+        formData.append("numero_asesor", contexto.numero_asesor);
+      }
+
+      if (contexto.usuario) {
+        formData.append("usuario", contexto.usuario);
+      }
+
+      return http("/digitales/mensajes/plantillas/admin/media/", {
+        method: "POST",
+        body: formData,
+      });
+    },
+
   digitalesPlantillaCrear: (numeroAsesor = "", payload = {}) =>
     http(
       `/digitales/mensajes/plantillas/admin/${toQuery(
