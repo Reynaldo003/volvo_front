@@ -1,11 +1,5 @@
 import { useEffect, useState } from "react";
-import {
-  CalendarDays,
-  Users,
-  Car,
-  BadgeCheck,
-  WalletCards,
-} from "lucide-react";
+import { CalendarDays } from "lucide-react";
 
 import { apiTraficoPiso } from "../../lib/apiTraficoPiso";
 
@@ -171,13 +165,13 @@ function RankingCard({
   );
 
   return (
-    <article className="flex min-h-[340px] flex-col rounded-xl border border-slate-200 bg-white p-5 shadow-sm">
-      <div className="border-b border-slate-100 pb-3">
-        <h2 className="text-sm font-bold text-[#001E50]">
+    <article className="flex min-h-[340px] flex-col bg-white p-6 font-light border-b border-[#E5E5E5]">
+      <div className="border-b border-[#E5E5E5] pb-3">
+        <h2 className="text-xs font-light uppercase tracking-[0.2em] text-[#141414]">
           {title}
         </h2>
 
-        <p className="mt-0.5 text-xs text-slate-400">
+        <p className="mt-0.5 text-[11px] font-light tracking-wide text-[#707070]">
           {subtitle}
         </p>
       </div>
@@ -199,15 +193,15 @@ function RankingCard({
 
             return (
               <div key={item.label}>
-                <div className="mb-1.5 flex items-center justify-between gap-3 text-xs">
+                <div className="mb-1.5 flex items-center justify-between gap-3 text-xs font-light">
                   <span
-                    className="truncate font-semibold text-slate-700"
+                    className="truncate font-light tracking-wide text-[#141414]"
                     title={item.label}
                   >
                     {item.label}
                   </span>
 
-                  <span className="shrink-0 font-bold text-[#001E50]">
+                  <span className="shrink-0 font-light text-[#141414]">
                     {item.value}
 
                     <span className="ml-1 font-normal text-slate-400">
@@ -437,39 +431,115 @@ export default function PrimeraVisita() {
         });
 
   return (
-    <div className="mx-auto w-full max-w-[1280px] space-y-6 px-4 pb-8">
-      {/* ENCABEZADO */}
-      <div>
-        <h1 className="text-2xl font-bold text-slate-900">
-          Primera Visita
-        </h1>
-      </div>
+    <div className="w-full space-y-6 bg-white px-4 py-6 text-[#141414] md:px-8 font-bahnschrift font-light">
+      <style>{`
+        .font-bahnschrift {
+          font-family: 'Bahnschrift Light', 'Bahnschrift', 'Segoe UI', -apple-system, BlinkMacSystemFont, sans-serif;
+        }
+      `}</style>
 
       {errorCarga && (
-        <div className="rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-600">
+        <div className="border-b border-red-200 bg-red-50 p-3 text-xs font-light text-red-600">
           {errorCarga}
         </div>
       )}
 
-      {/* FILTROS */}
-      <section className="rounded-xl border border-slate-200 bg-white p-4 shadow-sm">
+      <section className="relative w-full overflow-hidden border-b border-[#E5E5E5] p-6 text-white md:p-8 font-light">
+        <video
+          className="absolute inset-0 h-full w-full object-cover"
+          autoPlay
+          loop
+          muted
+          playsInline
+          preload="metadata"
+        >
+          <source src="../video.webm" type="video/webm" />
+        </video>
+        <div className="absolute inset-0 bg-gradient-to-b from-black/35 via-black/55 to-black/90" />
+
+        <div className="relative z-10">
+          <div className="flex flex-col gap-2 border-b border-white/20 pb-4 md:flex-row md:items-center md:justify-between">
+            <div>
+              <span className="text-[10px] font-light uppercase tracking-[0.3em] text-slate-300">
+                Volvo Suecia Car Angelopolis · CRM Dashboard
+              </span>
+              <h1 className="mt-1 text-2xl font-light tracking-tight text-white md:text-3xl">
+                Análisis Comercial de Primera Visita
+              </h1>
+            </div>
+            <div className="text-xs font-light tracking-wide text-slate-300">
+              Periodo Activo:{" "}
+              <span className="font-light text-white">
+                {mes} {anio}
+              </span>
+            </div>
+          </div>
+
+          <div className="mt-6 grid grid-cols-1 gap-6 lg:grid-cols-12 lg:items-center">
+            <div className="lg:col-span-5">
+              <p className="text-[11px] font-light uppercase tracking-[0.2em] text-slate-300">
+                Primeras Visitas Registradas
+              </p>
+              <div className="mt-1 flex items-baseline gap-3">
+                <h2 className="text-5xl font-light tracking-tight text-white md:text-6xl">
+                  {cargando ? "..." : totalVisitas}
+                </h2>
+                <span className="border border-white/20 bg-black/40 px-2.5 py-1 text-xs font-light tracking-wider text-slate-200 backdrop-blur-md">
+                  prospectos
+                </span>
+              </div>
+            </div>
+
+            <div className="grid grid-cols-1 gap-px border border-white/20 bg-white/20 sm:grid-cols-3 lg:col-span-7">
+              <div className="bg-black/50 p-4 backdrop-blur-xs">
+                <p className="text-[9px] font-light uppercase tracking-[0.2em] text-slate-300">
+                  Dejan auto a cuenta
+                </p>
+                <p className="mt-1 text-2xl font-light text-white">
+                  {totalAutoCuenta}
+                </p>
+                <p className="mt-0.5 text-[10px] font-light text-slate-400">
+                  Interesados
+                </p>
+              </div>
+
+              <div className="bg-black/50 p-4 backdrop-blur-xs">
+                <p className="text-[9px] font-light uppercase tracking-[0.2em] text-slate-300">
+                  Comprueban ingresos
+                </p>
+                <p className="mt-1 text-2xl font-light text-white">
+                  {totalCompruebanIngresos}
+                </p>
+                <p className="mt-0.5 text-[10px] font-light text-slate-400">
+                  Prospectos
+                </p>
+              </div>
+
+              <div className="bg-black/50 p-4 backdrop-blur-xs">
+                <p className="text-[9px] font-light uppercase tracking-[0.2em] text-slate-300">
+                  Presupuesto promedio
+                </p>
+                <p className="mt-1 text-xl font-light text-white">
+                  {cargando ? "..." : moneda(promedioPresupuesto)}
+                </p>
+                <p className="mt-0.5 text-[10px] font-light text-slate-400">
+                  Presupuestos capturados
+                </p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section className="w-full border-b border-[#E5E5E5] pb-4 pt-2 font-light">
         <div className="flex flex-wrap items-center justify-between gap-4">
-
-          <div className="flex flex-wrap items-center gap-3">
-
-            {/* AÑO */}
-            <div className="flex items-center gap-2 rounded-lg border border-slate-200 bg-slate-50 px-3 py-2">
-              <CalendarDays
-                size={16}
-                className="text-[#001E50]"
-              />
-
+          <div className="flex flex-wrap items-center gap-4">
+            <div className="flex items-center gap-2 border-b border-[#E5E5E5] py-1">
+              <CalendarDays size={13} className="text-[#141414]" strokeWidth={1.5} />
               <select
                 value={anio}
-                onChange={(e) =>
-                  setAnio(Number(e.target.value))
-                }
-                className="bg-transparent text-sm font-semibold text-[#001E50] outline-none"
+                onChange={(e) => setAnio(Number(e.target.value))}
+                className="cursor-pointer bg-transparent text-xs font-light uppercase tracking-[0.15em] text-[#141414] outline-none"
               >
                 {aniosDisponibles.map((item) => (
                   <option key={item} value={item}>
@@ -479,19 +549,18 @@ export default function PrimeraVisita() {
               </select>
             </div>
 
-            <div className="hidden h-7 w-px bg-slate-200 md:block" />
+            <div className="hidden h-4 w-px bg-[#E5E5E5] md:block" />
 
-            {/* MESES */}
             <div className="flex flex-wrap items-center gap-1">
               {MESES.map((item) => (
                 <button
                   key={item}
                   type="button"
                   onClick={() => setMes(item)}
-                  className={`rounded-md px-3 py-1.5 text-xs font-semibold transition ${
+                  className={`px-2.5 py-1 text-xs font-light tracking-wider transition-colors ${
                     mes === item
-                      ? "bg-[#001E50] text-white shadow-sm"
-                      : "bg-slate-50 text-slate-600 hover:bg-slate-100"
+                      ? "bg-[#141414] text-white"
+                      : "text-[#707070] hover:bg-[#F5F5F5]"
                   }`}
                 >
                   {item}
@@ -500,347 +569,180 @@ export default function PrimeraVisita() {
             </div>
           </div>
 
-          {/* DÍAS */}
-          <div className="flex items-center gap-3 rounded-lg border border-slate-200 bg-slate-50 px-4 py-2">
-            <span className="text-xs font-semibold uppercase tracking-wide text-slate-500">
-              Rango días
+          <div className="flex items-center gap-2.5 border-b border-[#E5E5E5] py-1">
+            <span className="text-[10px] font-light uppercase tracking-[0.15em] text-[#707070]">
+              Días
             </span>
-
-            <span className="rounded border border-slate-200 bg-white px-2 py-1 text-xs font-bold text-[#001E50]">
+            <span className="text-xs font-light text-[#141414]">
               {String(diaInicio).padStart(2, "0")}
             </span>
-
             <input
               type="range"
               min="1"
               max="31"
               value={diaFin}
-              onChange={(e) =>
-                setDiaFin(Number(e.target.value))
-              }
-              className="w-28 accent-[#001E50]"
+              onChange={(e) => setDiaFin(Number(e.target.value))}
+              className="w-20 cursor-pointer accent-[#141414]"
             />
-
-            <span className="rounded border border-slate-200 bg-white px-2 py-1 text-xs font-bold text-[#001E50]">
+            <span className="text-xs font-light text-[#141414]">
               {String(diaFin).padStart(2, "0")}
             </span>
           </div>
-
         </div>
       </section>
 
-      {/* KPI */}
-      <section className="grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4">
-
-        {/* PRIMERAS VISITAS */}
-        <article className="rounded-xl border border-slate-200 bg-white p-5 shadow-sm">
-          <div className="flex items-center justify-between">
-            <span className="text-xs font-bold uppercase tracking-wide text-slate-500">
-              Primeras visitas
-            </span>
-
-            <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-blue-50 text-blue-600">
-              <Users size={20} />
-            </div>
-          </div>
-
-          <div className="mt-5 flex items-end gap-2">
-            <span className="text-4xl font-bold text-[#001E50]">
-              {cargando ? "..." : totalVisitas}
-            </span>
-
-            <span className="mb-1 text-xs text-slate-400">
-              prospectos
-            </span>
-          </div>
-        </article>
-
-        {/* AUTO A CUENTA */}
-        <article className="rounded-xl border border-slate-200 bg-white p-5 shadow-sm">
-          <div className="flex items-center justify-between">
-            <span className="text-xs font-bold uppercase tracking-wide text-slate-500">
-              Dejan auto a cuenta
-            </span>
-
-            <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-indigo-50 text-indigo-600">
-              <Car size={20} />
-            </div>
-          </div>
-
-          <div className="mt-5 flex items-end gap-2">
-            <span className="text-4xl font-bold text-[#001E50]">
-              {cargando ? "..." : totalAutoCuenta}
-            </span>
-
-            <span className="mb-1 text-xs text-slate-400">
-              interesados
-            </span>
-          </div>
-        </article>
-
-        {/* COMPRUEBAN INGRESOS */}
-        <article className="rounded-xl border border-slate-200 bg-white p-5 shadow-sm">
-          <div className="flex items-center justify-between">
-            <span className="text-xs font-bold uppercase tracking-wide text-slate-500">
-              Comprueban ingresos
-            </span>
-
-            <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-emerald-50 text-emerald-600">
-              <BadgeCheck size={20} />
-            </div>
-          </div>
-
-          <div className="mt-5 flex items-end gap-2">
-            <span className="text-4xl font-bold text-[#001E50]">
-              {cargando ? "..." : totalCompruebanIngresos}
-            </span>
-
-            <span className="mb-1 text-xs text-slate-400">
-              prospectos
-            </span>
-          </div>
-        </article>
-
-        {/* PRESUPUESTO */}
-        <article className="rounded-xl border border-slate-200 bg-white p-5 shadow-sm">
-          <div className="flex items-center justify-between">
-            <span className="text-xs font-bold uppercase tracking-wide text-slate-500">
-              Presupuesto promedio
-            </span>
-
-            <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-slate-100 text-[#001E50]">
-              <WalletCards size={20} />
-            </div>
-          </div>
-
-          <div className="mt-5">
-            <span className="text-3xl font-bold text-[#001E50]">
-              {cargando
-                ? "..."
-                : moneda(promedioPresupuesto)}
-            </span>
-
-            <p className="mt-1 text-xs text-slate-400">
-              sobre presupuestos capturados
-            </p>
-          </div>
-        </article>
-
-      </section>
-
-      {/* FILA 1 */}
-      <section className="grid grid-cols-1 gap-4 xl:grid-cols-3">
-
+      <section className="grid w-full grid-cols-1 gap-6 xl:grid-cols-3">
         <RankingCard
           title="Atendidos por consultor"
           subtitle="Distribución de primeras visitas por asesor"
           items={asesores}
           total={totalVisitas}
         />
-
         <RankingCard
           title="Motivos de ingreso"
           subtitle="Razón principal de la visita al dealer"
           items={motivosIngreso}
           total={totalVisitas}
         />
-
         <RankingCard
           title="Fecha estimada de compra"
           subtitle="Horizonte de decisión de compra"
           items={tiemposCompra}
           total={totalVisitas}
         />
-
       </section>
 
-      {/* FILA 2 */}
-      <section className="grid grid-cols-1 gap-4 xl:grid-cols-3">
-
+      <section className="grid w-full grid-cols-1 gap-6 xl:grid-cols-3">
         <RankingCard
           title="Modelo de interés"
           subtitle="Vehículos de mayor interés en primera visita"
           items={modelosInteres}
           total={totalVisitas}
         />
-
         <RankingCard
           title="Rango de edades"
           subtitle="Distribución etaria de prospectos"
           items={rangosEdad}
           total={totalVisitas}
         />
-
         <RankingCard
           title="Motivo de compra"
           subtitle="Principales razones declaradas de compra"
           items={motivosCompra}
           total={totalVisitas}
         />
-
       </section>
 
-      {/* FILA 3 */}
-      <section className="grid grid-cols-1 gap-4 xl:grid-cols-3">
-
+      <section className="grid w-full grid-cols-1 gap-6 xl:grid-cols-3">
         <RankingCard
           title="Forma de capitalización"
           subtitle="Forma prevista de capitalización"
           items={formasCapitalizacion}
           total={totalVisitas}
         />
-
         <RankingCard
           title="Perfil de prospectos"
           subtitle="Perfil profesional registrado"
           items={perfilesProfesionales}
           total={totalVisitas}
         />
-
         <RankingCard
           title="Intereses de prospectos"
           subtitle="Pasatiempos e intereses declarados"
           items={pasatiempos}
           total={totalVisitas}
         />
-
       </section>
 
-        {/* DETALLE DE PRIMERAS VISITAS */}
-        <section className="overflow-hidden rounded-xl border border-slate-200 bg-white shadow-sm">
-
-        <div className="flex flex-wrap items-center justify-between gap-3 border-b border-slate-200 px-5 py-4">
-            <div>
-            <h2 className="text-sm font-bold text-[#001E50]">
-                Detalle de primeras visitas
+      <section className="w-full overflow-hidden border-b border-[#E5E5E5] bg-white font-light">
+        <div className="flex flex-wrap items-center justify-between gap-3 border-b border-[#E5E5E5] px-6 py-4">
+          <div>
+            <h2 className="text-xs font-light uppercase tracking-[0.2em] text-[#141414]">
+              Detalle de primeras visitas
             </h2>
-
-            <p className="mt-0.5 text-xs text-slate-400">
-                Registros correspondientes al periodo seleccionado
+            <p className="mt-0.5 text-[11px] font-light tracking-wide text-[#707070]">
+              Registros correspondientes al periodo seleccionado
             </p>
-            </div>
-
-            <span className="rounded-md border border-blue-100 bg-blue-50 px-3 py-1.5 text-xs font-bold text-[#001E50]">
+          </div>
+          <span className="text-xs font-light tracking-wide text-[#707070]">
             {registrosTabla.length} registros
-            </span>
+          </span>
         </div>
 
         {registrosTabla.length === 0 ? (
-            <div className="flex min-h-[180px] items-center justify-center px-5 py-10 text-sm text-slate-400">
+          <div className="flex min-h-[180px] items-center justify-center px-5 py-10 text-xs font-light text-[#707070]">
             No hay primeras visitas para el periodo seleccionado.
-            </div>
+          </div>
         ) : (
-            <div className="max-h-[480px] overflow-auto">
-
-            <table className="min-w-[1200px] w-full border-collapse text-left text-xs">
-
-                <thead className="sticky top-0 z-10 bg-slate-50">
-                <tr className="border-b border-slate-200 text-[11px] font-bold uppercase tracking-wide text-slate-500">
-
-                    <th className="whitespace-nowrap px-4 py-3">
-                    Fecha
-                    </th>
-
-                    <th className="whitespace-nowrap px-4 py-3">
-                    Prospecto
-                    </th>
-
-                    <th className="whitespace-nowrap px-4 py-3">
-                    Teléfono
-                    </th>
-
-                    <th className="whitespace-nowrap px-4 py-3">
-                    Consultor
-                    </th>
-
-                    <th className="whitespace-nowrap px-4 py-3">
-                    Motivo ingreso
-                    </th>
-
-                    <th className="whitespace-nowrap px-4 py-3">
-                    Modelo interés
-                    </th>
-
-                    <th className="whitespace-nowrap px-4 py-3">
-                    Tiempo compra
-                    </th>
-
-                    <th className="whitespace-nowrap px-4 py-3">
-                    Edad
-                    </th>
-
-                    <th className="whitespace-nowrap px-4 py-3">
-                    Capitalización
-                    </th>
-
+          <div className="max-h-[480px] overflow-auto">
+            <table className="w-full min-w-[1200px] border-collapse text-left text-xs">
+              <thead className="sticky top-0 z-10 bg-[#F8F8F7]">
+                <tr className="border-b border-[#E5E5E5] text-[10px] font-light uppercase tracking-[0.15em] text-[#707070]">
+                  <th className="whitespace-nowrap px-4 py-3">Fecha</th>
+                  <th className="whitespace-nowrap px-4 py-3">Prospecto</th>
+                  <th className="whitespace-nowrap px-4 py-3">Teléfono</th>
+                  <th className="whitespace-nowrap px-4 py-3">Consultor</th>
+                  <th className="whitespace-nowrap px-4 py-3">Motivo ingreso</th>
+                  <th className="whitespace-nowrap px-4 py-3">Modelo interés</th>
+                  <th className="whitespace-nowrap px-4 py-3">Tiempo compra</th>
+                  <th className="whitespace-nowrap px-4 py-3">Edad</th>
+                  <th className="whitespace-nowrap px-4 py-3">Capitalización</th>
                 </tr>
-                </thead>
-
-                <tbody>
+              </thead>
+              <tbody>
                 {registrosTabla.map((registro) => (
-                    <tr
+                  <tr
                     key={registro.id_trafico}
-                    className="border-b border-slate-100 transition hover:bg-slate-50"
-                    >
-                    <td className="whitespace-nowrap px-4 py-3 text-slate-500">
-                        {formatearFecha(registro.creado_en)}
+                    className="border-b border-[#F0F0EE] transition-colors hover:bg-[#FAFAF9]"
+                  >
+                    <td className="whitespace-nowrap px-4 py-3 font-light text-[#707070]">
+                      {formatearFecha(registro.creado_en)}
                     </td>
-
                     <td className="max-w-[220px] px-4 py-3">
-                        <div
-                        className="truncate font-semibold text-slate-800"
+                      <div
+                        className="truncate font-light text-[#141414]"
                         title={registro.nombre_prospecto || ""}
-                        >
+                      >
                         {registro.nombre_prospecto || "Sin nombre"}
-                        </div>
-
-                        <div className="mt-0.5 truncate text-[11px] text-slate-400">
+                      </div>
+                      <div className="mt-0.5 truncate text-[10px] font-light text-[#A0A0A0]">
                         {registro.email || "Sin correo"}
-                        </div>
+                      </div>
                     </td>
-
-                    <td className="whitespace-nowrap px-4 py-3 text-slate-600">
-                        {registro.telefono || "—"}
+                    <td className="whitespace-nowrap px-4 py-3 font-light text-[#707070]">
+                      {registro.telefono || "—"}
                     </td>
-
-                    <td className="whitespace-nowrap px-4 py-3 text-slate-600">
-                        {registro.asesor_ventas || "Sin asignar"}
+                    <td className="whitespace-nowrap px-4 py-3 font-light text-[#707070]">
+                      {registro.asesor_ventas || "Sin asignar"}
                     </td>
-
-                    <td className="px-4 py-3 text-slate-600">
-                        {registro.motivo_ingreso || "—"}
+                    <td className="px-4 py-3 font-light text-[#707070]">
+                      {registro.motivo_ingreso || "—"}
                     </td>
-
-                    <td className="whitespace-nowrap px-4 py-3 font-semibold text-[#001E50]">
-                        {registro.auto_suenos || "—"}
+                    <td className="whitespace-nowrap px-4 py-3 font-light text-[#141414]">
+                      {registro.auto_suenos || "—"}
                     </td>
-
-                    <td className="whitespace-nowrap px-4 py-3 text-slate-600">
-                        {registro.tiempo_compra || "—"}
+                    <td className="whitespace-nowrap px-4 py-3 font-light text-[#707070]">
+                      {registro.tiempo_compra || "—"}
                     </td>
-
-                    <td className="whitespace-nowrap px-4 py-3 text-slate-600">
-                        {numero(registro.edad) > 0
+                    <td className="whitespace-nowrap px-4 py-3 font-light text-[#707070]">
+                      {numero(registro.edad) > 0
                         ? `${numero(registro.edad)} años`
                         : "—"}
                     </td>
-
-                    <td className="whitespace-nowrap px-4 py-3 text-slate-600">
-                        {registro.forma_capitalizacion || "—"}
+                    <td className="whitespace-nowrap px-4 py-3 font-light text-[#707070]">
+                      {registro.forma_capitalizacion || "—"}
                     </td>
-                    </tr>
+                  </tr>
                 ))}
-                </tbody>
-
+              </tbody>
             </table>
-            </div>
+          </div>
         )}
 
-        <div className="border-t border-slate-100 px-5 py-3 text-xs text-slate-400">
-            Fuente: Tráfico de Piso · CRM Volvo
+        <div className="border-t border-[#E5E5E5] px-6 py-3 text-[10px] font-light uppercase tracking-[0.15em] text-[#A0A0A0]">
+          Fuente: Tráfico de Piso · CRM Volvo
         </div>
-
-        </section>
+      </section>
     </div>
   );
 }
