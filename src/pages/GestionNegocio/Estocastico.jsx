@@ -24,6 +24,8 @@ import { apiCitas } from "../../lib/apiCitas";
 
 import { apiPruebaManejo } from "../../lib/apiPruebaManejo";
 
+import { http, toQuery } from "../../lib/apiClient";
+
 const MESES = [
 
   "ENE",
@@ -452,6 +454,10 @@ function MatrizDiariaCard({
 
   diaFin,
 
+  oportunidadesDiarias,
+
+  tareasDiarias,
+
 }) {
 
   const dias = Array.from(
@@ -679,6 +685,24 @@ function MatrizDiariaCard({
       ),
 
     },
+    {
+      label: "Oportunidades",
+      valores: dias.map(
+        (dia) =>
+          oportunidadesDiarias.find(
+            (registro) => Number(registro.dia) === dia
+          )?.total ?? 0
+      ),
+    },
+    {
+      label: "Tareas",
+      valores: dias.map(
+        (dia) =>
+          tareasDiarias.find(
+            (registro) => Number(registro.dia) === dia
+          )?.total ?? 0
+      ),
+    },
 
   ];
 
@@ -815,13 +839,6 @@ function MatrizDiariaCard({
         </table>
 
       </div>
-
-      <div className="border-t border-slate-100 px-5 py-3 text-[11px] text-slate-400">
-
-        Se omiten métricas de Salesforce, oportunidades y tareas en esta fase.
-
-      </div>
-
     </section>
 
   );
@@ -1452,6 +1469,10 @@ function TestDriveAsesorModeloCard({
 
 export default function Estocastico() {
 
+  const [oportunidadesDiarias, setOportunidadesDiarias] = useState([]);
+  const [tareasDiarias, setTareasDiarias] = useState([]);
+  const [errorSalesforce, setErrorSalesforce] = useState("");
+
   const [prospectos, setProspectos] =
 
     useState([]);
@@ -1653,6 +1674,56 @@ export default function Estocastico() {
     cargarDatos();
 
   }, []);
+
+  useEffect(() => {
+    if (!anio || !mes) return;
+
+    let activo = true;
+
+    const cargarSalesforce = async () => {
+      setOportunidadesDiarias([]);
+      setTareasDiarias([]);
+      setErrorSalesforce("");
+
+      const parametros = toQuery({
+        anio: Number(anio),
+        mes: MESES_NUMERO[mes] + 1,
+      });
+
+      const resultados = await Promise.allSettled([
+        http(`/salesforce/api/oportunidades/resumen-diario/${parametros}`),
+        http(`/salesforce/api/tareas/resumen-diario/${parametros}`),
+      ]);
+
+      if (!activo) return;
+
+      const [oportunidades, tareas] = resultados;
+
+      if (oportunidades.status === "fulfilled") {
+        setOportunidadesDiarias(oportunidades.value.resultados ?? []);
+      }
+
+      if (tareas.status === "fulfilled") {
+        setTareasDiarias(tareas.value.resultados ?? []);
+      }
+
+      if (
+        oportunidades.status === "rejected" ||
+        tareas.status === "rejected"
+      ) {
+        console.error("Error Salesforce:", resultados);
+        setErrorSalesforce(
+          "No fue posible cargar uno o ambos indicadores de Salesforce."
+        );
+      }
+    };
+
+    cargarSalesforce();
+
+    return () => {
+      activo = false;
+    };
+  }, [anio, mes]);
 
   const todasLasFechas = [
 
@@ -1959,6 +2030,12 @@ export default function Estocastico() {
         </div>
       </section>
 
+      {errorSalesforce && (
+        <p className="px-4 py-2 text-xs text-red-600" role="alert">
+          {errorSalesforce}
+        </p>
+      )}
+
       {/* MATRIZ DIARIA POWER BI */}
 
         <MatrizDiariaCard
@@ -1972,6 +2049,10 @@ export default function Estocastico() {
         pruebas={pruebasFiltradas}
 
         diaFin={diaFin}
+
+        oportunidadesDiarias={oportunidadesDiarias}
+
+        tareasDiarias={tareasDiarias}
 
         />
 
